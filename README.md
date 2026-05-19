@@ -29,6 +29,41 @@ using Pkg
 Pkg.add("TwoTimescaleResilience")
 ```
 
+## DEB-like physiological axes
+
+A new module extension translates the multi-stressor inputs into Dynamic Energy Budget (DEB)-like physiological axes. This mechanism maps stressor rasters to assimilation, maintenance, growth, and reproduction stress:
+
+```math
+s = W b + \text{interactions}
+```
+
+These axes determine the organism's adaptive margin $A_{\text{DEB}}$, representing the systemic biological capacity available to absorb pulse perturbations:
+
+```math
+A_{\text{DEB}} = A_0 - \alpha_A s_A - \alpha_M s_M - \alpha_G s_G - \alpha_R s_R
+```
+
+Margin drives the restoring force (resilience) using a bounded function:
+
+```math
+\lambda(A) = \lambda_{\min} + (\lambda_{\max} - \lambda_{\min}) \frac{[A]_+}{K_A + [A]_+}
+```
+
+Ultimately, this allows computing a defensible Amplification Factor ($F$), describing how much the same perturbation response would be amplified under the DEB-like background physiological stress state:
+
+```math
+F = \frac{\lambda(A_0)}{\lambda(A_{\text{DEB}})}
+```
+
+### Example Default Mapping
+
+We include a hypothetical mapping designed specifically for available `pathogen` and `organic` background stressor rasters:
+
+* **pathogen**: interpreted as a faecal/pathogen proxy
+* **organic**: interpreted as an organic pollution/BOD proxy
+
+*Please note: The mapping is hypothetical and intended solely to serve as a hypothesis-generating vulnerability atlas. It provides a sensitivity-testable mapping rather than a fully calibrated biological state DEB model.*
+
 ## Minimal Scalar Example
 
 ```julia
@@ -74,6 +109,10 @@ Bgrid, Agrid, lambdagrid, Fgrid = run_synthetic_raster_demo(params; output_dir="
 # Or plot directly
 fig = plot_amplification_grid(Fgrid)
 ```
+
+## Examples Directory
+
+* `examples/nc_real_raster_deb_axes_demo.jl`: Processes true pathogen and organic NetCDF variables to calculate DEB-like adaptive margin and amplification factor rasters.
 
 ## Testing
 
