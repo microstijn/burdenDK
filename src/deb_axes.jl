@@ -37,21 +37,21 @@ function deb_axes_vector(values::AbstractVector{<:Real}, mapping::DEBAxisMapping
     J = length(values)
     W = mapping.W
     s = W * values
-
+    
     if !isnothing(mapping.interactions)
         for a in 1:4
             s[a] += pairwise_axis_interaction(mapping.interactions[a], values)
         end
     end
-
+    
     if mapping.clamp_nonnegative
         s .= max.(s, 0.0)
     end
-
+    
     if mapping.clamp_unit
         s .= min.(s, 1.0)
     end
-
+    
     return s
 end
 
@@ -72,9 +72,9 @@ function deb_adaptive_margin(axes, params::DEBAxisParams)
     else
         sA, sM, sG, sR = axes.assimilation, axes.maintenance, axes.growth, axes.reproduction
     end
-
+    
     alphaA, alphaM, alphaG, alphaR = params.alpha_axes
-
+    
     return params.A0 - (alphaA * sA + alphaM * sM + alphaG * sG + alphaR * sR)
 end
 
@@ -92,12 +92,12 @@ end
 function deb_axes_grid(layers::Vector{Matrix{Float64}}, mapping::DEBAxisMapping)
     nrows, ncols = size(layers[1])
     J = length(layers)
-
+    
     sAgrid = zeros(Float64, nrows, ncols)
     sMgrid = zeros(Float64, nrows, ncols)
     sGgrid = zeros(Float64, nrows, ncols)
     sRgrid = zeros(Float64, nrows, ncols)
-
+    
     for r in 1:nrows
         for c in 1:ncols
             has_nan = false
@@ -107,7 +107,7 @@ function deb_axes_grid(layers::Vector{Matrix{Float64}}, mapping::DEBAxisMapping)
                     break
                 end
             end
-
+            
             if has_nan
                 sAgrid[r, c] = NaN
                 sMgrid[r, c] = NaN
@@ -118,7 +118,7 @@ function deb_axes_grid(layers::Vector{Matrix{Float64}}, mapping::DEBAxisMapping)
                 for j in 1:J
                     b[j] = layers[j][r, c]
                 end
-
+                
                 s = deb_axes_vector(b, mapping)
                 sAgrid[r, c] = s[1]
                 sMgrid[r, c] = s[2]
@@ -127,7 +127,7 @@ function deb_axes_grid(layers::Vector{Matrix{Float64}}, mapping::DEBAxisMapping)
             end
         end
     end
-
+    
     return (assimilation=sAgrid, maintenance=sMgrid, growth=sGgrid, reproduction=sRgrid)
 end
 
@@ -136,12 +136,12 @@ function deb_adaptive_margin_grid(axes, params::DEBAxisParams)
     sM = axes.maintenance
     sG = axes.growth
     sR = axes.reproduction
-
+    
     nrows, ncols = size(sA)
     Agrid = zeros(Float64, nrows, ncols)
-
+    
     alphaA, alphaM, alphaG, alphaR = params.alpha_axes
-
+    
     for r in 1:nrows
         for c in 1:ncols
             if isnan(sA[r, c]) || isnan(sM[r, c]) || isnan(sG[r, c]) || isnan(sR[r, c])
@@ -157,7 +157,7 @@ end
 function restoring_force_from_margin_grid(Agrid::Matrix{Float64}, params::DEBAxisParams)
     nrows, ncols = size(Agrid)
     lambdagrid = zeros(Float64, nrows, ncols)
-
+    
     for r in 1:nrows
         for c in 1:ncols
             if isnan(Agrid[r, c])
@@ -174,7 +174,7 @@ function amplification_from_margin_grid(Agrid::Matrix{Float64}, params::DEBAxisP
     nrows, ncols = size(Agrid)
     Fgrid = zeros(Float64, nrows, ncols)
     lambda_control = restoring_force_from_margin(A_control, params)
-
+    
     for r in 1:nrows
         for c in 1:ncols
             if isnan(Agrid[r, c])
@@ -191,13 +191,13 @@ end
 """
     default_pathogen_organic_deb_mapping(; interaction_strength=0.25, clamp_unit=false)
 
-Returns a hypothetical, reduced-order DEB-inspired mapping for the `pathogen` and `organic`
-background stressors.
+Returns a hypothetical, reduced-order DEB-inspired mapping for the `pathogen` and `organic` 
+background stressors. 
 
 - `pathogen` is interpreted as a faecal/pathogen proxy.
 - `organic` is interpreted as an organic pollution/BOD proxy.
 
-Note: This mapping is meant for hypothesis generation and sensitivity testing. No calibration
+Note: This mapping is meant for hypothesis generation and sensitivity testing. No calibration 
 claim is made.
 """
 function default_pathogen_organic_deb_mapping(; interaction_strength=0.25, clamp_unit=false)
@@ -207,16 +207,16 @@ function default_pathogen_organic_deb_mapping(; interaction_strength=0.25, clamp
         0.00 0.25;
         0.25 0.15
     ]
-
+    
     Gamma_A = zeros(2, 2)
     Gamma_M = zeros(2, 2)
     Gamma_G = zeros(2, 2)
     Gamma_R = zeros(2, 2)
-
+    
     Gamma_M[1, 2] = interaction_strength
-
+    
     interactions = [Gamma_A, Gamma_M, Gamma_G, Gamma_R]
-
+    
     return DEBAxisMapping(
         W=W,
         interactions=interactions,
@@ -230,7 +230,7 @@ function deb_amplification_pipeline(layers::Vector{Matrix{Float64}}, mapping::DE
     Agrid = deb_adaptive_margin_grid(axes, params)
     lambdagrid = restoring_force_from_margin_grid(Agrid, params)
     Fgrid = amplification_from_margin_grid(Agrid, params; A_control=params.A0)
-
+    
     return (
         axes = axes,
         A = Agrid,
@@ -241,22 +241,22 @@ end
 
 function pulse_deb_axes_timeseries(D::Matrix{Float64}, mapping::DEBAxisMapping)
     ntime, nstressors = size(D)
-
+    
     sA_pulse = zeros(Float64, ntime)
     sM_pulse = zeros(Float64, ntime)
     sG_pulse = zeros(Float64, ntime)
     sR_pulse = zeros(Float64, ntime)
-
+    
     for t in 1:ntime
         b = D[t, :]
         s = deb_axes_vector(b, mapping)
-
+        
         sA_pulse[t] = s[1]
         sM_pulse[t] = s[2]
         sG_pulse[t] = s[3]
         sR_pulse[t] = s[4]
     end
-
+    
     return (
         assimilation = sA_pulse,
         maintenance = sM_pulse,
@@ -270,50 +270,50 @@ function total_deb_margin_timeseries(A_background::Real, pulse_axes, params::DEB
     sM_pulse = pulse_axes.maintenance
     sG_pulse = pulse_axes.growth
     sR_pulse = pulse_axes.reproduction
-
+    
     ntime = length(sA_pulse)
     A_total = zeros(Float64, ntime)
-
+    
     alphaA, alphaM, alphaG, alphaR = params.alpha_axes
-
+    
     for t in 1:ntime
         cost = alphaA * sA_pulse[t] + alphaM * sM_pulse[t] + alphaG * sG_pulse[t] + alphaR * sR_pulse[t]
         A_total[t] = A_background - cost
     end
-
+    
     return A_total
 end
 
 function simulate_deb_axis_response(t::Vector{Float64}, pulse_axes, A_background::Float64, params::DEBAxisParams, q::Float64; y0::Float64 = 0.0, dt::Float64)
     ntime = length(t)
     y = zeros(Float64, ntime)
-
+    
     sA_pulse = pulse_axes.assimilation
     sM_pulse = pulse_axes.maintenance
     sG_pulse = pulse_axes.growth
     sR_pulse = pulse_axes.reproduction
-
+    
     alphaA, alphaM, alphaG, alphaR = params.alpha_axes
-
+    
     y_current = y0
     if ntime > 0
         y[1] = y_current
     end
-
+    
     for i in 1:(ntime - 1)
         cost_i = alphaA * sA_pulse[i] + alphaM * sM_pulse[i] + alphaG * sG_pulse[i] + alphaR * sR_pulse[i]
         A_total_i = A_background - cost_i
         lambda_i = restoring_force_from_margin(A_total_i, params)
-
+        
         if lambda_i > 0
             y_next = y_current * exp(-lambda_i * dt) + (q * cost_i / lambda_i) * (1.0 - exp(-lambda_i * dt))
         else
             y_next = y_current + q * cost_i * dt
         end
-
+        
         y[i+1] = y_next
         y_current = y_next
     end
-
+    
     return y
 end

@@ -3,7 +3,7 @@ using Test
 
 @testset "Examples Verification" begin
     @testset "Test 7.1 -- check output names conceptually" begin
-        # We don't want to run the full netcdf script if it requires actual netcdf files,
+        # We don't want to run the full netcdf script if it requires actual netcdf files, 
         # but we can verify the generated names.
         expected_files = [
             "pathogen_normalised.asc",

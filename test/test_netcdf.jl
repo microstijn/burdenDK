@@ -41,10 +41,12 @@ using NCDatasets
     end
 
     # Read it back using the extension function
-    layer_read = load_nc_layer(filename, "test_var")
+    layer_read, lon_out, lat_out = load_nc_layer(filename, "test_var")
     @test size(layer_read) == (2, 2)
     @test layer_read[1, 1] == 1.0
     @test layer_read[2, 2] == 4.0
+    @test length(lon_out) == 2
+    @test length(lat_out) == 2
 
     rm(filename, force=true)
 end
