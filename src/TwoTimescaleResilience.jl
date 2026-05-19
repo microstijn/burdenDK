@@ -5,6 +5,7 @@ export load_nc_layer, normalise_layer, write_ascii_grid, read_ascii_grid, plot_s
        synthetic_background_layers, run_synthetic_raster_demo, compute_background_index_grid, adaptive_margin_grid, restoring_force_grid, amplification_factor_grid,
        positive_part, phi_background, adaptive_margin, restoring_force, amplification_factor, BackgroundParams, BackgroundStressor, background_index
 
+include("deb_axes.jl")
 include("background.jl")
 include("grids.jl")
 include("pulses.jl")
