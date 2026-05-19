@@ -1,24 +1,23 @@
 name = "TwoTimescaleResilience"
 uuid = "a1b2c3d4-e5f6-7a8b-9c0d-1e2f3a4b5c6d"
-authors = ["AI Coding Tool"]
 version = "0.1.0"
+authors = ["AI Coding Tool"]
 
 [deps]
 CairoMakie = "13f3f980-e62b-5c42-98c6-ff1f3baf88f0"
-
-[compat]
-julia = "1.12"
-CairoMakie = "0.15"
-
-[weakdeps]
 NCDatasets = "85f8d34a-cbdd-5861-8df4-14fed0d494ab"
 
 [extensions]
 TwoTimescaleResilienceNCDatasetsExt = "NCDatasets"
 
+[compat]
+CairoMakie = "0.15"
+NCDatasets = "0.14.15"
+julia = "1.12"
+
 [extras]
-Test = "8dfed614-e22c-5e08-85e1-65c5234f0b40"
 NCDatasets = "85f8d34a-cbdd-5861-8df4-14fed0d494ab"
+Test = "8dfed614-e22c-5e08-85e1-65c5234f0b40"
 
 [targets]
 test = ["Test", "NCDatasets"]
