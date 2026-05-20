@@ -1,5 +1,5 @@
-export DEBAxisParams, DEBAxisMapping, deb_axes, deb_adaptive_margin, restoring_force_from_margin, amplification_from_margin
-export deb_axes_grid, deb_adaptive_margin_grid, restoring_force_from_margin_grid, amplification_from_margin_grid
+export DEBAxisParams, DEBAxisMapping, deb_axes, deb_adaptive_margin, restoring_force_from_margin, amplification_from_margin, restoring_force_from_margin_and_axes
+export deb_axes_grid, deb_adaptive_margin_grid, restoring_force_from_margin_grid, amplification_from_margin_grid, restoring_force_from_margin_and_axes_grid
 export default_pathogen_organic_deb_mapping
 export deb_amplification_pipeline
 export pulse_deb_axes_timeseries, total_deb_margin_timeseries
@@ -11,6 +11,11 @@ Base.@kwdef struct DEBAxisParams
     lambda_min::Float64 = 0.04
     lambda_max::Float64 = 1.0
     KA::Float64 = 0.30
+
+    recovery_axes::NTuple{4, Float64} = (0.10, 0.80, 0.10, 0.05)
+    use_axis_recovery_penalty::Bool = false
+    use_buffer_recovery_factor::Bool = false
+    beta_Z::Float64 = 0.0
 end
 
 Base.@kwdef struct DEBAxisMapping
@@ -65,22 +70,57 @@ function deb_axes(values::AbstractVector{<:Real}, mapping::DEBAxisMapping)
     )
 end
 
-function deb_adaptive_margin(axes, params::DEBAxisParams)
-    # axes can be a Vector or NamedTuple
-    if axes isa Vector
-        sA, sM, sG, sR = axes[1], axes[2], axes[3], axes[4]
+function _deb_axes_to_vector(axes)
+    if axes isa NamedTuple
+        return [
+            Float64(axes.assimilation),
+            Float64(axes.maintenance),
+            Float64(axes.growth),
+            Float64(axes.reproduction),
+        ]
+    elseif axes isa AbstractVector || axes isa Tuple
+        if length(axes) != 4
+            throw(ArgumentError("axes must have length 4"))
+        end
+        return Float64.(collect(axes))
     else
-        sA, sM, sG, sR = axes.assimilation, axes.maintenance, axes.growth, axes.reproduction
+        throw(ArgumentError("axes must be a NamedTuple or length-4 vector/tuple"))
     end
-    
-    alphaA, alphaM, alphaG, alphaR = params.alpha_axes
-    
-    return params.A0 - (alphaA * sA + alphaM * sM + alphaG * sG + alphaR * sR)
+end
+
+function deb_adaptive_margin(axes, params::DEBAxisParams)
+    s = _deb_axes_to_vector(axes)
+    alpha = collect(params.alpha_axes)
+    return params.A0 - sum(alpha .* s)
 end
 
 function restoring_force_from_margin(A::Real, params::DEBAxisParams)
     Ap = max(A, 0.0)
     return params.lambda_min + (params.lambda_max - params.lambda_min) * Ap / (params.KA + Ap)
+end
+
+function restoring_force_from_margin_and_axes(A::Real, axes, params::DEBAxisParams; Z=nothing)
+    Ap = max(Float64(A), 0.0)
+
+    base_lambda =
+        params.lambda_min +
+        (params.lambda_max - params.lambda_min) * Ap / (params.KA + Ap)
+
+    penalty = 1.0
+
+    if params.use_axis_recovery_penalty
+        s = _deb_axes_to_vector(axes)
+        beta = collect(params.recovery_axes)
+        penalty *= exp(-sum(beta .* s))
+    end
+
+    if params.use_buffer_recovery_factor && Z !== nothing
+        penalty *= exp(params.beta_Z * Float64(Z))
+    end
+
+    lambda = base_lambda * penalty
+
+    return clamp(lambda, params.lambda_min, params.lambda_max)
 end
 
 function amplification_from_margin(A::Real, params::DEBAxisParams; A_control=params.A0)
@@ -170,6 +210,45 @@ function restoring_force_from_margin_grid(Agrid::Matrix{Float64}, params::DEBAxi
     return lambdagrid
 end
 
+function restoring_force_from_margin_and_axes_grid(Agrid::Matrix{Float64}, axes, params::DEBAxisParams; Zgrid=nothing)
+    sA = axes.assimilation
+    sM = axes.maintenance
+    sG = axes.growth
+    sR = axes.reproduction
+
+    nrows, ncols = size(Agrid)
+    lambdagrid = zeros(Float64, nrows, ncols)
+
+    for r in 1:nrows
+        for c in 1:ncols
+            if isnan(Agrid[r, c]) || isnan(sA[r, c]) || isnan(sM[r, c]) || isnan(sG[r, c]) || isnan(sR[r, c])
+                lambdagrid[r, c] = NaN
+            elseif Zgrid !== nothing && isnan(Zgrid[r, c])
+                lambdagrid[r, c] = NaN
+            else
+                cell_axes = (
+                    assimilation = sA[r, c],
+                    maintenance = sM[r, c],
+                    growth = sG[r, c],
+                    reproduction = sR[r, c],
+                )
+
+                Z = Zgrid === nothing ? nothing : Zgrid[r, c]
+
+                lambdagrid[r, c] =
+                    restoring_force_from_margin_and_axes(
+                        Agrid[r, c],
+                        cell_axes,
+                        params;
+                        Z = Z
+                    )
+            end
+        end
+    end
+
+    return lambdagrid
+end
+
 function amplification_from_margin_grid(Agrid::Matrix{Float64}, params::DEBAxisParams; A_control=params.A0)
     nrows, ncols = size(Agrid)
     Fgrid = zeros(Float64, nrows, ncols)
@@ -225,18 +304,83 @@ function default_pathogen_organic_deb_mapping(; interaction_strength=0.25, clamp
     )
 end
 
-function deb_amplification_pipeline(layers::Vector{Matrix{Float64}}, mapping::DEBAxisMapping, params::DEBAxisParams)
+function deb_amplification_pipeline(
+    layers::Vector{Matrix{Float64}},
+    mapping::DEBAxisMapping,
+    params::DEBAxisParams;
+    buffer_grid=nothing,
+    buffer_params=nothing
+)
     axes = deb_axes_grid(layers, mapping)
-    Agrid = deb_adaptive_margin_grid(axes, params)
-    lambdagrid = restoring_force_from_margin_grid(Agrid, params)
-    Fgrid = amplification_from_margin_grid(Agrid, params; A_control=params.A0)
     
-    return (
-        axes = axes,
-        A = Agrid,
-        lambda = lambdagrid,
-        amplification = Fgrid
-    )
+    nrows, ncols = size(layers[1])
+    Agrid = zeros(Float64, nrows, ncols)
+
+    if buffer_grid !== nothing && buffer_params !== nothing
+        sA = axes.assimilation
+        sM = axes.maintenance
+        sG = axes.growth
+        sR = axes.reproduction
+        for r in 1:nrows
+            for c in 1:ncols
+                if isnan(buffer_grid[r, c]) || isnan(sA[r, c]) || isnan(sM[r, c]) || isnan(sG[r, c]) || isnan(sR[r, c])
+                    Agrid[r, c] = NaN
+                else
+                    cell_axes = (
+                        assimilation = sA[r, c],
+                        maintenance = sM[r, c],
+                        growth = sG[r, c],
+                        reproduction = sR[r, c],
+                    )
+                    Agrid[r, c] = adaptive_margin_with_buffer(cell_axes, buffer_grid[r, c], params, buffer_params)
+                end
+            end
+        end
+    else
+        Agrid = deb_adaptive_margin_grid(axes, params)
+    end
+
+    if params.use_axis_recovery_penalty || params.use_buffer_recovery_factor
+        lambdagrid = restoring_force_from_margin_and_axes_grid(Agrid, axes, params; Zgrid=buffer_grid)
+
+        lambda_control = restoring_force_from_margin_and_axes(
+            params.A0,
+            (assimilation=0.0, maintenance=0.0, growth=0.0, reproduction=0.0),
+            params;
+            Z = 0.0
+        )
+    else
+        lambdagrid = restoring_force_from_margin_grid(Agrid, params)
+        lambda_control = restoring_force_from_margin(params.A0, params)
+    end
+
+    Fgrid = zeros(Float64, nrows, ncols)
+    for r in 1:nrows
+        for c in 1:ncols
+            if isnan(lambdagrid[r, c]) || (buffer_grid !== nothing && isnan(buffer_grid[r, c]))
+                Fgrid[r, c] = NaN
+            else
+                Fgrid[r, c] = lambda_control / lambdagrid[r, c]
+            end
+        end
+    end
+
+    if buffer_grid !== nothing
+        return (
+            axes = axes,
+            Z = buffer_grid,
+            A = Agrid,
+            lambda = lambdagrid,
+            amplification = Fgrid
+        )
+    else
+        return (
+            axes = axes,
+            A = Agrid,
+            lambda = lambdagrid,
+            amplification = Fgrid
+        )
+    end
 end
 
 function pulse_deb_axes_timeseries(D::Matrix{Float64}, mapping::DEBAxisMapping)
