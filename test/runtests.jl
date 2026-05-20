@@ -19,4 +19,9 @@ using TwoTimescaleResilience
     include("test_ascii.jl")
     include("test_synthetic_raster.jl")
     include("test_netcdf.jl")
+
+    include("test_recovery_penalty.jl")
+    include("test_condition_buffer.jl")
+    include("test_reduced_deb_response.jl")
+    include("test_deb_pipeline_recovery_math.jl")
 end
