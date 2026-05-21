@@ -96,6 +96,57 @@ metrics = compute_metrics(sim)
 println("Response AUC: ", metrics.auc_y)
 ```
 
+## Reduced DEB-informed response operator
+
+This is not a full DEB model.
+It maps environmental stressors onto DEB process perturbations.
+
+## ISIMIP Water Quality mode-of-action layer
+
+The package now supports a full ISIMIP Water Quality mode-of-action pipeline:
+
+ISIMIP variable -> exposure filter -> mode of action -> DEB axes
+
+### Species exposure filters
+
+Aquatic species may be direct-contact.
+Humans require contact/use filtering.
+Human output is a vulnerability multiplier, not disease risk.
+
+### Supported ISIMIP-style variables
+
+`[WT, BOD, TDS, FC, Nutrient, Chemical, Plastic]`
+
+### Supported modes
+
+`[thermal, oxygen, osmotic, immune, eutrophication, toxic, feeding, physical]`
+
+### Equations
+
+```math
+e_j^{(q)} = H_j^{(q)}b_j
+```
+
+```math
+m_r^{(q)} = \sum_j U_{rj}^{(q)}e_j^{(q)} + \sum_{j<k} \Omega_{rjk}^{(q)}e_j^{(q)}e_k^{(q)}
+```
+
+```math
+s_a^{(q)} = \sum_r W_{ar}^{(q)}m_r^{(q)}
+```
+
+```math
+A = A_0 + \omega_Z Z - \alpha' s
+```
+
+```math
+\lambda = f(A) \exp(-\beta' s)
+```
+
+```math
+F = \frac{\lambda(A_0)}{\lambda(A,s,Z)}
+```
+
 ## Raster Amplification and CairoMakie Example
 
 ```julia
@@ -113,6 +164,8 @@ fig = plot_amplification_grid(Fgrid)
 ## Examples Directory
 
 * `examples/nc_real_raster_deb_axes_demo.jl`: Processes true pathogen and organic NetCDF variables to calculate DEB-like adaptive margin and amplification factor rasters.
+* Synthetic 3x3 examples (`isimip_moa_deb_3x3_demo.jl`, `species_comparison_3x3_demo.jl`) are smoke-tested during automated testing as they do not require local files.
+* Long-term NetCDF inspection scripts (e.g. `nc_monthly_longterm_isimip_moa_deb_inspection.jl`) are manual examples and are explicitly not included in automated tests because they require local NetCDF files.
 
 ## Testing
 

@@ -23,5 +23,13 @@ using TwoTimescaleResilience
     include("test_recovery_penalty.jl")
     include("test_condition_buffer.jl")
     include("test_reduced_deb_response.jl")
+    include("test_mode_of_action.jl")
+    include("test_default_isimip_moa.jl")
+    include("test_exposure_filters.jl")
+    include("test_moa_deb_mapping.jl")
+    include("test_isimip_deb_pipeline.jl")
+    include("test_species_profiles.jl")
+    include("test_isimip_event_response.jl")
+    include("test_examples_isimip_moa.jl")
     include("test_deb_pipeline_recovery_math.jl")
 end
