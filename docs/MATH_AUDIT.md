@@ -60,8 +60,8 @@
   ```
 - **Notes/Observations:** Linear mapping with optional strict upper-triangular quadratic pairwise interaction terms. Results can optionally be clamped to be non-negative and $\le 1.0$.
 
-### 2.2 DEB Axes Mapping
-- **Concept Name:** Mapping Variables to DEB Axes Costs
+### 2.2 DEB Axes Mapping (Direct from variables)
+- **Concept Name:** Mapping Variables directly to DEB Axes Costs
 - **Reconstructed Equation:**
   $$s_a = \sum_{i} W_{ai} v_i + \sum_{j < k} \Gamma_{jk}^{(a)} v_j v_k$$
   where $W$ maps variables to DEB axes (Assimilation, Maintenance, Growth, Reproduction).
@@ -76,6 +76,27 @@
   end
   ```
 - **Notes/Observations:** Mathematical structure is identical to Mode of Action mapping. Returns a NamedTuple with axes: `assimilation`, `maintenance`, `growth`, `reproduction`.
+
+### 2.3 Mode of Action to DEB Axes Mapping
+- **Concept Name:** Mapping Modes of Action to DEB Axes
+- **Reconstructed Equation:**
+  $$s_a = \sum_{r} W_{ar} m_r + \sum_{j < k} \Gamma_{jk}^{(a)} m_j m_k$$
+  where $W$ maps the intermediate Modes of Action ($m$) to the physiological DEB axes ($s$), and $\Gamma^{(a)}$ is an optional interaction matrix.
+- **File Path & Line Number:** `src/moa_deb_mapping.jl:13`
+- **Julia Implementation:**
+  ```julia
+  axes_vals = mapping.W * mode_vals
+  if mapping.interactions !== nothing
+      for a in 1:n_axes
+          for j in 1:(n_modes-1)
+              for k in (j+1):n_modes
+                  axes_vals[a] += int_mat[j, k] * mode_vals[j] * mode_vals[k]
+              end
+          end
+      end
+  end
+  ```
+- **Notes/Observations:** Demonstrates a two-step mapping pipeline where environmental variables first map to generalized Modes of Action (e.g., thermal, oxygen, toxic), which then map to specific physiological process costs (Assimilation, Maintenance, Growth, Reproduction).
 
 
 ## 3. State Variables and Margin
