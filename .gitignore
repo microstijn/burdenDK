@@ -27,3 +27,13 @@ Manifest.toml
 *.asc
 file_tree.txt
 implementation_A_bundle.txt
+docs/beamer/isimip_moa_deb_estuary_beamer.aux
+docs/beamer/isimip_moa_deb_estuary_beamer.log
+docs/beamer/isimip_moa_deb_estuary_beamer.nav
+docs/beamer/isimip_moa_deb_estuary_beamer.out
+docs/beamer/isimip_moa_deb_estuary_beamer.pdf
+docs/beamer/isimip_moa_deb_estuary_beamer.snm
+docs/beamer/isimip_moa_deb_estuary_beamer.synctex.gz
+docs/beamer/isimip_moa_deb_estuary_beamer.tex
+docs/beamer/isimip_moa_deb_estuary_beamer.toc
+docs/beamer/isimip_moa_deb_estuary_beamer.vrb
