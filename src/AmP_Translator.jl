@@ -51,6 +51,8 @@ function process_species_data()
             alpha_R = 1.0 - kap
             alpha_G = kap
 
+            L_m = kap * p_Am / p_M
+
             lambda_max = v * 0.1
             lambda_min = 0.01
             K_A = A_0 * 0.3
@@ -63,6 +65,11 @@ function process_species_data()
                     "lambda_min" => lambda_min,
                     "lambda_max" => lambda_max,
                     "KA" => K_A
+                ),
+                "auxiliary_metrics" => Dict(
+                    "L_m" => L_m,
+                    "p_Am" => p_Am,
+                    "p_M" => p_M
                 )
             )
             processed_count += 1
@@ -79,6 +86,9 @@ function process_species_data()
         println("\nDonax_trunculus stats:")
         println("  A0: ", dt["A0"])
         println("  alpha_M: ", dt["alpha_axes"][2])
+        println("  L_m: ", dt["auxiliary_metrics"]["L_m"])
+        println("  p_Am: ", dt["auxiliary_metrics"]["p_Am"])
+        println("  p_M: ", dt["auxiliary_metrics"]["p_M"])
     end
 
     # Write JSON
