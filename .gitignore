@@ -25,3 +25,5 @@ Manifest.toml
 /output
 *.png
 *.asc
+file_tree.txt
+implementation_A_bundle.txt
