@@ -51,8 +51,17 @@ function process_species_data()
             alpha_R = 1.0 - kap
             alpha_G = kap
 
+            # Calculate the fast recovery potential
             lambda_max = v * 0.1
-            lambda_min = 0.01
+            
+            # Ensure the slow recovery floor is strictly smaller (e.g., 5% of max)
+            # but apply an absolute minimum floor of 1e-5 to prevent division-by-zero.
+            lambda_min = max(lambda_max * 0.05, 1e-5)
+            
+            # Safety catch: just in case v was incredibly close to 0, ensure max > min
+            lambda_max = max(lambda_max, lambda_min * 2.0)
+            
+            # KA remains the same
             K_A = A_0 * 0.3
 
             # Tranche 3: JSON Structure formatting
