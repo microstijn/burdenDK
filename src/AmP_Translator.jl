@@ -53,14 +53,13 @@ function process_species_data()
 
             L_m = kap * p_Am / p_M
 
-            lambda_max = v * 0.1
+            # Fast recovery rate (1/time): Conductance normalized by Max Length
+            lambda_max = v / L_m
             
-            # Ensure the slow recovery floor is strictly smaller (e.g., 5% of max)
-            # but apply an absolute minimum floor of 1e-5 to prevent division-by-zero.
-            lambda_min = max(lambda_max * 0.05, 1e-5)
+            # Slow recovery rate (1/time): Maintenance normalized by Max Reserve Density
+            lambda_min = p_M / A_0
             
-            # Safety catch: just in case v was incredibly close to 0, ensure max > min
-            lambda_max = max(lambda_max, lambda_min * 2.0)
+            # (The safety catch is intentionally removed. DEB theory guarantees max > min via kap)
             
             # KA remains the same
             K_A = A_0 * 0.3
@@ -109,6 +108,5 @@ function process_species_data()
     return results
 end
 
-if abspath(PROGRAM_FILE) == @__FILE__
-    process_species_data()
-end
+process_species_data()
+
