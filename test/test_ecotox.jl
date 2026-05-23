@@ -10,8 +10,9 @@ using .ECOTOXParser
     target_cas = "7664417"
     results_path = "test_data/sample_results.txt"
     tests_path = "test_data/sample_tests.txt"
+    species_path = "test_data/sample_species.txt"
 
-    df = parse_ecotox_data(results_path, tests_path, target_cas)
+    df = parse_ecotox_data(results_path, tests_path, species_path, target_cas)
 
     if isempty(df)
         println("Sample too small for Ammonia targets, but pipeline executed successfully.")
@@ -51,18 +52,22 @@ using .ECOTOXParser
                 # 3. Parse conc1_mean to Float64
                 df_valid_conc.conc1_mean_num = parse.(Float64, strip.(string.(df_valid_conc.conc1_mean)))
 
-                # 4. Calculate and print Medians
+                # 4. Calculate Medians grouped by class for NOEC and EC50
                 df_noec = filter(:endpoint => x -> strip(string(x)) == "NOEC", df_valid_conc)
                 df_ec50 = filter(:endpoint => x -> strip(string(x)) == "EC50", df_valid_conc)
 
                 if !isempty(df_noec)
-                    median_noec = median(df_noec.conc1_mean_num)
-                    println("Median NOEC: $median_noec")
+                    summary_noec = combine(groupby(df_noec, :class), :conc1_mean_num => median => :median_noec)
+                    println("\nMedian NOEC by Taxonomic Class:")
+                    show(summary_noec)
+                    println()
                 end
 
                 if !isempty(df_ec50)
-                    median_ec50 = median(df_ec50.conc1_mean_num)
-                    println("Median EC50: $median_ec50")
+                    summary_ec50 = combine(groupby(df_ec50, :class), :conc1_mean_num => median => :median_ec50)
+                    println("\nMedian EC50 by Taxonomic Class:")
+                    show(summary_ec50)
+                    println()
                 end
 
                 @test true
