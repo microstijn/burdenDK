@@ -49,28 +49,54 @@ using .ECOTOXParser
                 println("Sample too small for Ammonia targets, but pipeline executed successfully.")
                 @test true
             else
-                # 3. Parse conc1_mean to Float64
-                df_valid_conc.conc1_mean_num = parse.(Float64, strip.(string.(df_valid_conc.conc1_mean)))
-
-                # 4. Calculate Medians grouped by class for NOEC and EC50
-                df_noec = filter(:endpoint => x -> strip(string(x)) == "NOEC", df_valid_conc)
-                df_ec50 = filter(:endpoint => x -> strip(string(x)) == "EC50", df_valid_conc)
-
-                if !isempty(df_noec)
-                    summary_noec = combine(groupby(df_noec, :class), :conc1_mean_num => median => :median_noec)
-                    println("\nMedian NOEC by Taxonomic Class:")
-                    show(summary_noec)
-                    println()
+                # 3. Filter out rows where effect is missing or "" after stripping
+                function is_valid_effect(x)
+                    if ismissing(x) || x === nothing
+                        return false
+                    end
+                    val = strip(string(x))
+                    return val != ""
                 end
 
-                if !isempty(df_ec50)
-                    summary_ec50 = combine(groupby(df_ec50, :class), :conc1_mean_num => median => :median_ec50)
-                    println("\nMedian EC50 by Taxonomic Class:")
-                    show(summary_ec50)
-                    println()
-                end
+                df_valid_effect = filter(:effect => is_valid_effect, df_valid_conc)
 
-                @test true
+                if isempty(df_valid_effect)
+                    println("Sample too small for Ammonia targets, but pipeline executed successfully.")
+                    @test true
+                else
+                    # 4. Parse conc1_mean to Float64
+                    df_valid_effect.conc1_mean_num = parse.(Float64, strip.(string.(df_valid_effect.conc1_mean)))
+
+                    # 5. Clean up effect and class to ensure consistency
+                    df_valid_effect.effect = strip.(string.(df_valid_effect.effect))
+                    df_valid_effect.class = strip.(string.(df_valid_effect.class))
+
+                    # 6. Calculate Medians and evidence count grouped by class and effect for NOEC and EC50
+                    df_noec = filter(:endpoint => x -> strip(string(x)) == "NOEC", df_valid_effect)
+                    df_ec50 = filter(:endpoint => x -> strip(string(x)) == "EC50", df_valid_effect)
+
+                    if !isempty(df_noec)
+                        summary_noec = combine(groupby(df_noec, [:class, :effect]),
+                            :conc1_mean_num => median => :median_noec,
+                            nrow => :evidence_count
+                        )
+                        println("\nMedian NOEC by Taxonomic Class and MoA Effect:")
+                        show(summary_noec)
+                        println()
+                    end
+
+                    if !isempty(df_ec50)
+                        summary_ec50 = combine(groupby(df_ec50, [:class, :effect]),
+                            :conc1_mean_num => median => :median_ec50,
+                            nrow => :evidence_count
+                        )
+                        println("\nMedian EC50 by Taxonomic Class and MoA Effect:")
+                        show(summary_ec50)
+                        println()
+                    end
+
+                    @test true
+                end
             end
         end
     end
