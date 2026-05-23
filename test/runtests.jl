@@ -32,4 +32,6 @@ using TwoTimescaleResilience
     include("test_isimip_event_response.jl")
     include("test_examples_isimip_moa.jl")
     include("test_deb_pipeline_recovery_math.jl")
+
+    include("test_ecotox.jl")
 end
