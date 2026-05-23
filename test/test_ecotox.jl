@@ -8,9 +8,13 @@ using .ECOTOXParser
 
 @testset "ECOTOXParser Ammonia Baseline" begin
     target_cas = "7664417"
-    results_path = "test_data/sample_results.txt"
-    tests_path = "test_data/sample_tests.txt"
-    species_path = "test_data/sample_species.txt"
+    results_path = joinpath(@__DIR__, "..", "test_data", "sample_results.txt")
+    tests_path = joinpath(@__DIR__, "..", "test_data", "sample_tests.txt")
+    species_path = joinpath(@__DIR__, "..", "test_data", "sample_species.txt")
+
+    @test isfile(results_path)
+    @test isfile(tests_path)
+    @test isfile(species_path)
 
     df = parse_ecotox_data(results_path, tests_path, species_path, target_cas)
 
