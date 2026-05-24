@@ -5,9 +5,37 @@ using CSV, DataFrames, Statistics, JSON
 export parse_ecotox_data,
        summarize_ecotox_endpoints,
        write_ecotox_library_json,
-       build_ecotox_toxicity_library
+       build_ecotox_toxicity_library,
+       build_ecotox_toxicity_library_multi,
+       normalize_cas,
+       hyphenate_cas
+
+function normalize_cas(cas)::String
+    if ismissing(cas) || cas === nothing
+        return ""
+    end
+    # strip whitespace and keep only digits
+    s = strip(string(cas))
+    return filter(isdigit, s)
+end
+
+function hyphenate_cas(cas)::String
+    norm = normalize_cas(cas)
+    if length(norm) < 4
+        return norm
+    end
+    prefix = norm[1:end-3]
+    middle = norm[end-2:end-1]
+    check = norm[end:end]
+    return "$(prefix)-$(middle)-$(check)"
+end
 
 function parse_ecotox_data(results_path::String, tests_path::String, species_path::String, target_cas::String)
+    target_cas_norm = normalize_cas(target_cas)
+    if target_cas_norm == ""
+        throw(ArgumentError("target_cas normalizes to an empty string"))
+    end
+
     # Load files
     results = CSV.read(results_path, DataFrame, delim='|', stringtype=String, silencewarnings=true, strict=false)
     tests = CSV.read(tests_path, DataFrame, delim='|', stringtype=String, silencewarnings=true, strict=false)
@@ -19,10 +47,9 @@ function parse_ecotox_data(results_path::String, tests_path::String, species_pat
     # Inner join on species_number
     df = innerjoin(df_tests_results, species, on = :species_number, makeunique=true)
 
-    # Filter for test_cas matching target_cas (stripping whitespace)
+    # Filter for test_cas matching normalized target_cas
     # Handling missing or Nothing gracefully
-    target_cas_stripped = strip(target_cas)
-    filter_func(x) = ismissing(x) ? false : strip(string(x)) == target_cas_stripped
+    filter_func(x) = normalize_cas(x) == target_cas_norm
 
     return filter(:test_cas => filter_func, df)
 end
@@ -55,6 +82,12 @@ function _first_existing_column(df::DataFrame, candidates::Vector{Symbol})::Unio
 end
 
 function summarize_ecotox_endpoints(df::DataFrame; cas::AbstractString)
+    cas_norm = normalize_cas(cas)
+    if cas_norm == ""
+        throw(ArgumentError("cas normalizes to an empty string"))
+    end
+    cas_hyphenated = hyphenate_cas(cas_norm)
+
     taxon_col = _first_existing_column(df, [:class, :taxonomic_class, :species_class, :taxon_class])
     if taxon_col === nothing
         throw(ArgumentError("No taxonomic class column could be detected."))
@@ -72,7 +105,6 @@ function summarize_ecotox_endpoints(df::DataFrame; cas::AbstractString)
 
     # Keep only required columns and add normalized versions
     df_clean = DataFrame()
-    df_clean.cas = fill(strip(cas), nrow(df))
     df_clean.taxon_class = [ismissing(x) ? missing : strip(string(x)) for x in df[!, taxon_col]]
     df_clean.effect_code = [ismissing(x) ? missing : uppercase(strip(string(x))) for x in df[!, :effect]]
     df_clean.endpoint_type = [ismissing(x) ? missing : uppercase(strip(string(x))) for x in df[!, :endpoint]]
@@ -86,6 +118,8 @@ function summarize_ecotox_endpoints(df::DataFrame; cas::AbstractString)
     if nrow(df_filtered) == 0
         return DataFrame(
             cas = String[],
+            cas_norm = String[],
+            cas_hyphenated = String[],
             taxon_class = String[],
             effect_code = String[],
             NOEC_median = Union{Missing, Float64}[],
@@ -110,13 +144,17 @@ function summarize_ecotox_endpoints(df::DataFrame; cas::AbstractString)
     end
 
     if nrow(summary_df) > 0
-        summary_df.cas = fill(strip(cas), nrow(summary_df))
+        summary_df.cas = fill(cas_norm, nrow(summary_df))
+        summary_df.cas_norm = fill(cas_norm, nrow(summary_df))
+        summary_df.cas_hyphenated = fill(cas_hyphenated, nrow(summary_df))
     else
         summary_df.cas = String[]
+        summary_df.cas_norm = String[]
+        summary_df.cas_hyphenated = String[]
     end
 
     # Reorder columns to match schema
-    select!(summary_df, :cas, :taxon_class, :effect_code, :NOEC_median, :EC50_median, :n_NOEC, :n_EC50)
+    select!(summary_df, :cas, :cas_norm, :cas_hyphenated, :taxon_class, :effect_code, :NOEC_median, :EC50_median, :n_NOEC, :n_EC50)
 
     return summary_df
 end
@@ -160,6 +198,73 @@ function build_ecotox_toxicity_library(
     end
 
     return summary_df
+end
+
+function build_ecotox_toxicity_library_multi(
+    results_path::String,
+    tests_path::String,
+    species_path::String,
+    target_cas_list::AbstractVector{<:AbstractString};
+    output_path::Union{Nothing, AbstractString}=nothing,
+    skip_empty::Bool=true
+)
+    if isempty(target_cas_list)
+        throw(ArgumentError("target_cas_list cannot be empty"))
+    end
+
+    # Deduplicate CAS based on normalized values, preserving first-seen order
+    seen = Set{String}()
+    deduped_cas_list = String[]
+    for cas in target_cas_list
+        norm = normalize_cas(cas)
+        if norm == ""
+            throw(ArgumentError("Invalid or empty CAS provided: '$cas'"))
+        end
+        if !(norm in seen)
+            push!(seen, norm)
+            push!(deduped_cas_list, cas)
+        end
+    end
+
+    summaries = DataFrame[]
+
+    for cas in deduped_cas_list
+        df = parse_ecotox_data(results_path, tests_path, species_path, cas)
+        if nrow(df) == 0
+            if skip_empty
+                @warn "No valid ECOTOX records found for CAS '$cas'. Skipping."
+                continue
+            else
+                @warn "No valid ECOTOX records found for CAS '$cas'. Including empty summary."
+            end
+        end
+
+        summary_df = summarize_ecotox_endpoints(df; cas=cas)
+        push!(summaries, summary_df)
+    end
+
+    if isempty(summaries)
+        # Create an empty DataFrame with the correct schema
+        combined_df = DataFrame(
+            cas = String[],
+            cas_norm = String[],
+            cas_hyphenated = String[],
+            taxon_class = String[],
+            effect_code = String[],
+            NOEC_median = Union{Missing, Float64}[],
+            EC50_median = Union{Missing, Float64}[],
+            n_NOEC = Int[],
+            n_EC50 = Int[]
+        )
+    else
+        combined_df = vcat(summaries...; cols=:union)
+    end
+
+    if output_path !== nothing
+        write_ecotox_library_json(combined_df, output_path)
+    end
+
+    return combined_df
 end
 
 end
