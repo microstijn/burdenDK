@@ -1,0 +1,736 @@
+\begin{filecontents*}{twotimescales_refs.bib}
+	@book{canguilhem1991normal,
+		author    = {Canguilhem, Georges},
+		title     = {The Normal and the Pathological},
+		translator= {Fawcett, Carolyn R. and Cohen, Robert S.},
+		publisher = {Zone Books},
+		address   = {New York},
+		year      = {1991}
+	}
+	
+	@book{canguilhem2008knowledge,
+		author    = {Canguilhem, Georges},
+		title     = {Knowledge of Life},
+		editor    = {Marrati, Paola and Meyers, Todd},
+		translator= {Geroulanos, Stefanos and Ginsburg, Daniela},
+		publisher = {Fordham University Press},
+		address   = {New York},
+		year      = {2008}
+	}
+	
+	@incollection{sholl2020plastic,
+		author    = {Sholl, Jonathan},
+		title     = {Plastic, Variable, and Constructive: Renewing Canguilhem's Biological Normativity},
+		booktitle = {Vital Norms: Canguilhem's The Normal and the Pathological in the Twenty-First Century},
+		editor    = {M{\'e}thot, Pierre-Olivier},
+		publisher = {Springer},
+		address   = {Cham},
+		year      = {2020},
+		pages     = {255--291}
+	}
+	
+	@article{engel1977newmodel,
+		author  = {Engel, George L.},
+		title   = {The Need for a New Medical Model: A Challenge for Biomedicine},
+		journal = {Science},
+		volume  = {196},
+		number  = {4286},
+		pages   = {129--136},
+		year    = {1977},
+		doi     = {10.1126/science.847460}
+	}
+	
+	@book{kooijman2010deb,
+		author    = {Kooijman, Sebastiaan A. L. M.},
+		title     = {Dynamic Energy Budget Theory for Metabolic Organisation},
+		edition   = {3},
+		publisher = {Cambridge University Press},
+		address   = {Cambridge},
+		year      = {2010},
+		doi       = {10.1017/CBO9780511805400}
+	}
+	
+	@article{marques2018amp,
+		author  = {Marques, Gon{\c{c}}alo M. and Augustine, Starrlight and Lika, Konstadia and Pecquerie, Laure and Domingos, Tiago and Kooijman, Sebastiaan A. L. M.},
+		title   = {The AmP Project: Comparing Species on the Basis of Dynamic Energy Budget Parameters},
+		journal = {PLOS Computational Biology},
+		volume  = {14},
+		number  = {5},
+		pages   = {e1006100},
+		year    = {2018},
+		doi     = {10.1371/journal.pcbi.1006100}
+	}
+	
+	@article{olker2022ecotox,
+		author  = {Olker, Jennifer H. and Elonen, Colleen M. and Pilli, Anne and Anderson, Arne and Kinziger, Brian and Erickson, Stephen and Skopinski, Michael and Pomplun, Anita and LaLone, Carlie A. and Russom, Christine L. and Hoff, Daniel J.},
+		title   = {The ECOTOXicology Knowledgebase: A Curated Database of Ecologically Relevant Toxicity Tests to Support Environmental Research and Risk Assessment},
+		journal = {Environmental Toxicology and Chemistry},
+		volume  = {41},
+		number  = {6},
+		pages   = {1520--1539},
+		year    = {2022},
+		doi     = {10.1002/etc.5324}
+	}
+	
+	@manual{epa2026ecotox,
+		author       = {{U.S. Environmental Protection Agency}},
+		title        = {Ecotoxicology (ECOTOX) Knowledgebase Resource Hub},
+		organization = {U.S. Environmental Protection Agency},
+		year         = {2026},
+		url          = {https://www.epa.gov/comptox-tools/ecotoxicology-ecotox-knowledgebase-resource-hub}
+	}
+	
+	@article{ward2018nitrate,
+		author  = {Ward, Mary H. and Jones, Rena R. and Brender, Jean D. and de Kok, Theo M. and Weyer, Peter J. and Nolan, Bernard T. and Villanueva, Cristina M. and van Breda, Simone G.},
+		title   = {Drinking Water Nitrate and Human Health: An Updated Review},
+		journal = {International Journal of Environmental Research and Public Health},
+		volume  = {15},
+		number  = {7},
+		pages   = {1557},
+		year    = {2018},
+		doi     = {10.3390/ijerph15071557}
+	}
+	
+	@article{hosseini2021nitrate,
+		author  = {Hosseini, Fatemeh and Majdi, Maryam and Naghshi, Sina and Sheikhhossein, Fatemeh and Djafarian, Kurosh and Shab-Bidar, Sakineh},
+		title   = {Nitrate-nitrite Exposure through Drinking Water and Diet and Risk of Colorectal Cancer: A Systematic Review and Meta-analysis of Observational Studies},
+		journal = {Clinical Nutrition},
+		volume  = {40},
+		number  = {5},
+		pages   = {3073--3081},
+		year    = {2021},
+		doi     = {10.1016/j.clnu.2020.11.010}
+	}
+	
+	@manual{who2022gdwq,
+		author       = {{World Health Organization}},
+		title        = {Guidelines for Drinking-water Quality: Fourth Edition Incorporating the First and Second Addenda},
+		organization = {World Health Organization},
+		address      = {Geneva},
+		year         = {2022},
+		url          = {https://www.who.int/publications/i/item/9789240045064}
+	}
+	
+	@manual{who2022nitrate,
+		author       = {{World Health Organization}},
+		title        = {Chemical Fact Sheets: Nitrate/Nitrite},
+		organization = {World Health Organization},
+		address      = {Geneva},
+		year         = {2022},
+		url          = {https://www.who.int/publications/m/item/chemical-fact-sheets--nitrate-nitrite}
+	}
+	
+	@manual{epa2026npdwr,
+		author       = {{U.S. Environmental Protection Agency}},
+		title        = {National Primary Drinking Water Regulations},
+		organization = {U.S. Environmental Protection Agency},
+		year         = {2026},
+		url          = {https://www.epa.gov/ground-water-and-drinking-water/national-primary-drinking-water-regulations}
+	}
+	
+	@manual{epa2003cumulative,
+		author       = {{U.S. Environmental Protection Agency}},
+		title        = {Framework for Cumulative Risk Assessment},
+		organization = {U.S. Environmental Protection Agency},
+		number       = {EPA/600/P-02/001F},
+		address      = {Washington, DC},
+		year         = {2003},
+		url          = {https://www.epa.gov/risk/framework-cumulative-risk-assessment}
+	}
+	
+	@manual{epa2025cumulative,
+		author       = {{U.S. Environmental Protection Agency}},
+		title        = {Guidelines for Cumulative Risk Assessment Planning and Problem Formulation},
+		organization = {U.S. Environmental Protection Agency, Risk Assessment Forum},
+		number       = {EPA/100/B-24/001},
+		address      = {Washington, DC},
+		year         = {2025},
+		url          = {https://www.epa.gov/system/files/documents/2025-01/guidelines-for-cumulative-risk-assessment-planning-and-problem-formulation_0.pdf}
+	}
+	
+	@article{sexton2012cumulative,
+		author  = {Sexton, Ken},
+		title   = {Cumulative Risk Assessment: An Overview of Methodological Approaches for Evaluating Combined Health Effects from Exposure to Multiple Environmental Stressors},
+		journal = {International Journal of Environmental Research and Public Health},
+		volume  = {9},
+		number  = {2},
+		pages   = {370--390},
+		year    = {2012},
+		doi     = {10.3390/ijerph9020370}
+	}
+	
+	@article{mchale2018multiple,
+		author  = {McHale, Cliona M. and Osborne, Gwendolyn and Morello-Frosch, Rachel and Salmon, Andrew G. and Sandy, Martha S. and Solomon, Gina and Zhang, Luoping and Smith, Martyn T. and Zeise, Lauren},
+		title   = {Assessing Health Risks from Multiple Environmental Stressors: Moving from G x E to I x E},
+		journal = {Mutation Research/Reviews in Mutation Research},
+		volume  = {775},
+		pages   = {11--20},
+		year    = {2018},
+		doi     = {10.1016/j.mrrev.2017.11.003}
+	}
+	
+	@article{carlin2024mixtures,
+		author  = {Carlin, Danielle J. and Rider, Cynthia V.},
+		title   = {Combined Exposures and Mixtures Research: An Enduring NIEHS Priority},
+		journal = {Environmental Health Perspectives},
+		volume  = {132},
+		number  = {7},
+		pages   = {075001},
+		year    = {2024},
+		doi     = {10.1289/EHP14340}
+	}
+	
+	@article{bopp2019mixtures,
+		author  = {Bopp, Stephanie K. and Kienzler, Aude and Richarz, Andrea-Nicole and van der Linden, Sander C. and Paini, Alicia and Parissis, Nikolaos and Worth, Andrew P.},
+		title   = {Regulatory Assessment and Risk Management of Chemical Mixtures: Challenges and Ways Forward},
+		journal = {Critical Reviews in Toxicology},
+		volume  = {49},
+		number  = {2},
+		pages   = {174--189},
+		year    = {2019},
+		doi     = {10.1080/10408444.2019.1579169}
+	}
+	
+	@techreport{kienzler2017mixtures,
+		author      = {Kienzler, Aude and Berggren, Elisabet and Bessems, Jos and Bopp, Stephanie and van der Linden, Sander and Worth, Andrew},
+		title       = {Assessment of Mixtures: Review of Regulatory Requirements and Guidance},
+		institution = {European Commission Joint Research Centre},
+		number      = {EUR 26675 EN},
+		year        = {2017},
+		doi         = {10.2788/138523}
+	}
+	
+	@article{stoiber2019drinking,
+		author  = {Stoiber, Tasha and Temkin, Alexis and Andrews, David and Campbell, Chris and Naidenko, Olga V.},
+		title   = {Applying a Cumulative Risk Framework to Drinking Water Assessment: A Commentary},
+		journal = {Environmental Health},
+		volume  = {18},
+		pages   = {37},
+		year    = {2019},
+		doi     = {10.1186/s12940-019-0475-5}
+	}
+	
+	@manual{who2016qmra,
+		author       = {{World Health Organization}},
+		title        = {Quantitative Microbial Risk Assessment: Application for Water Safety Management},
+		organization = {World Health Organization},
+		address      = {Geneva},
+		year         = {2016},
+		url          = {https://www.who.int/publications/i/item/9789241565370}
+	}
+	
+	@manual{healthcanada2019qmra,
+		author       = {{Health Canada}},
+		title        = {Guidance on the Use of Quantitative Microbial Risk Assessment in Drinking Water},
+		organization = {Health Canada},
+		year         = {2019},
+		url          = {https://www.canada.ca/en/health-canada/services/environmental-workplace-health/reports-publications/water-quality/guidance-qmra-drinking-water.html}
+	}
+	
+	@manual{who2023wsp,
+		author       = {{World Health Organization}},
+		title        = {Water Safety Plan Manual: Step-by-Step Risk Management for Drinking-water Suppliers, Second Edition},
+		organization = {World Health Organization},
+		address      = {Geneva},
+		year         = {2023},
+		url          = {https://www.who.int/publications/i/item/9789240067691}
+	}
+	
+	@article{jager2014deb,
+		author  = {Jager, Tjalling and Barsi, Alpar and Hamda, Natnael T. and Martin, Benjamin T. and Zimmer, Elke I. and Ducrot, Virginie},
+		title   = {Dynamic Energy Budgets in Population Ecotoxicology: Applications and Outlook},
+		journal = {Ecological Modelling},
+		volume  = {280},
+		pages   = {140--147},
+		year    = {2014},
+		doi     = {10.1016/j.ecolmodel.2013.06.024}
+	}
+	
+	@article{murphy2018aopdeb,
+		author  = {Murphy, Cheryl A. and Nisbet, Roger M. and Antczak, Philipp and Garcia-Reyero, Nat{\`a}lia and Gergs, Andre and Lika, Konstadia and Mathews, Teresa and Muller, Erik B. and Nacci, Diane and Peace, Angela and Remien, Christopher H. and Schultz, Irvin R. and Watanabe, Karen H.},
+		title   = {Incorporating Sub-organismal Processes into Dynamic Energy Budget Models for Ecological Risk Assessment},
+		journal = {Integrated Environmental Assessment and Management},
+		volume  = {14},
+		number  = {5},
+		pages   = {615--624},
+		year    = {2018},
+		doi     = {10.1002/ieam.4063}
+	}
+	
+	@article{efsa2018tktd,
+		author  = {{EFSA Panel on Plant Protection Products and their Residues}},
+		title   = {Scientific Opinion on the State of the Art of Toxicokinetic/Toxicodynamic Effect Models for Regulatory Risk Assessment of Pesticides for Aquatic Organisms},
+		journal = {EFSA Journal},
+		volume  = {16},
+		number  = {8},
+		pages   = {e05377},
+		year    = {2018},
+		doi     = {10.2903/j.efsa.2018.5377}
+	}
+	
+	@article{romoli2024energy,
+		author  = {Romoli, Carlo and Jager, Tjalling and Trijau, Marie and Goussen, Benoit and Gergs, Andr{\`e}},
+		title   = {Environmental Risk Assessment with Energy Budget Models: A Comparison Between Two Models of Different Complexity},
+		journal = {Environmental Toxicology and Chemistry},
+		volume  = {43},
+		number  = {2},
+		pages   = {440--449},
+		year    = {2024},
+		doi     = {10.1002/etc.5795}
+	}
+	
+	@article{rapport1998ecosystem,
+		author  = {Rapport, David J. and Costanza, Robert and McMichael, Anthony J.},
+		title   = {Assessing Ecosystem Health},
+		journal = {Trends in Ecology \& Evolution},
+		volume  = {13},
+		number  = {10},
+		pages   = {397--402},
+		year    = {1998},
+		doi     = {10.1016/S0169-5347(98)01449-9}
+	}
+	
+	@article{hyman2024ccva,
+		author  = {Hyman, Amanda A. and Crone, Erin R. and Benson, Abigail and Dunham, Jason and Lynch, Abigail J. and Thompson, Laura and Mims, Meryl C.},
+		title   = {Exposure, Sensitivity, or Adaptive Capacity? Reviewing Assessments that Use Only Two of Three Elements of Climate Change Vulnerability},
+		journal = {Conservation Science and Practice},
+		year    = {2024},
+		doi     = {10.1111/csp2.13293}
+	}
+	
+	@article{scheffer2009early,
+		author  = {Scheffer, Marten and Bascompte, Jordi and Brock, William A. and Brovkin, Victor and Carpenter, Stephen R. and Dakos, Vasilis and Held, Hermann and van Nes, Egbert H. and Rietkerk, Max and Sugihara, George},
+		title   = {Early-warning Signals for Critical Transitions},
+		journal = {Nature},
+		volume  = {461},
+		pages   = {53--59},
+		year    = {2009},
+		doi     = {10.1038/nature08227}
+	}
+	
+	@article{dakos2024tipping,
+		author  = {Dakos, Vasilis and Boulton, Chris A. and Buxton, Joshua E. and Abrams, Jesse F. and Arellano-Nava, Beatriz and Armstrong McKay, David I. and others},
+		title   = {Tipping Point Detection and Early Warnings in Climate, Ecological, and Human Systems},
+		journal = {Earth System Dynamics},
+		volume  = {15},
+		pages   = {1117--1135},
+		year    = {2024},
+		doi     = {10.5194/esd-15-1117-2024}
+	}
+	
+	@article{fox2021ssd,
+		author  = {Fox, D. R. and van Dam, R. A. and Fisher, R. and Batley, G. E. and Tillmanns, A. R. and Thorley, J. and Schwarz, C. J. and Spry, D. J. and McTavish, K.},
+		title   = {Recent Developments in Species Sensitivity Distribution Modeling},
+		journal = {Environmental Toxicology and Chemistry},
+		volume  = {40},
+		number  = {2},
+		pages   = {293--308},
+		year    = {2021},
+		doi     = {10.1002/etc.4925}
+	}
+	
+	@article{huang2024pbpk,
+		author  = {Huang, He and Zhao, Wenjing and Qin, Ning and Duan, Xiaoli},
+		title   = {Recent Progress on Physiologically Based Pharmacokinetic (PBPK) Model: A Review Based on Bibliometrics},
+		journal = {Toxics},
+		volume  = {12},
+		number  = {6},
+		pages   = {433},
+		year    = {2024},
+		doi     = {10.3390/toxics12060433}
+	}
+	
+	@article{arnesen1999daly,
+		author  = {Arnesen, Trude and Nord, Erik},
+		title   = {The Value of DALY Life: Problems with Ethics and Validity of Disability Adjusted Life Years},
+		journal = {BMJ},
+		volume  = {319},
+		number  = {7222},
+		pages   = {1423--1425},
+		year    = {1999},
+		doi     = {10.1136/bmj.319.7222.1423}
+	}
+	
+	@article{solberg2020daly,
+		author  = {Solberg, Carl Tollef and S{\o}rheim, Preben and M{\"u}ller, Karl Erik and Gamlund, Espen and Norheim, Ole Frithjof and Barra, Mathias},
+		title   = {The Devils in the DALY: Prevailing Evaluative Assumptions},
+		journal = {Public Health Ethics},
+		volume  = {13},
+		number  = {3},
+		pages   = {259--274},
+		year    = {2020},
+		doi     = {10.1093/phe/phaa030}
+	}
+	
+	@incollection{mathers2006burden,
+		author    = {Mathers, Colin D. and Lopez, Alan D. and Murray, Christopher J. L.},
+		title     = {The Burden of Disease and Mortality by Condition: Data, Methods, and Results for 2001},
+		booktitle = {Global Burden of Disease and Risk Factors},
+		editor    = {Lopez, Alan D. and Mathers, Colin D. and Ezzati, Majid and Jamison, Dean T. and Murray, Christopher J. L.},
+		publisher = {World Bank and Oxford University Press},
+		address   = {Washington, DC},
+		year      = {2006}
+	}
+	
+	@book{hui2019recursivity,
+		author    = {Hui, Yuk},
+		title     = {Recursivity and Contingency},
+		publisher = {Rowman \& Littlefield International},
+		address   = {London},
+		year      = {2019}
+	}
+	
+	@article{dupre2015process,
+		author  = {Dupr{\'e}, John},
+		title   = {A Process Ontology for Biology},
+		journal = {Physiology News},
+		volume  = {100},
+		pages   = {33--35},
+		year    = {2015},
+		doi     = {10.36866/pn.100.33}
+	}
+\end{filecontents*}
+
+\documentclass[11pt]{article}
+\usepackage[margin=1in]{geometry}
+\usepackage{amsmath,amssymb,bm}
+\usepackage{natbib}
+\usepackage{hyperref}
+\usepackage{booktabs}
+\usepackage{microtype}
+
+\title{Two-Timescale Resilience and Adaptive Margin in Water--Health Assessment}
+\author{Draft for discussion}
+\date{\today}
+
+\begin{document}
+	\maketitle
+	
+	\section{Introduction}
+	
+	Water-quality regulation has been most successful where harmful exposure can be linked to a well-characterised endpoint. Nitrate is a paradigmatic example. Drinking-water limits for nitrate and nitrite were historically justified by the prevention of infant methaemoglobinaemia: nitrate can be reduced to nitrite, nitrite can oxidise ferrous iron in haemoglobin, and the resulting methaemoglobin impairs oxygen transport. Contemporary regulatory values---for example the United States maximum contaminant level of 10 mg/L nitrate-nitrogen and the World Health Organization guideline value of 50 mg/L nitrate---retain this acute protective logic \citep{epa2026npdwr,who2022nitrate,who2022gdwq}. This logic should not be dismissed. It has made environmental hazards administratively visible, legally enforceable, and practically manageable.
+	
+	The limitation is that the same success has encouraged a particular evidentiary form: a contaminant-specific threshold tied to a discrete adverse endpoint. Such reasoning is powerful when a causal chain is short, acute, and mechanistically well isolated. It becomes less adequate when water-mediated risk is chronic, cumulative, multi-stressor, spatially heterogeneous, or expressed as a gradual erosion of the target organism's capacity to respond before a diagnosable disease state appears. This difficulty is widely recognised. Cumulative risk assessment was explicitly developed to move beyond single-stressor analysis \citep{epa2003cumulative,sexton2012cumulative}; recent cumulative-impact work further includes chemical and nonchemical stressors, life-course exposure, vulnerable communities, and environmental justice concerns \citep{epa2025cumulative,mchale2018multiple}. Mixtures research likewise emphasises that real-world exposures involve combinations of chemicals and nonchemical conditions that cannot be exhaustively tested one combination at a time \citep{carlin2024mixtures,bopp2019mixtures,kienzler2017mixtures}. The challenge, therefore, is not simply to proclaim that water--health systems are complex. It is to develop tractable ways of representing what chronic complexity does to future vulnerability.
+	
+	This paper proposes such a representation. We introduce \emph{TwoTimescaleResilience}, a species-aware spatial modelling framework that treats vulnerability as the amplification of acute burden caused by chronic depletion of adaptive capacity. The framework separates two processes that are often conflated. On a slow timescale, background environmental stressors alter the state of a specified biological target by depleting an adaptive margin. On a fast timescale, acute perturbations occur against this already-conditioned background. The same pulse can therefore produce different burdens depending on the prior state of the target system. The object of interest is not only whether a contaminant exceeds a limit, but whether long-term environmental conditions have weakened the restoring force with which a target organism, population, life stage, or regulatory receptor meets future perturbations.
+	
+	The applied implementation is built around a defence--attack distinction. The defence side is species-specific physiological capacity: baseline adaptive margin, axis-specific depletion sensitivities, and bounds on restoring force. In our implementation, these quantities are informed by Dynamic Energy Budget (DEB) theory and by Add-my-Pet (AmP) records, which provide species-level DEB models, parameters, and underlying life-history data \citep{kooijman2010deb,marques2018amp}. The attack side is stressor-specific pressure: no-effect and effect concentrations, endpoint categories, taxonomic groupings, and effect evidence. This layer is informed by curated ecotoxicological sources, especially the EPA ECOTOX Knowledgebase, which compiles single-chemical toxicity test results across aquatic and terrestrial species from the scientific literature \citep{olker2022ecotox,epa2026ecotox}. TwoTimescaleResilience therefore does not map environmental layers directly to risk. It first translates environmental variables into effective exposure, then into biological modes of action, then into four DEB-informed physiological axes---assimilation, maintenance, growth, and reproduction---before integrating them into adaptive margin, restoring force, and acute-burden amplification.
+	
+	This applied structure is central to the contribution of the paper. The framework is not merely a conceptual account of resilience; it is intended as a parameterisable spatial pipeline. Water-quality variables such as temperature, biological oxygen demand, total dissolved solids, faecal contamination, nutrients, and chemical pollutants can be routed through exposure filters and mode-of-action mappings into physiological-axis burdens. For example, temperature may contribute to thermal burden, biological oxygen demand to oxygen stress, total dissolved solids to osmotic stress, faecal contamination to immune or pathogen-related burden, nutrients to eutrophication-related stress, and chemical pollutants to toxic burden. These modes are then mapped onto DEB axes, so that the final vulnerability estimate is not a generic hazard index but a target-specific estimate of lost physiological response capacity.
+	
+	The modelling unit in this paper is deliberately conventional: the named biological target used in empirical parameterisation, such as a species, population, life stage, or regulatory receptor. Thus, when the framework is parameterised for \emph{Homo sapiens}, \emph{Daphnia magna}, a fish species, or any other taxon, it does not explicitly model a host--symbiont assemblage or any alternative theory of biological individuality. Such relations may be implicit in empirical data used to estimate response, tolerance, or energetic parameters, but they are not the explicit object of the present model. This focus is important: TwoTimescaleResilience is a framework for background-conditioned physiological vulnerability, not a theory of what the biological individual ultimately is.
+	
+	The conceptual motivation comes from a tradition that understands health as a capacity rather than a fixed state. Engel's critique of the reductionist biomedical model remains relevant because a purely biomedical model tends to define disease as deviation in measurable somatic variables and to bracket wider environmental, social, and behavioural relations \citep{engel1977newmodel}. Canguilhem's account of biological normativity gives this critique a specifically biological form. For Canguilhem, health is not mere conformity to a statistical norm; it is the capacity of a living being to establish and re-establish norms in relation to a changing milieu \citep{canguilhem1991normal,canguilhem2008knowledge}. Disease is not simply quantitative deviation from a normal value; it is a qualitative contraction of the range of viable relations that the organism can maintain with its milieu. Sholl's reconstruction of Canguilhem clarifies the contemporary relevance of this point: biological normativity concerns plasticity, variability, and organism--milieu co-construction rather than static normal constants \citep{sholl2020plastic}. In the terms of this paper, adaptive margin is a modelled proxy for one dimension of health: the remaining latitude to tolerate, absorb, and recover from perturbation.
+	
+	This position is not anti-analytic. Scientific models must decompose. They must identify variables, stressors, pathways, parameters, and scales. The problem is not decomposition as such, but the failure to reconstitute the biological meaning of the parts in relation to the whole. Canguilhem himself was explicit that isolating parts is legitimate ``for the sake of ease in experimental analysis'' but not as a reason to conceive the organism as merely a separable sum of parts \citep{canguilhem2008knowledge}. Our framework is therefore analytically decompositional but biologically synthetic. It decomposes exposure into stressor-specific components, mode-of-action mappings, and physiological axes; but it interprets those components through their contribution to a system-level adaptive margin and the consequent amplification of future burden.
+	
+	Mathematically, the framework begins with a vector of raw environmental stressors. Let $g$ denote a spatial unit, $t$ a slow background time index, and $q$ a species, population, life stage, or target biological profile. Let
+	\begin{equation}
+		\mathbf{R}_{g,t} = (R_{1,g,t},\ldots,R_{J,g,t})^\top
+	\end{equation}
+	be a vector of environmental stressors, such as chemical concentrations, temperature, oxygen stress, salinity, faecal contamination, nutrient status, or other water-quality variables. A target-specific exposure filter maps raw environmental variables into effective exposures,
+	\begin{equation}
+		\mathbf{e}^{(q)}_{g,t} = \mathbf{H}^{(q)}\mathbf{R}_{g,t},
+	\end{equation}
+	where $\mathbf{H}^{(q)}$ encodes habitat use, contact, uptake, physiology, behaviour, or other exposure modifiers. Effective exposure is mapped into biological modes of action,
+	\begin{equation}
+		\mathbf{m}^{(q)}_{g,t} = \mathbf{U}^{(q)}\mathbf{e}^{(q)}_{g,t},
+	\end{equation}
+	and from modes of action into DEB-informed physiological axes,
+	\begin{equation}
+		\mathbf{s}^{(q)}_{g,t} = \mathbf{W}^{(q)}\mathbf{m}^{(q)}_{g,t},
+	\end{equation}
+	where the entries of $\mathbf{s}$ can be interpreted as burdens on assimilation, maintenance, growth, and reproduction. This architecture is consistent with the role of DEB theory in ecotoxicology: DEB models provide a mechanistic individual-level platform for linking stressor effects to life-history processes and to higher levels of biological organisation \citep{jager2014deb,romoli2024energy}. It also parallels calls to connect adverse outcome pathways and DEB models: AOPs offer bottom-up mechanistic information, whereas DEB models offer an integrative route from suborganismal effects to organismal and population consequences \citep{murphy2018aopdeb}.
+	
+	For empirical chemical stressors, ECOTOX-style effect summaries can be used to define a first-pass active burden. For contaminant $j$, a simple scaled burden can be written as
+	\begin{equation}
+		x_j = \max\left(0,\frac{C_j - NOEC_j}{EC50_j - NOEC_j}\right),
+		\label{eq:ecotox_scaling}
+	\end{equation}
+	where $C_j$ is the ambient or effective concentration, $NOEC_j$ is a taxon- and endpoint-relevant no-observed-effect concentration, and $EC50_j$ is a corresponding median effect concentration. Other forms may be preferable when the available endpoint is an LC50, LOEC, benchmark dose, or full concentration--response curve. Equation~\eqref{eq:ecotox_scaling} should therefore be read as a transparent first-pass scaling rule, not as a universal toxicological law. The key point is that ECOTOX-derived effect evidence can be routed into DEB-axis burden through effect-code and mode-of-action mappings, while AmP-derived DEB parameters define the target's physiological capacity to absorb such burden.
+	
+	The central state variable is adaptive margin. For a target profile $q$, define
+	\begin{equation}
+		A^{(q)}_{g,t}
+		= A^{(q)}_0 + \omega_Z Z^{(q)}_{g,t} - \bm{\alpha}^{(q)}\cdot \mathbf{s}^{(q)}_{g,t},
+		\label{eq:A}
+	\end{equation}
+	where $A^{(q)}_0$ is the baseline margin, $Z$ is an optional condition or reserve buffer, $\omega_Z$ scales the contribution of that buffer, and $\bm{\alpha}^{(q)}$ weights the depletion associated with physiological-axis burden. In the applied implementation, $A_0^{(q)}$ and the axis-specific sensitivity vector $\bm{\alpha}^{(q)}$ are interpreted as defence-side parameters: they express how much physiological margin the target has and how strongly burdens on assimilation, maintenance, growth, and reproduction erode that margin. Equation~\eqref{eq:A} is not a claim that health literally equals a scalar. It defines a tractable index of remaining response capacity. It says that chronic background stress matters because it changes the system that will encounter future events. This is the first timescale.
+	
+	The second timescale concerns response to an acute perturbation. We assume that adaptive margin determines a restoring force $\lambda$. A simple bounded form is
+	\begin{equation}
+		\lambda(A) = \lambda_{\min} + (\lambda_{\max}-\lambda_{\min})\frac{A_+}{K_A + A_+},
+		\qquad A_+ = \max(A,0),
+		\label{eq:lambda}
+	\end{equation}
+	where $\lambda_{\min}$ and $\lambda_{\max}$ define lower and upper recovery bounds and $K_A$ is a half-saturation constant. In the applied implementation, these parameters are again defence-side quantities: they describe how remaining adaptive margin is converted into recovery capacity. Equation~\eqref{eq:lambda} formalises the intuitive claim that a system with greater adaptive margin has more capacity to dampen perturbation, while a depleted system recovers slowly or remains trapped in a fragile regime. This formulation also makes explicit the relation between engineering and ecological senses of resilience. The parameter $\lambda$ resembles engineering resilience, a return-rate after perturbation, but its dependence on $A$ links recovery to ecological vulnerability: the system may lose the margin needed to absorb further disturbance before crossing into a qualitatively narrower mode of functioning \citep{rapport1998ecosystem,scheffer2009early}.
+	
+	Let $C(\tau)$ be an acute event profile on the fast time variable $\tau$, and let $y(\tau)$ denote the displacement or burden induced by that event. For a fixed background state $A_{g,t}^{(q)}$, consider
+	\begin{equation}
+		\frac{dy}{d\tau} = -\lambda(A^{(q)}_{g,t})y + \beta C(\tau),
+		\qquad y(0)=0,
+		\label{eq:pulse}
+	\end{equation}
+	where $\beta$ maps event intensity to burden. Integrating Equation~\eqref{eq:pulse} over time and using Fubini's theorem gives
+	\begin{equation}
+		\int_0^\infty y(\tau)\,d\tau
+		= \frac{\beta}{\lambda(A^{(q)}_{g,t})}
+		\int_0^\infty C(\tau)\,d\tau,
+		\label{eq:auc}
+	\end{equation}
+	provided $C$ is integrable and $\lambda>0$. Thus, for identical acute event cost, the integrated displacement burden is inversely proportional to the background-conditioned restoring force. This yields the amplification factor
+	\begin{equation}
+		F^{(q)}_{g,t}=\frac{\lambda(A^{(q)}_0)}{\lambda(A^{(q)}_{g,t})}.
+		\label{eq:F}
+	\end{equation}
+	When $F=1$, background conditions do not amplify the event relative to baseline. When $F>1$, chronic background stress has made the same event more burdensome. The model therefore quantifies a form of upstream vulnerability: not the realised disease burden itself, but the degree to which future burdens are enlarged by prior loss of adaptive margin.
+	
+	This formulation is adjacent to, but mathematically distinct from, several established modelling traditions. Cumulative risk assessment aggregates stressor-specific risks or hazard quotients; drinking-water cumulative toxicity scores combine co-occurring contaminants into a sample-level toxicity index; QMRA maps microbial dose into probabilities of infection, illness, and sometimes DALY burden; PBPK/PBTK models translate external exposure into internal dose; TKTD, GUTS, and DEBtox models simulate time-dependent damage, survival, growth, or reproduction; AOP--DEB models connect mechanistic key events to energy-budget parameters; species sensitivity distributions infer protective concentrations from interspecies toxicity distributions; climate-vulnerability frameworks combine exposure, sensitivity, and adaptive capacity into an index; and early-warning approaches infer resilience loss from time-series statistics such as autocorrelation, variance, and recovery slowdown \citep{sexton2012cumulative,stoiber2019drinking,who2016qmra,huang2024pbpk,efsa2018tktd,murphy2018aopdeb,fox2021ssd,hyman2024ccva,dakos2024tipping}. TwoTimescaleResilience does not replace these approaches. Its narrower contribution is to formalise how chronic background burden changes the restoring force available during later acute perturbations, yielding an amplification factor for identical event exposure. The distinctive mathematical step is not merely $\mathbf{R}\mapsto\mathbf{s}$, because exposure--effect and energy-budget mappings already have precedents. The distinctive step is
+	\begin{equation}
+		\mathbf{s}\mapsto A\mapsto\lambda(A)\mapsto F,
+		\qquad
+		\mathrm{AUC}_y(A)=\frac{\beta}{\lambda(A)}\mathrm{AUC}_C.
+	\end{equation}
+	
+	The applied novelty follows from the same distinction. AmP-derived DEB parameters describe the target's physiological defence; ECOTOX-derived effect summaries describe stressor attack; spatial water-quality layers describe where and when attack occurs. Their combination yields maps of adaptive margin, restoring force, and amplification. The same environmental field can therefore produce different vulnerability maps for different taxa or life stages because each target can have different exposure filters, DEB-axis sensitivities, and restoring-force parameters. This is the practical reason for distinguishing hazard, burden, margin, recovery, and amplification rather than collapsing them into a single risk score.
+	
+	This distinction is important for environmental health metrics. Disability-adjusted life years (DALYs) remain central to global burden-of-disease assessment because they combine years of life lost and years lived with disability into a common comparative measure \citep{mathers2006burden}. Yet DALYs are downstream metrics of realised health loss. They also embed evaluative choices about disability, health states, and aggregation, a point emphasised in long-standing ethical and methodological critiques \citep{arnesen1999daly,solberg2020daly}. The aim of TwoTimescaleResilience is not to replace DALYs or other burden metrics. It is to model a different temporal layer. DALYs report the crash; adaptive-margin amplification reports the drift that makes the crash more likely, more severe, or more difficult to recover from.
+	
+	The nitrate case illustrates the need for this distinction without requiring us to claim that existing standards are simply wrong. The regulatory limit for nitrate was designed around infant methaemoglobinaemia, while subsequent epidemiological research has examined additional outcomes including colorectal cancer, thyroid disease, and neural tube defects \citep{ward2018nitrate}. Evidence for chronic outcomes is heterogeneous and, in some cases, contested. For example, a meta-analysis found dietary nitrate associated with colorectal cancer risk but did not find a statistically significant association for nitrate in drinking water alone \citep{hosseini2021nitrate}. This mixed evidence strengthens rather than weakens the modelling problem. Nitrate is not merely a toxicant with one endpoint; it is also part of nitrogen metabolism, diet, endogenous nitrosation, and physiological signalling. Its health significance depends on dose, context, co-exposures, and organismal susceptibility \citep{ward2018nitrate}. A threshold can protect against a known acute syndrome while still leaving unresolved how chronic exposure participates in system-level vulnerability.
+	
+	Water Safety Plans and health-based targets already provide a systems-oriented governance structure for drinking water, including preventive risk management from catchment to consumer, performance targets, water-quality targets, and health-outcome targets \citep{who2023wsp,who2022gdwq}. TwoTimescaleResilience is not a replacement for such frameworks. It is a possible diagnostic layer within them: a spatially explicit estimate of where background conditions have reduced adaptive margin and increased the expected burden of future perturbations. Similarly, ecosystem-health and climate-vulnerability frameworks emphasise that vulnerability is not reducible to exposure alone but depends on resilience, organisation, sensitivity, and adaptive capacity \citep{rapport1998ecosystem,hyman2024ccva}. The present model gives one mathematical expression to that idea for water-mediated physiological stress.
+	
+	The philosophical language of process and recursivity helps explain why this structure matters. Process ontologies in biology argue that living beings are better understood as temporally extended processes than as fixed substances, and that structures can be seen as relatively slow processes while functions are faster processes \citep{dupre2015process}. Hui's account of recursivity and contingency gives a complementary vocabulary for technical and biological systems: recursive systems return to themselves through feedback, while contingent events test whether a system can reorganise or whether it becomes trapped in a narrowed regime \citep{hui2019recursivity}. In our terms, the slow timescale recursively conditions the fast one. Past water-quality conditions shape the system that will meet future shocks. Contingency is not merely noise added to exposure; it is the event through which depleted or preserved adaptive margin becomes visible.
+	
+	The resulting model is therefore neither a rejection of regulatory thresholds nor a rejection of mechanistic toxicology. Thresholds remain necessary for enforceability and acute protection. Mechanistic toxicology remains necessary for identifying pathways and parameterising effects. But neither is sufficient for representing the upstream erosion of adaptive capacity under chronic, cumulative, and spatially heterogeneous stress. The contribution of this paper is to formalise that erosion as adaptive-margin depletion and to connect it to an observable consequence: amplification of acute response burden. The central question changes from ``Has a limit been exceeded?'' to ``How much less capable is this target system of absorbing what comes next?''
+	
+	Questions about microbiomes, symbiosis, or other expanded accounts of biological individuality are therefore left for discussion rather than built into the introductory framing. They may matter when interpreting empirical parameters, especially where measured physiology already reflects diet, developmental history, associated microorganisms, or prior environmental conditioning. But they are not required for the core two-timescale derivation.
+	
+	In the sections that follow, we develop the TwoTimescaleResilience framework in detail. We first define the exposure, mode-of-action, and DEB-axis mappings used to translate environmental stressors into physiological burden. We then derive the adaptive-margin and restoring-force functions and show why integrated acute burden scales as $1/\lambda$. We then describe the applied parameterisation pathway: AmP-derived DEB parameters provide species-specific defence, ECOTOX-derived toxicity summaries provide stressor attack, and spatial water-quality layers provide the environmental field in which both are combined. Finally, we discuss uncertainty, mixture handling, and spatial implementation. The goal is not to replace existing risk assessment, but to add a missing layer: a quantitative account of drift before crash.
+	
+	\clearpage
+	\appendix
+	\section{Supplementary Note: Mathematical Comparison with Existing Modelling Frameworks}
+	\label{supp:comparison}
+	
+	This supplementary note positions TwoTimescaleResilience against neighbouring model families by comparing their mathematical objects, transformations, and outputs. The goal is not to dismiss existing approaches, many of which could parameterise components of TwoTimescaleResilience, but to specify the narrower mathematical novelty of the two-timescale amplification construction.
+	
+	\subsection{Canonical form of TwoTimescaleResilience}
+	
+	TwoTimescaleResilience has the canonical form
+	\begin{equation}
+		\mathbf{R}_{g,t}
+		\rightarrow \mathbf{e}^{(q)}_{g,t}
+		\rightarrow \mathbf{m}^{(q)}_{g,t}
+		\rightarrow \mathbf{s}^{(q)}_{g,t}
+		\rightarrow A^{(q)}_{g,t}
+		\rightarrow \lambda(A^{(q)}_{g,t})
+		\rightarrow F^{(q)}_{g,t}.
+	\end{equation}
+	The distinctive part of the chain is
+	\begin{equation}
+		\mathbf{s}^{(q)}_{g,t}
+		\rightarrow A^{(q)}_{g,t}
+		\rightarrow \lambda(A^{(q)}_{g,t})
+		\rightarrow F^{(q)}_{g,t},
+	\end{equation}
+	where chronic background stress depletes adaptive margin, adaptive margin determines restoring force, and restoring force determines the integrated burden of later acute perturbations. For the linear pulse-response equation
+	\begin{equation}
+		\dot{y}=-\lambda(A)y+\beta C(\tau),
+	\end{equation}
+	we obtain
+	\begin{equation}
+		\mathrm{AUC}_y(A)=\int_0^\infty y(\tau)d\tau
+		=\frac{\beta}{\lambda(A)}\int_0^\infty C(\tau)d\tau
+		=\frac{\beta}{\lambda(A)}\mathrm{AUC}_C.
+	\end{equation}
+	The amplification factor is therefore
+	\begin{equation}
+		F(A)=\frac{\lambda(A_0)}{\lambda(A)}.
+	\end{equation}
+	This means the same acute event $C(\tau)$ has a larger integrated burden when background conditions have reduced $A$ and hence $\lambda(A)$.
+	
+	\subsection{Cumulative risk and cumulative impact assessment}
+	
+	Cumulative risk assessment typically aggregates multiple stressor-specific risks or hazard contributions. A generic additive risk representation is
+	\begin{equation}
+		R_{\mathrm{cum}}=\sum_{j=1}^J R_j,
+	\end{equation}
+	while independent risk aggregation is often represented as
+	\begin{equation}
+		R_{\mathrm{cum}}=1-\prod_{j=1}^J(1-R_j).
+	\end{equation}
+	For non-cancer toxicity, a standard hazard quotient/index construction is
+	\begin{equation}
+		HQ_j=\frac{E_j}{RfD_j},
+		\qquad
+		HI=\sum_{j=1}^J HQ_j.
+	\end{equation}
+	CRA/CIA frameworks are flexible and decision-oriented rather than reducible to one equation, but their central mathematical move is generally aggregation of risk or hazard contributions \citep{epa2003cumulative,sexton2012cumulative,epa2025cumulative}. TwoTimescaleResilience differs by inserting a dynamic vulnerability state between cumulative burden and future outcome:
+	\begin{equation}
+		\{E_j\}_{j=1}^J\rightarrow R_{\mathrm{cum}}
+		\quad\hbox{versus}\quad
+		\{E_j\}_{j=1}^J\rightarrow \mathbf{s}\rightarrow A\rightarrow\lambda(A)\rightarrow F.
+	\end{equation}
+	Thus CRA estimates combined risk now, whereas TwoTimescaleResilience estimates changed response capacity later.
+	
+	\subsection{Drinking-water cumulative toxicity scores}
+	
+	Drinking-water cumulative risk methods can combine multiple contaminant contributions into a toxicity score. A generic representation is
+	\begin{equation}
+		Score_{\mathrm{water}}=\sum_{j=1}^J w_j f_j(C_j),
+	\end{equation}
+	where $C_j$ is contaminant concentration, $f_j$ maps concentration to a toxicity or risk contribution, and $w_j$ is a health or disability weight. Stoiber and colleagues propose such a framework to combine cancer and non-cancer contaminants in drinking water, including disability weights from the Global Burden of Disease study \citep{stoiber2019drinking}. The output is a sample-level toxicity or health-impact score. TwoTimescaleResilience instead treats background contamination as a conditioning process:
+	\begin{equation}
+		\mathbf{C}\rightarrow Score_{\mathrm{water}}
+		\quad\hbox{versus}\quad
+		\mathbf{C}_{\mathrm{background}}\rightarrow A\rightarrow\lambda\rightarrow F.
+	\end{equation}
+	
+	\subsection{Quantitative microbial risk assessment}
+	
+	QMRA follows the chain
+	\begin{equation}
+		\hbox{hazard identification}\rightarrow\hbox{exposure assessment}\rightarrow\hbox{dose--response}\rightarrow\hbox{risk characterization}.
+	\end{equation}
+	A common exponential dose--response model is
+	\begin{equation}
+		P_{\mathrm{inf}}=1-e^{-rD},
+	\end{equation}
+	where $D$ is dose and $r$ is an infectivity parameter. A beta-Poisson form is
+	\begin{equation}
+		P_{\mathrm{inf}}=1-\left(1+\frac{D}{\beta}\right)^{-\alpha},
+	\end{equation}
+	and illness probability may be represented as
+	\begin{equation}
+		P_{\mathrm{ill}}=P_{\mathrm{inf}}P_{\mathrm{ill}\mid\mathrm{inf}}.
+	\end{equation}
+	QMRA can then convert illness probabilities into DALY burden or compare risk to health-based targets \citep{who2016qmra,healthcanada2019qmra}. The canonical transformation is
+	\begin{equation}
+		D\rightarrow P_{\mathrm{inf}}\rightarrow P_{\mathrm{ill}}\rightarrow \mathrm{DALY}.
+	\end{equation}
+	TwoTimescaleResilience does not replace microbial dose--response. Instead, it can sit upstream or alongside QMRA as a modifier of event burden:
+	\begin{equation}
+		\hbox{background stress}\rightarrow A\rightarrow\lambda(A)\rightarrow \hbox{amplified burden of microbial or chemical event}.
+	\end{equation}
+	
+	\subsection{Mixture toxicity: concentration addition and independent action}
+	
+	For chemicals with similar modes of action, concentration addition often uses toxic units
+	\begin{equation}
+		TU_j=\frac{C_j}{ECx_j},
+		\qquad
+		TU_{\mathrm{mix}}=\sum_{j=1}^J TU_j.
+	\end{equation}
+	For dissimilar modes of action, independent action is commonly represented as
+	\begin{equation}
+		E_{\mathrm{mix}}=1-\prod_{j=1}^J(1-E_j),
+	\end{equation}
+	where $E_j$ is the fractional effect or probability of effect from component $j$ \citep{bopp2019mixtures,kienzler2017mixtures}. TwoTimescaleResilience can use mixture logic to construct effective burden, for example
+	\begin{equation}
+		\mathbf{s}=\mathcal{M}(\{C_j\}_{j=1}^J),
+	\end{equation}
+	where $\mathcal{M}$ may implement concentration addition, independent action, or empirically calibrated mixture rules. However, TwoTimescaleResilience then continues to
+	\begin{equation}
+		\mathbf{s}\rightarrow A\rightarrow\lambda(A)\rightarrow F.
+	\end{equation}
+	Mixture toxicity is therefore a possible burden-construction submodule, not the final output.
+	
+	\subsection{PBPK/PBTK, TKTD, DEBtox, and AOP--DEB}
+	
+	PBPK/PBTK models translate external exposure into internal tissue dose through compartmental mass-balance equations, for example
+	\begin{equation}
+		\frac{dA_i}{dt}
+		= Q_i(C_{\mathrm{art}}-C_i/P_i)-CL_iC_i
+		+\sum_k T_{ki}-\sum_l T_{il}.
+	\end{equation}
+	Their canonical form is
+	\begin{equation}
+		C_{\mathrm{external}}(t)\rightarrow C_{\mathrm{internal},i}(t).
+	\end{equation}
+	TKTD models then separate uptake/elimination from damage/effect dynamics:
+	\begin{equation}
+		\frac{dC_{\mathrm{int}}}{dt}=k_u C_{\mathrm{ext}}(t)-k_e C_{\mathrm{int}}(t),
+		\qquad
+		\frac{dD}{dt}=k_d(C_{\mathrm{int}}-D).
+	\end{equation}
+	A GUTS-style survival model may express hazard as
+	\begin{equation}
+		h(t)=h_0+b\max(D(t)-z,0),
+		\qquad
+		S(t)=\exp\left[-\int_0^t h(u)du\right].
+	\end{equation}
+	A simplified DEB representation tracks reserve $E$, structure $V$, and reproduction/maturity allocation:
+	\begin{align}
+		\frac{dE}{dt} &= p_A-p_C,\\
+		\frac{dV}{dt} &= \frac{\kappa p_C-p_M}{[E_G]},\\
+		p_R &= (1-\kappa)p_C-p_J.
+	\end{align}
+	AOP--DEB integration maps adverse outcome pathway key events onto DEB processes or parameters:
+	\begin{equation}
+		MIE\rightarrow KE_1\rightarrow KE_2\rightarrow AO,
+		\qquad
+		KE_i\rightarrow \Delta p_A,\Delta p_M,\Delta\kappa,\Delta p_R,\ldots
+	\end{equation}
+	TwoTimescaleResilience can use PBPK/PBTK, TKTD, DEBtox, or AOP--DEB information to parameterise $\mathbf{e}$, $\mathbf{m}$, $\mathbf{s}$, or $\bm{\alpha}$, but its distinctive transformation is downstream:
+	\begin{equation}
+		C(t)\rightarrow D(t)\rightarrow S(t),G(t),R(t)
+		\quad\hbox{versus}\quad
+		\mathbf{s}\rightarrow A\rightarrow\lambda(A)\rightarrow F.
+	\end{equation}
+	
+	\subsection{Species sensitivity distributions, vulnerability indices, and early warning}
+	
+	Species sensitivity distributions fit toxicity thresholds across species:
+	\begin{equation}
+		X_i=\log(ECx_i),\qquad X_i\sim F_\theta,
+		\qquad
+		HC_5=F_\theta^{-1}(0.05).
+	\end{equation}
+	Climate vulnerability assessment often decomposes vulnerability into exposure $E$, sensitivity $S$, and adaptive capacity $AC$:
+	\begin{equation}
+		V=f(E,S,AC),
+		\qquad
+		V=w_EE+w_SS-w_{AC}AC.
+	\end{equation}
+	Early-warning models infer resilience loss from statistical changes in observed time series. For a system
+	\begin{equation}
+		x_{t+1}=f(x_t,\theta_t)+\epsilon_t,
+	\end{equation}
+	critical slowing down may be reflected in rising lag-1 autocorrelation
+	\begin{equation}
+		\rho_1=\frac{\mathrm{Cov}(x_t,x_{t-1})}{\mathrm{Var}(x_t)}
+	\end{equation}
+	or rising variance
+	\begin{equation}
+		\sigma^2=\mathrm{Var}(x_t).
+	\end{equation}
+	TwoTimescaleResilience differs from all three: it is not a cross-species protective concentration, not an index of vulnerability components, and not an inference from time-series statistics. It estimates recovery loss from stressor burden:
+	\begin{equation}
+		\mathbf{R}_{g,t}\rightarrow\mathbf{s}_{g,t}^{(q)}\rightarrow A_{g,t}^{(q)}\rightarrow\lambda(A_{g,t}^{(q)})\rightarrow F_{g,t}^{(q)}.
+	\end{equation}
+	
+	\subsection{Summary of mathematical novelty}
+	
+	Most neighbouring models have one of the following canonical forms:
+	\begin{align}
+		\hbox{Aggregation:} && R_{\mathrm{cum}} &= \sum_j R_j,\\
+		\hbox{Dose--response:} && D &\rightarrow P(\hbox{effect}),\\
+		\hbox{Internal dose:} && C_{\mathrm{external}}(t)&\rightarrow C_{\mathrm{internal}}(t),\\
+		\hbox{Dynamic damage/effect:} && C(t)&\rightarrow D(t)\rightarrow S(t),G(t),R(t),\\
+		\hbox{Vulnerability index:} && V&=f(E,S,AC),\\
+		\hbox{Early warning:} && x(t)&\rightarrow \rho_1,\sigma^2,\hbox{recovery slowdown}.
+	\end{align}
+	TwoTimescaleResilience instead has the canonical form
+	\begin{equation}
+		\hbox{background stress}\rightarrow A\rightarrow\lambda(A)\rightarrow \frac{1}{\lambda(A)}\hbox{-scaled event burden}.
+	\end{equation}
+	The novelty is therefore not that the model uses exposure variables, mixtures, or DEB-informed physiology. Those have clear precedents. The novelty is that these components are organised into a two-timescale amplification mechanism: slow background stress depletes adaptive margin, adaptive margin controls restoring force, and restoring force scales the integrated burden of future acute perturbations. The applied version makes this operational through a defence--attack architecture:
+	\begin{equation}
+		\hbox{AmP/DEB defence parameters} + \hbox{ECOTOX attack summaries} + \hbox{spatial water-quality fields}
+		\rightarrow A\rightarrow\lambda(A)\rightarrow F.
+	\end{equation}
+	
+	\bibliographystyle{plainnat}
+	\bibliography{twotimescales_refs}
+\end{document}
