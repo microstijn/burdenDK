@@ -1,35 +1,35 @@
 # TwoTimescaleResilience / burdenDK AI Context File
-# Purpose: machine-readable project memory for future AI assistants.
+# Purpose: machine-readable project memory for future AI assistants and coding tools.
 # Update this file whenever implementation changes, new insights are added, or APIs evolve.
+
+metadata:
+  file_name: "TwoTimescaleResilience_AI_context.yaml"
+  last_updated: "2026-05-23"
+  update_reason: >
+    Full refreshed context after AmP runtime adapter Tranche 1 completion and planning of a new
+    multi-species 3x3 synthetic CairoMakie example script.
+  intended_reader: "AI coding assistants and future Copilot/LLM sessions"
 
 project:
   repository_directory_name: "burdenDK"
   main_framework_name: "TwoTimescaleResilience"
   main_julia_module: "TwoTimescaleResilience"
   language: "Julia"
-  current_context_date: "2026-05-23"
-  owner_context:
-    institution_context: "Wageningen University & Research path observed in local directory"
-    local_path_observed: "C:\\Users\\peete074\\OneDrive - Wageningen University & Research\\programming\\burdenDK"
+  local_path_observed: "C:\\Users\\peete074\\OneDrive - Wageningen University & Research\\programming\\burdenDK"
   one_sentence_summary: >
     TwoTimescaleResilience is a species-aware, spatial Julia framework that maps raw environmental raster stressors
     into Dynamic Energy Budget-informed physiological vulnerability maps, expressed as an Amplification Factor F that
     quantifies how chronic background stress magnifies the burden of acute perturbations.
 
 ai_usage_instructions:
-  primary_goal: >
-    This YAML is intended to let future AI tools become immediately up to date on the package, theory,
-    implementation structure, empirical pipelines, current integration state, and next likely development steps
-    without requiring the user to re-explain the project.
-  expected_ai_behavior:
-    - "Do not propose a new package architecture unless explicitly asked; the package already exists."
-    - "Treat src/isimip_deb_pipeline.jl as the existing spatial/runtime engine, not as missing functionality."
-    - "Treat SpeciesProfile as the central runtime integration object."
-    - "Treat AmP and ECOTOX as empirical parameter sources that must be adapted into existing runtime structs."
-    - "Prefer adapter functions over rewrites."
-    - "When helping with code, align changes with current structs: ExposureFilter, ModeOfActionMapping, MoAToDEBMapping, DEBAxisParams, SpeciesProfile."
-    - "Distinguish model/framework name TwoTimescaleResilience from repository folder burdenDK."
-    - "If new implementation details are added, update this YAML."
+  - "Do not propose a new package architecture unless explicitly asked; the package already exists."
+  - "Treat src/isimip_deb_pipeline.jl as the existing spatial/runtime engine."
+  - "Treat SpeciesProfile as the central runtime integration object."
+  - "Treat AmP and ECOTOX as empirical parameter sources that should be adapted into existing runtime structs."
+  - "Prefer adapter functions and examples over rewrites."
+  - "When helping with code, align with existing structs: ExposureFilter, ModeOfActionMapping, MoAToDEBMapping, DEBAxisParams, SpeciesProfile."
+  - "Distinguish repository folder burdenDK from model/framework/module name TwoTimescaleResilience."
+  - "If new implementation details are added, update this YAML."
 
 scientific_purpose:
   problem_statement: >
@@ -38,14 +38,14 @@ scientific_purpose:
     depletion of a species-specific adaptive margin and computes how that depletion weakens restoring force.
     The output is an amplification factor describing how much larger the response burden of an acute event becomes
     under stressed versus pristine background conditions.
-  conceptual_innovation:
-    - "Introduces Adaptive Margin A as a macroscopic DEB-derived state variable representing physiological buffering capacity."
-    - "Defines vulnerability as amplification of acute perturbation burden caused by reduced background-conditioned restoring force."
-    - "By using two separated timescales, avoids needing Jacobian ecosystem matrices over large spatial rasters."
-    - "Uses Fubini's theorem to show that integrated response burden scales as 1/lambda."
-    - "Anchors species defense parameters in Add-my-Pet DEB data."
-    - "Anchors stressor attack parameters in EPA ECOTOX-derived NOEC/EC50/effect/taxon summaries."
-    - "Moves away from arbitrary interaction Gamma parameters toward formal mixture toxicity logic: Concentration Addition and Independent Action."
+  conceptual_innovations:
+    - "Adaptive Margin A is a macroscopic DEB-derived state variable representing physiological buffering capacity."
+    - "Vulnerability is defined as amplification of acute perturbation burden caused by reduced background-conditioned restoring force."
+    - "Two separated timescales avoid needing Jacobian ecosystem matrices over large spatial rasters."
+    - "Fubini's theorem shows integrated response burden scales as 1/lambda."
+    - "Species defense parameters are anchored in Add-my-Pet DEB data."
+    - "Stressor attack parameters are intended to be anchored in EPA ECOTOX-derived NOEC/EC50/effect/taxon summaries."
+    - "Arbitrary Gamma interaction parameters are being replaced by formal mixture toxicity logic: Concentration Addition and Independent Action."
 
 mathematical_framework:
   notation:
@@ -60,70 +60,57 @@ mathematical_framework:
     restoring_force: "lambda"
     amplification_factor: "F or mathcal{F}"
   phases:
-    phase_1_exposure_filtering:
-      description: >
-        Raw environmental variables are converted into species-specific effective exposure by applying contact,
-        habitat, behavioral, or infrastructure multipliers.
+    exposure_filtering:
+      description: "Raw environmental variables are converted into species-specific effective exposure by contact/use/habitat multipliers."
       equation: "e_{j,g,m}^{(q)} = h_j^{(q)} R_{j,g,m}"
       code_object: "ExposureFilter"
       code_field: "multipliers::Vector{Float64}"
-    phase_1b_nec_thresholding_empirical_stress_activation:
-      description: >
-        For empirical toxicants, concentrations below the No Effect Concentration do not create physiological burden.
-        The active stress uses threshold exceedance and tolerance scaling.
+    nec_thresholding:
+      description: "For empirical toxicants, concentrations below the No Effect Concentration create zero physiological burden."
       preferred_equation: "x_j = max(0, (C_ambient,j - NEC_j) / cstar_j)"
       ecotox_approximation: "cstar_j may be approximated as EC50_j - NOEC_j; mapping slope W = 1 / (EC50 - NOEC)."
-      caution: "If using Toxic Units TU_j = C_ambient,j / EC50_j, document whether NOEC thresholding occurs before TU aggregation."
-    phase_2_mode_of_action_mapping:
+    mode_of_action_mapping:
       description: "Effective exposure is mapped into biological modes of action."
       equation_linear: "m = U e"
       legacy_equation_with_interactions: "m_r = sum_j U_{rj} e_j + sum_{j<k} Gamma_{jk}^{(r)} e_j e_k"
       code_object: "ModeOfActionMapping"
-      matrix_shape_expected: "n_modes x n_environmental_variables"
       current_mode_names: ["thermal", "oxygen", "osmotic", "immune", "eutrophication", "toxic", "feeding", "physical"]
       current_isimip_variable_names: ["WT", "BOD", "TDS", "FC", "Nutrient", "Chemical", "Plastic"]
-    phase_2b_moa_to_deb_axes:
+    moa_to_deb_axes:
       description: "Modes of action are mapped into four DEB physiological axes."
       equation_linear: "s = W m"
-      legacy_equation_with_interactions: "s_a = sum_r W_{ar} m_r + sum_{r<k} GammaTilde_{rk}^{(a)} m_r m_k"
       code_object: "MoAToDEBMapping"
       deb_axis_order: ["assimilation", "maintenance", "growth", "reproduction"]
-      matrix_shape_expected: "4 x n_modes"
-    phase_2c_mixture_toxicity:
+    mixture_toxicity:
       description: >
-        The empirical theory aims to eliminate arbitrary Gamma interaction scalars and replace them with formal mixture toxicity.
-        Use Concentration Addition for stressors sharing effect/MoA and Independent Action for distinct effects/MoAs.
+        Empirical ECOTOX workflows should avoid arbitrary Gamma interaction scalars. Use Concentration Addition for
+        stressors sharing effect/MoA and Independent Action for distinct effects/MoAs.
       concentration_addition:
         condition: "same MoA or same ECOTOX effect code"
         equation: "TU_total = sum_j TU_j"
       independent_action:
         condition: "distinct MoAs/effect codes"
         equation_probability_form: "Stress_total = 1 - prod_j (1 - E_j)"
-        note: "If raw active stress x_j is unbounded, transform to an effect-like bounded value E_j = x_j / (1 + x_j) before IA."
+        bounded_transform_if_needed: "E_j = x_j / (1 + x_j) for unbounded x_j"
       implementation_note: >
-        Current mapping structs retain interactions::Union{Nothing, Vector{Matrix{Float64}}}. For empirical ECOTOX workflows,
-        set interactions = nothing and apply CA/IA in an empirical adapter or preprocessing step.
-    phase_3_adaptive_margin:
+        Existing mapping structs retain interactions::Union{Nothing, Vector{Matrix{Float64}}}. For empirical ECOTOX workflows,
+        set interactions = nothing and apply CA/IA in an adapter/preprocessing step.
+    adaptive_margin:
       description: "Aggregate DEB-axis burden depletes species-specific baseline adaptive margin."
-      equation: "A_{g,m}^{(q)} = A0^{(q)} + omega_Z^{(q)} Z_{g,m}^{(q)} - sum_a alpha_a^{(q)} s_{a,g,m}^{(q)}"
+      equation: "A = A0 + omega_Z Z - dot(alpha_axes, s_axes)"
       no_buffer_equation: "A = A0 - dot(alpha_axes, s_axes)"
       code_object: "DEBAxisParams"
-      code_fields: ["A0", "alpha_axes", "lambda_min", "lambda_max", "KA"]
-    phase_3b_restoring_force:
+    restoring_force:
       description: "Adaptive margin determines recovery/restoring force via bounded Michaelis-Menten form."
-      equation: "lambda = lambda_min + (lambda_max - lambda_min) * [A]_+ / (KA + [A]_+)"
-      positive_part: "[A]_+ = max(A, 0)"
+      equation: "lambda = lambda_min + (lambda_max - lambda_min) * max(A,0) / (KA + max(A,0))"
       code_functions:
         - "restoring_force_from_margin(A, params::DEBAxisParams)"
         - "restoring_force_from_margin_grid(Agrid, params::DEBAxisParams)"
-    phase_4_amplification:
-      description: >
-        For an identical acute event cost C_event(t), the integrated displacement burden is proportional to 1/lambda.
-        Therefore amplification is the ratio of pristine restoring force to stressed restoring force.
+    amplification:
+      description: "For identical acute event cost, integrated displacement burden is proportional to 1/lambda."
       perturbation_ode: "dy/dt = -lambda y + q_c C_event(t), y(0)=0"
-      analytical_solution: "y(t) = q_c int_0^t exp(-lambda(t-u)) C_event(u) du"
       fubini_result: "AUC_y = (q_c / lambda) * AUC_C"
-      amplification_equation: "F_{g,m}^{(q)} = lambda(A0) / lambda(A_DEB,g,m)"
+      amplification_equation: "F = lambda(A0) / lambda(A_background)"
       code_functions:
         - "amplification_from_margin(A, params::DEBAxisParams; A_control=params.A0)"
         - "amplification_from_margin_grid(Agrid, params::DEBAxisParams; A_control=params.A0)"
@@ -169,10 +156,10 @@ core_runtime_structs:
       beta_Z: "Float64 = 0.0"
     role: "Primary species defense parameter object; target of AmP adapter."
     axis_order: ["assimilation", "maintenance", "growth", "reproduction"]
-    note: "alpha_axes are depletion coefficients, not necessarily normalized weights; they need not sum to one."
+    note: "alpha_axes are depletion/sensitivity coefficients, not necessarily normalized weights; they need not sum to one."
   DEBAxisMapping:
     fields:
-      W: "Matrix{Float64}; rows correspond to axes: assimilation, maintenance, growth, reproduction"
+      W: "Matrix{Float64}; rows correspond to assimilation, maintenance, growth, reproduction"
       interactions: "Union{Nothing, Vector{Matrix{Float64}}} = nothing"
       clamp_nonnegative: "Bool = true"
       clamp_unit: "Bool = false"
@@ -207,19 +194,6 @@ core_runtime_structs:
       weight: "Float64"
     role: "Acute pulse/event stressor descriptor."
   TwoTimescaleSimulationResult:
-    fields:
-      name: "String"
-      background_stressors: "Vector{BackgroundStressor}"
-      pulse_stressors: "Vector{PulseStressor}"
-      B: "Float64"
-      A: "Float64"
-      lambda: "Float64"
-      amplification_factor: "Float64"
-      t: "Vector{Float64}"
-      P: "Matrix{Float64}"
-      D: "Matrix{Float64}"
-      M: "Vector{Float64}"
-      y: "Vector{Float64}"
     role: "Output object for two-timescale simulations."
   SpeciesProfile:
     fields:
@@ -231,7 +205,7 @@ core_runtime_structs:
       buffer_params: "Union{Nothing, ConditionBufferParams} = nothing"
       description: "String = empty"
     role: "Central runtime integration object for species-aware modeling."
-    important_note: "Future empirical adapters should construct SpeciesProfile objects rather than redesigning the engine."
+    important_note: "Future empirical adapters should construct or populate SpeciesProfile objects rather than redesigning the engine."
 
 runtime_execution_graph:
   scalar_or_cell_pipeline:
@@ -251,32 +225,41 @@ runtime_execution_graph:
   existing_pipeline_entrypoints:
     - "isimip_deb_pipeline(values, exposure_filter, moa_mapping, moa_deb_mapping, deb_params; ...)"
     - "isimip_deb_pipeline_grid(layers, exposure_filter, moa_mapping, moa_deb_mapping, deb_params; ...)"
-  important_inference: >
-    The spatial engine already exists. Do not suggest creating a new SpatialEngine.jl unless the user explicitly requests a refactor.
+  single_cell_return_shape: |
+    (
+        effective_values = effective_values,
+        modes = modes,
+        axes = axes,
+        Z = Z,
+        A = A,
+        lambda = lambda,
+        amplification = F
+    )
+  grid_return_shape: |
+    (
+        effective_layers = effective_layers,
+        modes = modes,
+        axes = axes,
+        Z = buffer_grid,
+        A = Agrid,
+        lambda = lambdagrid,
+        amplification = Fgrid
+    )
 
 package_structure_observed:
   root_directories:
     data:
-      subdirectories:
-        - "ecotox/ecotox_ascii_03_12_2026/validation"
-      role: "Raw or semi-raw empirical data, especially EPA ECOTOX ASCII export."
+      role: "Raw/semi-raw empirical data, including AmP_Species_Library.json and ECOTOX ASCII data."
+      notable_paths:
+        - "data/AmP_Species_Library.json"
+        - "data/ecotox/ecotox_ascii_03_12_2026/validation"
     docs:
-      subdirectories: ["beamer", "tex"]
       role: "LaTeX documentation, manuscript derivations, and presentation material."
+      subdirectories: ["beamer", "tex"]
     examples:
       role: "Executable demos, real raster workflows, NetCDF inspection, animations, and visualization scripts."
-    ext:
-      role: "Julia extension directory; current contents unknown."
     output:
-      role: "Generated rasters, animations, multipanel diagnostics, beamer raster exports, and NetCDF demo outputs."
-      notable_subdirectories:
-        - "dynqual_country_seasonality_animation"
-        - "dynqual_country_seasonality_multipanel_animation"
-        - "dynqual_K_A_country_trails_animation"
-        - "nc_monthly_longterm_deb_axes_inspection"
-        - "nc_monthly_longterm_isimip_moa_deb_inspection"
-        - "nc_real_raster_deb_demo"
-        - "nc_real_raster_demo"
+      role: "Generated rasters, animations, multipanel diagnostics, and example outputs."
     src:
       role: "Julia package implementation."
     test:
@@ -284,107 +267,9 @@ package_structure_observed:
     test_data:
       role: "Small data fixtures for tests."
   src_files:
-    AmP_Translator.jl:
-      role: "Offline Add-my-Pet translator; currently produces AmP species JSON."
-      observed_functions:
-        - "process_species_data()"
-      integration_state: "Exists as sidecar builder; not included in main module at time of observation."
-    ECOTOXParser.jl:
-      role: "Offline EPA ECOTOX ASCII parser; extracts NOEC/EC50/effect/taxon summaries for target CAS."
-      observed_functions:
-        - "parse_ecotox_data(results_path::String, tests_path::String, species_path::String, target_cas::String)"
-        - "filter_func(x) = ismissing(x) ? false : strip(string(x)) == target_cas_stripped"
-      integration_state: "Exists as sidecar builder; not included in main module at time of observation."
-    ascii.jl:
-      role: "ASCII grid IO."
-    background.jl:
-      role: "Background stress index and older/general adaptive margin/restoring force functions."
-    condition_buffer.jl:
-      role: "Optional dynamic condition buffer Z and buffer-related parameters."
-    deb_axes.jl:
-      role: "DEB-axis mapping, margin depletion, restoring force, amplification, grid variants, and pulse-axis response."
-      observed_functions:
-        - "pairwise_axis_interaction(Gamma::Matrix{Float64}, values::AbstractVector{<:Real})"
-        - "deb_axes_vector(values::AbstractVector{<:Real}, mapping::DEBAxisMapping)::Vector{Float64}"
-        - "deb_axes(values::AbstractVector{<:Real}, mapping::DEBAxisMapping)"
-        - "_deb_axes_to_vector(axes)"
-        - "deb_adaptive_margin(axes, params::DEBAxisParams)"
-        - "restoring_force_from_margin(A::Real, params::DEBAxisParams)"
-        - "restoring_force_from_margin_and_axes(A::Real, axes, params::DEBAxisParams; Z=nothing)"
-        - "amplification_from_margin(A::Real, params::DEBAxisParams; A_control=params.A0)"
-        - "deb_axes_grid(layers::Vector{Matrix{Float64}}, mapping::DEBAxisMapping)"
-        - "deb_adaptive_margin_grid(axes, params::DEBAxisParams)"
-        - "restoring_force_from_margin_grid(Agrid::Matrix{Float64}, params::DEBAxisParams)"
-        - "restoring_force_from_margin_and_axes_grid(Agrid::Matrix{Float64}, axes, params::DEBAxisParams; Zgrid=nothing)"
-        - "amplification_from_margin_grid(Agrid::Matrix{Float64}, params::DEBAxisParams; A_control=params.A0)"
-        - "default_pathogen_organic_deb_mapping(; interaction_strength=0.25, clamp_unit=false)"
-        - "deb_amplification_pipeline(...)"
-        - "pulse_deb_axes_timeseries(D::Matrix{Float64}, mapping::DEBAxisMapping)"
-        - "total_deb_margin_timeseries(A_background::Real, pulse_axes, params::DEBAxisParams)"
-        - "simulate_deb_axis_response(t::Vector{Float64}, pulse_axes, A_background::Float64, params::DEBAxisParams, q::Float64; y0::Float64 = 0.0, dt::Float64)"
-    default_isimip_moa.jl:
-      role: "Default ISIMIP variable-to-MoA mapping and default interactions."
-      observed_functions:
-        - "default_isimip_interactions()"
-        - "default_isimip_moa_mapping(; clamp_unit=false)"
-    exposure_filters.jl:
-      role: "Exposure filters for species/contact/use multipliers."
-      observed_functions:
-        - "apply_exposure_filter(values::AbstractVector{<:Real}, filter::ExposureFilter)"
-        - "apply_exposure_filter_grid(layers::Vector{Matrix{Float64}}, filter::ExposureFilter)"
-        - "aquatic_exposure_filter(nvars::Int)"
-        - "default_exposure_filter(nvars::Int)"
-        - "human_exposure_filter()"
-    grids.jl:
-      role: "Grid infrastructure and synthetic raster support."
-    isimip_deb_pipeline.jl:
-      role: "Existing spatial/runtime engine for ISIMIP/NetCDF-style values/layers through exposure, MoA, DEB, and response."
-      observed_functions:
-        - "isimip_deb_pipeline(values, exposure_filter, moa_mapping, moa_deb_mapping, deb_params; ...)"
-        - "isimip_deb_pipeline_grid(layers, exposure_filter, moa_mapping, moa_deb_mapping, deb_params; ...)"
-    isimip_event_response.jl:
-      role: "Event/acute-response layer for ISIMIP-derived DEB state."
-    metrics.jl:
-      role: "AUC, recovery time, and simulation metrics."
-    moa_deb_mapping.jl:
-      role: "Mode-of-action-to-DEB-axis transformations for scalar, grid, and time series."
-      observed_functions:
-        - "moa_to_deb_axes(modes, mapping::MoAToDEBMapping)"
-        - "moa_to_deb_axes_grid(modes, mapping::MoAToDEBMapping)"
-        - "moa_to_deb_axes_timeseries(mode_timeseries, mapping::MoAToDEBMapping)"
-        - "default_moa_to_deb_mapping(; clamp_unit=false)"
-    mode_of_action.jl:
-      role: "Environmental-variable-to-mode-of-action transformations."
-      observed_functions:
-        - "mode_names() = (:thermal, :oxygen, :osmotic, :immune, :eutrophication, :toxic, :feeding, :physical)"
-        - "isimip_variable_names() = (:WT, :BOD, :TDS, :FC, :Nutrient, :Chemical, :Plastic)"
-        - "mode_of_action_vector(values::AbstractVector{<:Real}, mapping::ModeOfActionMapping)::Vector{Float64}"
-        - "mode_of_action(values::AbstractVector{<:Real}, mapping::ModeOfActionMapping)"
-        - "mode_of_action_grid(layers::Vector{Matrix{Float64}}, mapping::ModeOfActionMapping)"
-    netcdf.jl:
-      role: "NetCDF loading/normalization utilities."
-    plotting.jl:
-      role: "Plotting functions for grids, scenarios, backgrounds, and amplification maps."
-    pulses.jl:
-      role: "Acute pulse stressor definitions and burden matrix calculations."
-    reduced_deb_response.jl:
-      role: "Reduced DEB response / recovery penalty math."
-    simulation.jl:
-      role: "General two-timescale simulation logic."
-    species_defaults.jl:
-      role: "Hard-coded/default SpeciesProfile constructors for generic taxa."
-      observed_functions:
-        - "default_species_profile()"
-        - "aquatic_invertebrate_profile()"
-        - "fish_profile()"
-        - "bivalve_profile()"
-        - "amphibian_profile()"
-        - "bird_profile()"
-        - "small_mammal_profile()"
-        - "human_profile()"
     TwoTimescaleResilience.jl:
       role: "Main module entrypoint."
-      currently_included_files:
+      includes_observed_before_amp_update:
         - "deb_axes.jl"
         - "condition_buffer.jl"
         - "reduced_deb_response.jl"
@@ -403,93 +288,37 @@ package_structure_observed:
         - "plotting.jl"
         - "ascii.jl"
         - "netcdf.jl"
-      not_currently_included_at_observation:
-        - "AmP_Translator.jl"
-        - "ECOTOXParser.jl"
-      key_exports_observed:
-        - "load_nc_layer"
-        - "normalise_layer"
-        - "write_ascii_grid"
-        - "read_ascii_grid"
-        - "plot_scenario_comparison"
-        - "plot_grid"
-        - "plot_background_layers"
-        - "plot_amplification_grid"
-        - "trapezoid_auc"
-        - "recovery_time_after_last_pulse"
-        - "compute_metrics"
-        - "TwoTimescaleSimulationResult"
-        - "simulate_two_timescale"
-        - "PulseStressor"
-        - "rectangular_pulse"
-        - "pulse_exposure_matrix"
-        - "burden_matrix_exact_update"
-        - "acute_mixture_burden"
-        - "synthetic_background_layers"
-        - "run_synthetic_raster_demo"
-        - "compute_background_index_grid"
-        - "adaptive_margin_grid"
-        - "restoring_force_grid"
-        - "amplification_factor_grid"
-        - "positive_part"
-        - "phi_background"
-        - "adaptive_margin"
-        - "restoring_force"
-        - "amplification_factor"
-        - "BackgroundParams"
-        - "BackgroundStressor"
-        - "background_index"
-  tests_observed:
-    role: "Extensive test suite covering IO, background, condition buffer, DEB axes, MoA, mapping, ISIMIP pipeline, event response, ECOTOX, examples, plotting, pulses, simulation, and synthetic rasters."
-    notable_tests:
-      - "test_deb_pipeline_recovery_math.jl"
-      - "test_recovery_penalty.jl"
-      - "test_reduced_deb_response.jl"
-      - "test_moa_deb_mapping.jl"
-      - "test_mode_of_action.jl"
-      - "test_isimip_deb_pipeline.jl"
-      - "test_isimip_event_response.jl"
-      - "test_ecotox.jl"
-      - "test_species_profiles.jl"
-      - "test_synthetic_raster.jl"
-  examples_observed:
-    conceptual_demos:
-      - "synthetic_raster_demo.jl"
-      - "isimip_moa_deb_3x3_demo.jl"
-      - "species_comparison_3x3_demo.jl"
-    real_or_netcdf_workflows:
-      - "get_nc_vars.jl"
-      - "global_example.jl"
-      - "isimip_nc_template.jl"
-      - "nc_real_raster_deb_axes_demo.jl"
-      - "nc_monthly_longterm_deb_axes_inspection.jl"
-      - "nc_monthly_longterm_isimip_moa_deb_inspection.jl"
-      - "nc_monthly_longterm_isimip_moa_deb_inspection_real.jl"
-      - "nc_monthly_longterm_isimip_moa_deb_inspection_europe_geomakie.jl"
-    visualization_and_animation:
-      - "beamer_raster_export_addon.jl"
-      - "dynqual_country_seasonality_animation.jl"
-      - "dynqual_country_seasonality_multipanel_animation.jl"
-      - "dynqual_K_A_country_trails_animation.jl"
+      amp_update: "After AmP Tranche 1, src/amp_library.jl is included and its five functions are exported."
+    amp_library.jl:
+      role: "Runtime AmP JSON loader/adapter implemented in AmP Tranche 1."
+    AmP_Translator.jl:
+      role: "Offline Add-my-Pet translator; produces AmP species JSON."
+      observed_function: "process_species_data()"
+    ECOTOXParser.jl:
+      role: "Offline EPA ECOTOX ASCII parser; extracts NOEC/EC50/effect/taxon summaries for target CAS."
+      observed_functions:
+        - "parse_ecotox_data(results_path::String, tests_path::String, species_path::String, target_cas::String)"
+    deb_axes.jl:
+      role: "DEB-axis mapping, adaptive margin, restoring force, amplification, grid variants, and pulse-axis response."
+    default_isimip_moa.jl:
+      role: "Default ISIMIP variable-to-MoA mapping and legacy/default interactions."
+    exposure_filters.jl:
+      role: "Exposure filters for species/contact/use multipliers."
+    isimip_deb_pipeline.jl:
+      role: "Existing spatial/runtime engine for ISIMIP-style values/layers through exposure, MoA, DEB, and response."
+    moa_deb_mapping.jl:
+      role: "Mode-of-action-to-DEB-axis transformations for scalar, grid, and time series."
+    mode_of_action.jl:
+      role: "Environmental-variable-to-mode-of-action transformations."
+    species_defaults.jl:
+      role: "Default SpeciesProfile constructors for generic taxa such as fish_profile()."
 
 empirical_pipelines:
   amp_defense_pipeline:
     source_database: "Add-my-Pet allStat.mat"
-    current_script: "src/AmP_Translator.jl"
-    current_function: "process_species_data()"
-    current_output: "AmP species JSON library"
+    offline_builder: "src/AmP_Translator.jl"
+    current_json_library_path: "data/AmP_Species_Library.json"
     biological_role: "Species-specific defense bounds and DEB physiological parameters."
-    extracted_or_derived_parameters:
-      - "maximum specific assimilation p_Am"
-      - "specific somatic maintenance p_M"
-      - "somatic allocation fraction kappa"
-      - "energy conductance v"
-      - "maximum structural length L_m"
-      - "baseline adaptive margin A0"
-      - "axis depletion coefficients alpha_axes"
-      - "lambda_min"
-      - "lambda_max"
-      - "KA"
     observed_json_example:
       species_key: "Abatus_cordatus"
       record:
@@ -513,53 +342,21 @@ empirical_pipelines:
       lambda_bounds.lambda_min: "DEBAxisParams.lambda_min"
       lambda_bounds.lambda_max: "DEBAxisParams.lambda_max"
       lambda_bounds.KA: "DEBAxisParams.KA"
-    sanity_check_for_abatus:
-      lambda0_formula: "lambda_min + (lambda_max - lambda_min) * A0 / (KA + A0)"
-      expected_lambda0_approx: 0.01097
-    recommended_runtime_adapter_functions:
-      - "load_amp_species_library(path)"
-      - "amp_record_to_deb_params(record)::DEBAxisParams"
-      - "amp_species_deb_params(library, species_key)::DEBAxisParams"
-      - "amp_species_profile(library, species_key; exposure_filter, moa_mapping, moa_deb_mapping)::SpeciesProfile"
-    recommended_validation:
-      - "A0 > 0"
-      - "KA > 0"
-      - "lambda_min > 0"
-      - "lambda_max >= lambda_min"
-      - "length(alpha_axes) == 4"
-      - "all alpha_axes finite and nonnegative"
-    integration_state: >
-      AmP output is already shaped nearly perfectly for DEBAxisParams. Integration requires lightweight loader/constructor functions,
-      not modification of the core runtime engine.
+    abatus_baseline_lambda0:
+      formula: "lambda_min + (lambda_max - lambda_min) * A0 / (KA + A0)"
+      expected_approx: 0.01097
   ecotox_attack_pipeline:
     source_database: "EPA ECOTOX ASCII database"
     current_script: "src/ECOTOXParser.jl"
-    current_function: "parse_ecotox_data(results_path, tests_path, species_path, target_cas)"
-    database_scale_context: "Raw ASCII database approximately 1.5 GB in project context."
     biological_role: "Empirical attack parameters: NEC/NOEC thresholds, EC50/tolerance scaling, taxonomic and effect-code routing."
     parser_capabilities_reported:
-      - "Safely parses large ECOTOX ASCII files while bypassing mixed-type formatting traps."
+      - "Parses large ECOTOX ASCII files while bypassing mixed-type formatting traps."
       - "Joins results.txt, tests.txt via test_id, and species.txt via species_number."
-      - "Calculates empirical medians for NOEC and EC50."
+      - "Calculates medians for NOEC and EC50."
       - "Groups medians by taxonomic class and physiological effect code."
-    key_outputs_needed_for_runtime:
-      - "taxon_class"
-      - "chemical or CAS identifier"
-      - "effect code, e.g. MOR, GRO, REP"
-      - "NOEC median as NEC threshold"
-      - "EC50 median as tolerance/totoxicity scale"
-      - "n_records for confidence/diagnostics"
-    current_limitation: >
-      Current observed function accepts a single target_cas. The runtime model likely needs a library-level interface for many stressors,
-      many taxa, and many effect codes.
-    recommended_runtime_adapter_functions:
-      - "load_ecotox_library(path)"
-      - "ecotox_records_for_taxon_and_stressors(library, taxon_class, stressors)"
-      - "ecotox_effect_to_deb_axis(effect_code)::Symbol or index"
-      - "ecotox_records_to_moa_mapping(records)::ModeOfActionMapping"
-      - "ecotox_records_to_moa_deb_mapping(records)::MoAToDEBMapping"
-      - "species_profile_from_libraries(species_key, taxon_class, amp_library, ecotox_library; exposure_filter, stressors)::SpeciesProfile"
-    suggested_first_pass_effect_routing:
+    runtime_integration_state: "Not yet wired into runtime mappings. Future work should create lightweight ECOTOX adapters."
+    first_pass_formula: "x_j = max(0, C_j - NOEC_j) / (EC50_j - NOEC_j)"
+    suggested_effect_routing:
       MOR: "maintenance"
       GRO: "growth"
       REP: "reproduction"
@@ -568,144 +365,152 @@ empirical_pipelines:
       MPH: "maintenance"
       DVP: "growth"
       FEC: "reproduction"
-    integration_options:
-      option_A_ecotox_modifies_moa_mapping:
-        description: "Use ECOTOX to map raw chemical concentrations into MoA intensities through ModeOfActionMapping.U."
-        best_when: "Maintaining explicit MoA layer is important."
-      option_B_ecotox_modifies_moa_deb_mapping:
-        description: "Use ECOTOX effect code directly to route burden to DEB axes through MoAToDEBMapping.W."
-        best_when: "Fast first empirical integration is desired because ECOTOX is already grouped by physiological effect."
-        recommendation: "Recommended first implementation."
-      option_C_direct_deb_burden_preprocessor:
-        description: "Compute DEB-axis burdens directly from ECOTOX records before calling DEB margin functions."
-        caution: "This bypasses existing MoA abstractions and should only be used if clearly documented."
-    recommended_first_empirical_formula:
-      active_exposure: "x_j = max(0, C_j - NOEC_j) / (EC50_j - NOEC_j)"
-      same_effect_CA: "x_effect_total = sum_j x_j for same effect code"
-      distinct_effect_IA: "E_total = 1 - prod_j(1 - E_j) after bounded transform if needed"
-    integration_state: >
-      ECOTOX parser is built and tested but likely not yet wired into SpeciesProfile runtime mapping objects. The missing layer is an adapter
-      from ECOTOX summaries to ModeOfActionMapping/MoAToDEBMapping or direct DEB-axis burdens.
 
-current_main_module_state:
-  file: "src/TwoTimescaleResilience.jl"
-  interpretation: >
-    The main module currently exposes the original two-timescale raster/resilience engine. It includes DEB, MoA, exposure,
-    ISIMIP, species defaults, background, pulse, metrics, plotting, ASCII, and NetCDF files. It does not include AmP_Translator.jl
-    or ECOTOXParser.jl at the observed time.
-  implication: >
-    A collaborator looking only at the main module would see a raster/DEB resilience package with default species and MoA mappings,
-    but would not yet see the empirical AmP/ECOTOX grounding.
-  recommended_decision:
-    preferred: >
-      Keep heavy raw parsers as offline builders if they depend on large external files, but include/export lightweight runtime library loaders
-      and adapter constructors in the main package.
-    alternative: >
-      Include AmP_Translator.jl and ECOTOXParser.jl directly if reproducibility from raw databases should be part of the public API.
-  recommended_new_file_names:
-    - "amp_library.jl"
-    - "ecotox_library.jl"
-    - "empirical_profiles.jl"
-  recommended_exports:
-    - "load_amp_species_library"
-    - "amp_record_to_deb_params"
-    - "amp_species_deb_params"
-    - "amp_species_profile"
-    - "load_ecotox_library"
-    - "ecotox_records_to_moa_deb_mapping"
-    - "species_profile_from_libraries"
+implementation_updates:
+  - date: "2026-05-23"
+    tranche: "AmP runtime integration Tranche 1"
+    status: "completed"
+    summary: >
+      Implemented lightweight runtime adapter for Add-my-Pet species JSON library. The adapter loads
+      data/AmP_Species_Library.json using JSON.jl and converts AmP records into existing DEBAxisParams.
+    files_added:
+      - "src/amp_library.jl"
+      - "test/test_amp_library.jl"
+    files_modified:
+      - "src/TwoTimescaleResilience.jl"
+      - "test/runtests.jl"
+      - "test/test_ecotox.jl"
+    main_module_update:
+      included_file: "src/amp_library.jl"
+      new_exports:
+        - "amp_species_key"
+        - "load_amp_species_library"
+        - "validate_amp_record"
+        - "amp_record_to_deb_params"
+        - "amp_species_deb_params"
+    implemented_functions:
+      amp_species_key:
+        signature: "amp_species_key(name::AbstractString)::String"
+        behavior: "Strips leading/trailing whitespace and collapses any run of whitespace to a single underscore; existing underscores are preserved."
+      load_amp_species_library:
+        signature: "load_amp_species_library(path::AbstractString = joinpath(\"data\", \"AmP_Species_Library.json\"))"
+        behavior: "Loads parsed JSON object using JSON.parsefile from JSON.jl. JSON3 is not used."
+      validate_amp_record:
+        signature: "validate_amp_record(record)::Bool"
+        behavior: "Validates A0, alpha_axes, lambda_bounds.KA, lambda_bounds.lambda_min, lambda_bounds.lambda_max; throws ArgumentError for invalid records."
+      amp_record_to_deb_params:
+        signature: "amp_record_to_deb_params(record)::DEBAxisParams"
+        behavior: "Validates and converts one AmP record to DEBAxisParams."
+      amp_species_deb_params:
+        signature: "amp_species_deb_params(library, species_name::AbstractString)::DEBAxisParams"
+        behavior: "Supports exact JSON keys and human-readable names through amp_species_key; missing species throw KeyError; no silent defaults."
+    test_coverage:
+      - "Loads real data/AmP_Species_Library.json."
+      - "Confirms Abatus_cordatus exists."
+      - "Tests species-key normalization including multiple whitespace collapse."
+      - "Validates Abatus_cordatus record."
+      - "Converts Abatus_cordatus to DEBAxisParams and checks A0, alpha_axes, lambda_min, lambda_max, KA."
+      - "Checks flexible lookup for Abatus_cordatus and Abatus cordatus."
+      - "Checks baseline restoring force lambda0 ≈ 0.01097."
+      - "Checks invalid records throw ArgumentError."
+    additional_fix: >
+      Full-suite execution exposed an ECOTOX fixture path issue. Since test_data/sample_results.txt existed,
+      test_ecotox.jl was fixed to resolve fixture paths relative to the test/repository directory using @__DIR__
+      instead of relying on current working directory. ECOTOX scientific logic was not changed.
+    integration_state_after_update: >
+      AmP JSON can now be consumed at runtime as DEBAxisParams. SpeciesProfile construction from AmP is not yet part of the package
+      unless implemented later. Current example scripts can use amp_species_deb_params to replace deb_params in an existing default
+      SpeciesProfile-derived workflow pattern.
 
-worked_example_abatus_cordatus:
-  species: "Abatus cordatus"
-  species_key: "Abatus_cordatus"
-  amp_parameters:
-    A0: 1539.9871108901957
-    alpha_M: 0.4250074376301585
-    lambda_min: 0.00899027004972587
-    lambda_max: 0.011568702452292915
-    KA: 461.99613326705867
-  baseline_restoring_force:
-    formula: "lambda0 = lambda_min + (lambda_max - lambda_min) * A0 / (KA + A0)"
-    approximate_value: 0.01097
-    units: "d^-1"
-  hypothetical_ecotox_attack:
-    stressor_type: "heavy metal maintenance-axis toxicant with effect MOR"
-    NOEC_mg_L: 2.0
-    EC50_mg_L: 4.5
-    ambient_concentration_mg_L: 12.0
-    active_exposure: "e = max(0, 12.0 - 2.0) = 10.0"
-    slope: "W_M = 1/(4.5 - 2.0) = 0.4"
-    daily_stress: "s_daily = 4.0"
-    cumulative_stress_assumed: "s_M = 2000"
-  stressed_margin:
-    formula: "A_stressed = max(0, A0 - alpha_M * s_M)"
-    approximate_value: 689.99
-  stressed_restoring_force:
-    formula: "lambda_stressed = lambda_min + (lambda_max - lambda_min) * A_stressed / (KA + A_stressed)"
-    approximate_value: 0.01053
-  amplification:
-    formula: "F = lambda0 / lambda_stressed"
-    approximate_value: 1.0418
-    interpretation: "An acute perturbation would produce approximately 4.2% larger integrated response burden than under pristine conditions."
-  caution: >
-    The cumulative s_M = 2000 in the worked example is an illustrative severe monthly aggregation assumption, not directly derived from the one-day ECOTOX calculation unless a temporal aggregation rule is explicitly implemented.
+current_runtime_usage_after_amp_tranche_1:
+  minimal_usage: |
+    using TwoTimescaleResilience
 
-known_design_tensions_and_resolutions:
-  gamma_vs_CA_IA:
-    issue: "Early derivations and code structs include optional Gamma/interactions matrices. Empirical theory now prefers CA/IA mixture toxicity."
-    resolution: >
-      Retain interactions fields for legacy/default simulations, but set interactions=nothing for empirical ECOTOX workflows and implement CA/IA in adapters/preprocessing.
-  species_defaults_vs_amp:
-    issue: "species_defaults.jl provides generic SpeciesProfile constructors; AmP provides species-specific empirical defense parameters."
-    resolution: "Keep species_defaults for demos/tests/fallbacks; use AmP adapters for empirical species profiles."
-  default_isimip_moa_vs_ecotox:
-    issue: "default_isimip_moa.jl provides phenomenological ISIMIP variable-to-MoA mapping; ECOTOX provides chemical/effect/taxon empirical mappings."
-    resolution: >
-      Let ECOTOX-derived mappings override or augment defaults for chemical stressors. Retain defaults for variables without ECOTOX analogues such as temperature, BOD, TDS, pathogens, nutrients, plastics, depending on context.
-  alpha_axes_language:
-    issue: "alpha_axes may be described as weights, but observed values need not sum to one."
-    resolution: "Call them depletion coefficients or sensitivity coefficients unless they are explicitly normalized."
-  code_KA_vs_math_K_A:
-    issue: "Code uses KA, manuscript uses K_A."
-    resolution: "Document KA == K_A."
+    amp = load_amp_species_library()
+    params = amp_species_deb_params(amp, "Abatus cordatus")
+    lambda0 = restoring_force_from_margin(params.A0, params)
+  expected_lambda0_for_abatus: "approximately 0.01097"
+  profile_like_usage_without_amp_species_profile: |
+    base_profile = fish_profile()
+    exposure_filter = base_profile.exposure_filter
+    moa_mapping = base_profile.moa_mapping
+    moa_deb_mapping = base_profile.moa_deb_mapping
+    deb_params = amp_species_deb_params(amp, "Abatus cordatus")
 
-recommended_next_development_steps:
-  immediate:
-    - "Implement lightweight AmP JSON loader and adapter to DEBAxisParams."
-    - "Add tests that Abatus_cordatus JSON converts to DEBAxisParams and reproduces lambda0 ≈ 0.01097."
-    - "Add SpeciesProfile constructor from AmP record using existing exposure/mapping defaults."
-  next:
-    - "Define ECOTOX library JSON schema for taxon_class + stressor/CAS + effect_code + NOEC + EC50 + n_records."
-    - "Implement effect-code-to-DEB-axis routing."
-    - "Implement first-pass ECOTOX adapter to construct MoAToDEBMapping or direct DEB-axis burden logic."
-    - "Add tests for below-NOEC behavior: all concentrations below NOEC must yield F = 1."
-    - "Add monotonicity tests: increasing concentration should not increase A or lambda and should not decrease F."
-    - "Add tests for lambda lower bound when A <= 0."
+    result = isimip_deb_pipeline(
+        zeros(7),
+        exposure_filter,
+        moa_mapping,
+        moa_deb_mapping,
+        deb_params
+    )
+
+recommended_next_example_script:
+  file_name: "examples/amp_multispecies_synthetic_demo.jl"
+  purpose: >
+    Demonstrate the new AmP runtime adapter in a multi-species, synthetic ISIMIP-style workflow using 3x3 grids and CairoMakie heatmaps.
+    The example should not add package features. It should load data/AmP_Species_Library.json, obtain DEBAxisParams for multiple species
+    including Abatus cordatus, run existing isimip_deb_pipeline on zero/low/high synthetic stress vectors, run isimip_deb_pipeline_grid
+    on 3x3 low/high synthetic layer stacks, and graph amplification grids.
+  constraints:
+    - "Do not modify src/ code."
+    - "Do not modify tests."
+    - "Do not add dependencies."
+    - "Do not implement amp_species_profile."
+    - "Do not implement ECOTOX."
+    - "Do not implement mixture toxicity."
+    - "Do not use NetCDF."
+    - "Keep the example lightweight."
+    - "CairoMakie may be used because project examples already use it."
+    - "The script may write small PNG figures under output/amp_multispecies_synthetic_demo/."
+  required_behavior:
+    - "Run with: julia examples/amp_multispecies_synthetic_demo.jl"
+    - "Use Pkg.activate(joinpath(@__DIR__, \"..\")) pattern."
+    - "Use TwoTimescaleResilience, Statistics, and CairoMakie."
+    - "Load AmP library from joinpath(@__DIR__, \"..\", \"data\", \"AmP_Species_Library.json\")."
+    - "Select 3-5 species from sorted library keys and ensure Abatus_cordatus is included."
+    - "Use Dict{String, Any} for species_params to avoid relying on DEBAxisParams export visibility."
+    - "Print species parameters: A0, alpha_axes, lambda_min, lambda_max, KA, baseline lambda0."
+    - "Reuse fish_profile only for exposure_filter, moa_mapping, and moa_deb_mapping; replace deb_params with AmP-derived params."
+    - "Run single-cell scenarios: zeros(7), fill(0.1,7), fill(0.5,7)."
+    - "Print tables for A, lambda, and amplification."
+    - "Define spatial 3x3 patterns: gradient low and higher/clamped high pattern."
+    - "Run isimip_deb_pipeline_grid for low/high 3x3 layer stacks for each species."
+    - "Print mean/max amplification and mean A/lambda summaries."
+    - "Create CairoMakie heatmap figure for high-stress amplification grids across species."
+    - "Create CairoMakie 1x2 low-vs-high amplification figure for Abatus_cordatus if available."
+    - "Save figures under output/amp_multispecies_synthetic_demo/."
+  suggested_3x3_patterns: |
+    gradient_3x3 = [
+        0.0  0.1  0.2;
+        0.1  0.3  0.5;
+        0.2  0.5  0.8
+    ]
+    grid_pattern_low = gradient_3x3
+    grid_pattern_high = clamp.(0.5 .* gradient_3x3 .+ 0.4, 0.0, 1.0)
+    layers_low = [copy(grid_pattern_low) for _ in 1:7]
+    layers_high = [copy(grid_pattern_high) for _ in 1:7]
+  output_files:
+    - "output/amp_multispecies_synthetic_demo/amp_multispecies_amplification_high.png"
+    - "output/amp_multispecies_synthetic_demo/amp_multispecies_amplification_low_high_abatus.png"
+  non_goals:
+    - "Do not create new package API."
+    - "Do not use real raster/NetCDF data."
+    - "Do not make publication-grade maps; this is a lightweight adapter demonstration."
+
+future_work:
+  amp_tranche_2_optional:
+    description: "Add amp_species_profile(...) constructor to package later if desired."
+    target_api: "amp_species_profile(library, species_name; exposure_filter, moa_mapping, moa_deb_mapping, name=..., description=...)::SpeciesProfile"
+  ecotox_runtime_adapters:
+    description: "Create lightweight ECOTOX library loader and adapters to active stress/effect routing/DEB-axis burden."
+    likely_files:
+      - "src/ecotox_library.jl"
+      - "test/test_ecotox_library.jl"
   documentation:
-    - "Add README architecture section centered on SpeciesProfile."
+    - "Add README architecture section centered on SpeciesProfile and empirical adapters."
     - "Add table mapping mathematical symbols to code fields."
-    - "Add JSON schema docs for AmP and ECOTOX libraries."
-    - "Add note that AmP/ECOTOX raw parsers are offline builders unless included in main module."
-  possible_refactor_but_not_required:
-    - "Group exports by IO, plotting, simulation, background, DEB, metrics, demos, empirical adapters."
-    - "Split heavy parser scripts from lightweight runtime library loaders."
-
-symbol_to_code_mapping:
-  R_j: "input values or layers"
-  h_j: "ExposureFilter.multipliers"
-  e_j: "output of apply_exposure_filter"
-  U: "ModeOfActionMapping.U"
-  m_r: "output of mode_of_action / mode_of_action_grid"
-  W_moa_deb: "MoAToDEBMapping.W"
-  s_A_s_M_s_G_s_R: "output of moa_to_deb_axes or deb_axes; axis order assimilation, maintenance, growth, reproduction"
-  A0: "DEBAxisParams.A0"
-  alpha_a: "DEBAxisParams.alpha_axes"
-  K_A: "DEBAxisParams.KA"
-  lambda_min: "DEBAxisParams.lambda_min"
-  lambda_max: "DEBAxisParams.lambda_max"
-  lambda: "restoring_force_from_margin result"
-  F: "amplification_from_margin result"
-  Z: "optional condition buffer state controlled by ConditionBufferParams"
+    - "Document AmP JSON schema and current adapter functions."
 
 communication_template_for_future_ai_sessions: |
   Project: TwoTimescaleResilience.jl in repository burdenDK.
@@ -713,6 +518,6 @@ communication_template_for_future_ai_sessions: |
   Main runtime object: SpeciesProfile(name, exposure_filter, moa_mapping, moa_deb_mapping, deb_params, buffer_params).
   Core pipeline: values/layers -> ExposureFilter -> ModeOfActionMapping -> MoAToDEBMapping -> DEBAxisParams -> margin -> lambda -> amplification.
   Existing spatial engine: isimip_deb_pipeline and isimip_deb_pipeline_grid.
-  AmP JSON already maps directly into DEBAxisParams.
+  AmP Tranche 1 is complete: src/amp_library.jl provides load_amp_species_library and amp_species_deb_params to convert AmP JSON records to DEBAxisParams.
+  Current example work should use amp_species_deb_params with fish_profile-derived exposure/mapping assumptions; do not implement new package features unless asked.
   ECOTOX parser extracts NOEC/EC50 grouped by taxon/effect and still needs adapters into mappings or DEB-axis burden.
-  Key goal: build empirical adapters without changing the engine.
