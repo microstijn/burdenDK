@@ -1,0 +1,743 @@
+     Testing TwoTimescaleResilience
+      Status `/tmp/jl_OpmVx2/Project.toml`
+  [336ed68f] CSV v0.10.16
+  [13f3f980] CairoMakie v0.15.10
+  [a93c6f00] DataFrames v1.8.2
+  [cf35fbd7] GeoInterface v1.6.1
+  [db073c08] GeoMakie v0.7.16
+  [682c06a0] JSON v1.6.0
+  [23992714] MAT v0.12.0
+  [85f8d34a] NCDatasets v0.14.15
+  [436b0209] NaturalEarth v0.1.1
+  [10745b16] Statistics v1.11.1
+  [bd369af6] Tables v1.12.1
+  [a1b2c3d4] TwoTimescaleResilience v0.1.0 `/app`
+  [8dfed614] Test v1.11.0
+      Status `/tmp/jl_OpmVx2/Manifest.toml`
+  [621f4979] AbstractFFTs v1.5.0
+  [1520ce14] AbstractTrees v0.4.5
+  [79e6a3ab] Adapt v4.6.0
+  [35492f91] AdaptivePredicates v1.2.0
+  [66dad0bd] AliasTables v1.1.3
+  [27a7e980] Animations v0.4.2
+  [67c07d97] Automa v1.1.0
+  [13072b0f] AxisAlgorithms v1.1.0
+  [39de3d68] AxisArrays v0.4.8
+  [18cc8868] BaseDirs v1.3.2
+  [fa961155] CEnum v0.5.0
+  [179af706] CFTime v0.2.9
+  [96374032] CRlibm v1.0.2
+  [336ed68f] CSV v0.10.16
+  [159f3aea] Cairo v1.1.1
+  [13f3f980] CairoMakie v0.15.10
+  [d360d2e6] ChainRulesCore v1.26.1
+  [944b1d66] CodecZlib v0.7.8
+  [6b39b394] CodecZstd v0.8.7
+  [a2cac450] ColorBrewer v0.4.2
+  [35d6a980] ColorSchemes v3.31.0
+  [3da002f7] ColorTypes v0.12.1
+  [c3611d14] ColorVectorSpace v0.11.0
+  [5ae59095] Colors v0.13.1
+  [1fbeeb36] CommonDataModel v0.4.3
+  [34da2185] Compat v4.18.1
+  [95dc2771] ComputePipeline v0.1.7
+  [187b0558] ConstructionBase v1.6.0
+  [d38c429a] Contour v0.6.3
+  [150eb455] CoordinateTransformations v0.6.4
+  [b7a15901] CoreMath v0.1.0
+  [a8cc5b0e] Crayons v4.1.1
+  [9a962f9c] DataAPI v1.16.0
+  [a93c6f00] DataFrames v1.8.2
+  [864edb3b] DataStructures v0.19.4
+  [e2d170a0] DataValueInterfaces v1.0.0
+  [927a84f5] DelaunayTriangulation v1.6.6
+  [3c3547ce] DiskArrays v0.4.19
+  [31c24e10] Distributions v0.25.125
+  [ffbed154] DocStringExtensions v0.9.5
+  [4e289a0a] EnumX v1.0.7
+  [429591f6] ExactPredicates v2.2.9
+  [411431e0] Extents v0.1.6
+  [b86e33f2] FFTA v0.3.1
+  [5789e2e9] FileIO v1.19.0
+  [8fc22ac5] FilePaths v0.9.0
+  [48062228] FilePathsBase v0.9.24
+  [1a297f60] FillArrays v1.16.0
+  [53c48c17] FixedPointNumbers v0.8.5
+  [1fa38f19] Format v1.3.7
+  [b38be410] FreeType v4.1.1
+  [663a7486] FreeTypeAbstraction v0.10.8
+  [68eda718] GeoFormatTypes v0.4.5
+  [cf35fbd7] GeoInterface v1.6.1
+  [61d90e0f] GeoJSON v0.8.4
+  [db073c08] GeoMakie v0.7.16
+  [0ef565a4] Geodesy v1.2.0
+  [5c1252a2] GeometryBasics v0.5.10
+  [3251bfac] GeometryOps v0.1.40
+  [05efe853] GeometryOpsCore v0.1.10
+  [a2bd30eb] Graphics v1.1.3
+  [3955a311] GridLayoutBase v0.11.2
+  [42e2da0e] Grisu v1.0.2
+  [f67ccb44] HDF5 v0.17.3
+  [34004b35] HypergeometricFunctions v0.3.28
+  [2803e5a7] ImageAxes v0.6.12
+  [c817782e] ImageBase v0.1.7
+  [a09fc81d] ImageCore v0.10.5
+  [82e4d734] ImageIO v0.6.9
+  [bc367c6b] ImageMetadata v0.9.10
+  [9b13fd28] IndirectArrays v1.0.0
+  [d25df0c9] Inflate v0.1.5
+  [842dd82b] InlineStrings v1.4.5
+  [18e54dd8] IntegerMathUtils v0.1.3
+  [a98d9a8b] Interpolations v0.16.2
+  [d1acc4aa] IntervalArithmetic v1.0.9
+  [8197267c] IntervalSets v0.7.14
+  [3587e190] InverseFunctions v0.1.17
+  [41ab1584] InvertedIndices v1.3.1
+  [92d709cd] IrrationalConstants v0.2.6
+  [f1662d9f] Isoband v0.1.1
+  [c8e1da08] IterTools v1.10.0
+  [82899510] IteratorInterfaceExtensions v1.0.0
+  [692b3bcd] JLLWrappers v1.8.0
+  [682c06a0] JSON v1.6.0
+  [0f8b85d8] JSON3 v1.14.3
+  [b835a17e] JpegTurbo v0.1.6
+  [5ab0869b] KernelDensity v0.6.11
+  [8ac3fa9e] LRUCache v1.6.2
+  [b964fa9f] LaTeXStrings v1.4.0
+  [8cdb02fc] LazyModules v0.3.1
+  [2ab3a3ac] LogExpFunctions v0.3.29
+  [23992714] MAT v0.12.0
+  [3da0fdf6] MPIPreferences v0.1.12
+  [1914dd2f] MacroTools v0.5.16
+  [ee78f7c6] Makie v0.24.10
+  [dbb5928d] MappedArrays v0.4.3
+  [0a4f8689] MathTeXEngine v0.6.8
+  [e1d29d7a] Missings v1.2.0
+  [e94cdb99] MosaicViews v0.3.4
+  [46d2c3a1] MuladdMacro v0.2.4
+  [85f8d34a] NCDatasets v0.14.15
+  [77ba4419] NaNMath v1.1.3
+  [436b0209] NaturalEarth v0.1.1
+  [f09324ee] Netpbm v1.1.1
+  [510215fc] Observables v0.5.5
+  [6fe1bfb0] OffsetArrays v1.17.0
+  [52e1d378] OpenEXR v0.3.3
+  [bac558e1] OrderedCollections v1.8.1
+  [90014a1f] PDMats v0.11.37
+  [f57f5aa1] PNGFiles v0.4.4
+  [19eb6ba3] Packing v0.5.1
+  [5432bcbf] PaddedViews v0.5.12
+  [69de0a69] Parsers v2.8.4
+  [eebad327] PkgVersion v0.3.3
+  [995b91a9] PlotUtils v1.4.4
+  [647866c9] PolygonOps v0.1.2
+  [2dfb63ee] PooledArrays v1.4.3
+  [aea7be01] PrecompileTools v1.3.4
+  [21216c6a] Preferences v1.5.2
+  [08abe8d2] PrettyTables v3.3.2
+  [27ebfcd6] Primes v0.5.7
+  [92933f4c] ProgressMeter v1.11.0
+  [c94c279d] Proj v1.9.0
+  [43287f4e] PtrArrays v1.4.0
+  [4b34888f] QOI v1.0.2
+  [1fd47b50] QuadGK v2.11.3
+  [b3c3ace0] RangeArrays v0.3.2
+  [c84ed2f1] Ratios v0.4.5
+  [189a3867] Reexport v1.2.2
+  [05181044] RelocatableFolders v1.0.1
+  [ae029012] Requires v1.3.1
+  [79098fc4] Rmath v0.9.0
+  [5eaf0fd0] RoundingEmulator v0.2.1
+  [fdea26ae] SIMD v3.7.2
+  [6c6a2e73] Scratch v1.3.0
+  [91c51154] SentinelArrays v1.4.10
+  [65257c39] ShaderAbstractions v0.5.0
+  [992d4aef] Showoff v1.0.3
+  [73760f76] SignedDistanceFields v0.4.1
+  [699a6c99] SimpleTraits v0.9.6
+  [45858cf5] Sixel v0.1.5
+  [746ee33f] SortTileRecursiveTree v0.1.4
+  [a2af1166] SortingAlgorithms v1.2.2
+  [276daf66] SpecialFunctions v2.7.2
+  [860ef19b] StableRNGs v1.0.4
+  [91464d47] StableTasks v0.1.7
+  [cae243ae] StackViews v0.1.2
+  [90137ffa] StaticArrays v1.9.18
+  [1e83bf80] StaticArraysCore v1.4.4
+  [10745b16] Statistics v1.11.1
+  [82ae8749] StatsAPI v1.8.0
+  [2913bbd2] StatsBase v0.34.10
+  [4c63d2b9] StatsFuns v1.5.2
+  [69024149] StringEncodings v0.3.7
+  [892a3eda] StringManipulation v0.4.4
+  [09ab397b] StructArrays v0.7.3
+  [856f2bd8] StructTypes v1.11.0
+  [ec057cc2] StructUtils v2.8.2
+  [3783bdb8] TableTraits v1.0.1
+  [bd369af6] Tables v1.12.1
+  [62fd8b95] TensorCore v0.1.1
+  [731e570b] TiffImages v0.11.9
+  [3bb67fe8] TranscodingStreams v0.11.3
+  [981d1d27] TriplotBase v0.1.0
+  [a1b2c3d4] TwoTimescaleResilience v0.1.0 `/app`
+  [1cfade01] UnicodeFun v0.4.1
+  [1986cc42] Unitful v1.28.0
+  [ea10d353] WeakRefStrings v1.4.3
+  [e3aaa7dc] WebP v0.1.3
+  [efce3f68] WoodburyMatrices v1.1.0
+  [76eceee3] WorkerUtilities v1.6.1
+  [0b7ba130] Blosc_jll v1.21.7+0
+  [6e34b625] Bzip2_jll v1.0.9+0
+  [4e9b3aee] CRlibm_jll v1.0.1+0
+  [83423d85] Cairo_jll v1.18.7+0
+  [a38c48d9] CoreMath_jll v0.1.0+0
+  [5ae413db] EarCut_jll v2.2.4+0
+  [2e619515] Expat_jll v2.8.0+0
+  [b22a6f82] FFMPEG_jll v8.1.0+0
+  [a3f928ae] Fontconfig_jll v2.17.1+0
+  [d7e528f0] FreeType2_jll v2.14.3+1
+  [559328eb] FriBidi_jll v1.0.17+0
+⌅ [b0724c58] GettextRuntime_jll v0.22.4+0
+  [59f7168a] Giflib_jll v5.2.3+0
+  [7746bdde] Glib_jll v2.86.3+0
+  [3b182d85] Graphite2_jll v1.3.15+0
+  [0234f1f7] HDF5_jll v2.1.2+0
+  [2e76f6c2] HarfBuzz_jll v8.5.1+0
+  [e33a78d0] Hwloc_jll v2.13.0+1
+  [905a6f67] Imath_jll v3.2.2+0
+  [aacddb02] JpegTurbo_jll v3.1.5+0
+  [c1c5ebd0] LAME_jll v3.100.3+0
+  [88015f11] LERC_jll v4.1.0+0
+  [1d63c593] LLVMOpenMP_jll v18.1.8+0
+⌅ [e9f186c6] Libffi_jll v3.4.7+0
+  [7e76a0d4] Libglvnd_jll v1.7.1+1
+  [94ce4f54] Libiconv_jll v1.18.0+0
+  [4b2f31a3] Libmount_jll v2.42.0+0
+  [89763e89] Libtiff_jll v4.7.2+0
+  [38a345b3] Libuuid_jll v2.42.0+0
+  [5ced341a] Lz4_jll v1.10.1+0
+  [b5ada748] MPIABI_jll v0.1.5+0
+  [7cb0a576] MPICH_jll v5.0.1+0
+  [f1f71cc9] MPItrampoline_jll v5.5.6+0
+  [9237b28f] MicrosoftMPI_jll v10.1.4+3
+  [7243133f] NetCDF_jll v401.1000.0+0
+  [e7412a2a] Ogg_jll v1.3.6+0
+  [6cdc7f73] OpenBLASConsistentFPCSR_jll v0.3.33+0
+  [18a262bb] OpenEXR_jll v3.4.9+0
+  [fe0851c0] OpenMPI_jll v5.0.11+0
+  [efe28fd5] OpenSpecFun_jll v0.5.6+0
+  [91d4177d] Opus_jll v1.6.1+0
+  [58948b4f] PROJ_jll v902.800.100+0
+  [36c8627f] Pango_jll v1.57.1+0
+  [30392449] Pixman_jll v0.46.4+0
+  [f50d1b31] Rmath_jll v0.5.1+0
+  [76ed43ae] SQLite_jll v3.51.2+0
+⌅ [02c8fc9c] XML2_jll v2.13.9+0
+  [ffd25f8a] XZ_jll v5.8.3+0
+  [4f6342f7] Xorg_libX11_jll v1.8.13+0
+  [0c0b7dd1] Xorg_libXau_jll v1.0.13+0
+  [a3789734] Xorg_libXdmcp_jll v1.1.6+0
+  [1082639a] Xorg_libXext_jll v1.3.8+0
+  [d091e8ba] Xorg_libXfixes_jll v6.0.2+0
+  [ea2f1a96] Xorg_libXrender_jll v0.9.12+0
+  [a65dc6b1] Xorg_libpciaccess_jll v0.19.0+0
+  [c7cfdc94] Xorg_libxcb_jll v1.17.1+0
+  [c5fb5394] Xorg_xtrans_jll v1.6.0+0
+  [3161d3a3] Zstd_jll v1.5.7+1
+⌅ [2b3700d1] aws_c_auth_jll v0.9.6+0
+  [70f11efc] aws_c_cal_jll v0.9.13+0
+  [73048d1d] aws_c_common_jll v0.12.6+0
+  [73a04cd5] aws_c_compression_jll v0.3.2+0
+  [3254fc65] aws_c_http_jll v0.10.13+0
+  [13c41daa] aws_c_io_jll v0.26.3+0
+⌅ [bd1f34fb] aws_c_s3_jll v0.11.5+0
+  [1282aa60] aws_c_sdkutils_jll v0.2.4+1
+  [b2a88e68] aws_checksums_jll v0.2.10+0
+  [c4b69c83] dlfcn_win32_jll v1.4.2+0
+  [9a68df92] isoband_jll v0.2.3+0
+  [477f73a3] libaec_jll v1.1.6+0
+  [a4ae2306] libaom_jll v3.13.3+0
+  [0ac62f75] libass_jll v0.17.4+0
+  [8e53e030] libdrm_jll v2.4.125+1
+  [f638f0a6] libfdk_aac_jll v2.0.4+0
+  [b53b4c65] libpng_jll v1.6.58+0
+  [075b6546] libsixel_jll v1.10.5+0
+  [9a156e7d] libva_jll v2.23.0+0
+  [f27f6e37] libvorbis_jll v1.3.8+0
+  [c5f90fcd] libwebp_jll v1.6.0+0
+  [337d8026] libzip_jll v1.11.3+0
+  [9aeb927a] mpif_jll v0.1.7+0
+  [cddc5d3d] s2n_tls_jll v1.7.3+0
+⌅ [1270edf5] x264_jll v10164.0.1+0
+  [dfaa095f] x265_jll v4.1.0+0
+  [0dad84c5] ArgTools v1.1.2
+  [56f22d72] Artifacts v1.11.0
+  [2a0f44e3] Base64 v1.11.0
+  [8bf52ea8] CRC32c v1.11.0
+  [ade2ca70] Dates v1.11.0
+  [8ba89e20] Distributed v1.11.0
+  [f43a241f] Downloads v1.7.0
+  [7b1f6079] FileWatching v1.11.0
+  [9fa8497b] Future v1.11.0
+  [b77e0a4c] InteractiveUtils v1.11.0
+  [ac6e5ff7] JuliaSyntaxHighlighting v1.12.0
+  [4af54fe1] LazyArtifacts v1.11.0
+  [b27032c2] LibCURL v0.6.4
+  [76f85450] LibGit2 v1.11.0
+  [8f399da3] Libdl v1.11.0
+  [37e2e46d] LinearAlgebra v1.12.0
+  [56ddb016] Logging v1.11.0
+  [d6f4376e] Markdown v1.11.0
+  [a63ad114] Mmap v1.11.0
+  [ca575930] NetworkOptions v1.3.0
+  [44cfe95a] Pkg v1.12.1
+  [de0858da] Printf v1.11.0
+  [3fa0cd96] REPL v1.11.0
+  [9a3f8284] Random v1.11.0
+  [ea8e919c] SHA v0.7.0
+  [9e88b42a] Serialization v1.11.0
+  [1a1011a3] SharedArrays v1.11.0
+  [6462fe0b] Sockets v1.11.0
+  [2f01184e] SparseArrays v1.12.0
+  [f489334b] StyledStrings v1.11.0
+  [4607b0f0] SuiteSparse
+  [fa267f1f] TOML v1.0.3
+  [a4e569a6] Tar v1.10.0
+  [8dfed614] Test v1.11.0
+  [cf7118a7] UUIDs v1.11.0
+  [4ec0a83e] Unicode v1.11.0
+  [e66e0078] CompilerSupportLibraries_jll v1.3.0+1
+  [deac9b47] LibCURL_jll v8.15.0+0
+  [e37daf67] LibGit2_jll v1.9.0+0
+  [29816b5a] LibSSH2_jll v1.11.3+1
+  [14a3606d] MozillaCACerts_jll v2025.11.4
+  [4536629a] OpenBLAS_jll v0.3.29+0
+  [05823500] OpenLibm_jll v0.8.7+0
+  [458c3c95] OpenSSL_jll v3.5.4+0
+  [efcefdf7] PCRE2_jll v10.44.0+1
+  [bea87d4a] SuiteSparse_jll v7.8.3+2
+  [83775a58] Zlib_jll v1.3.1+2
+  [8e850b90] libblastrampoline_jll v5.15.0+0
+  [8e850ede] nghttp2_jll v1.64.0+1
+  [3f19e933] p7zip_jll v17.7.0+0
+        Info Packages marked with ⌅ have new versions available but compatibility constraints restrict them from upgrading.
+Precompiling for configuration --code-coverage=none --color=auto --check-bounds=yes --warn-overwrite=yes --depwarn=yes --inline=yes --startup-file=no --track-allocation=none
+    982.6 ms  ✓ RangeArrays
+   1062.5 ms  ✓ AbstractFFTs
+   1101.6 ms  ✓ MuladdMacro
+   1199.0 ms  ✓ LaTeXStrings
+    904.5 ms  ✓ IndirectArrays
+    775.4 ms  ✓ PolygonOps
+   1047.1 ms  ✓ IteratorInterfaceExtensions
+   1092.4 ms  ✓ WorkerUtilities
+    742.4 ms  ✓ TensorCore
+    851.8 ms  ✓ GeoFormatTypes
+    964.3 ms  ✓ StatsAPI
+    940.1 ms  ✓ Contour
+    886.6 ms  ✓ TriplotBase
+   2196.8 ms  ✓ OffsetArrays
+   2676.1 ms  ✓ Format
+   2048.3 ms  ✓ FillArrays
+   1159.8 ms  ✓ IntegerMathUtils
+   3630.8 ms  ✓ CEnum
+    947.6 ms  ✓ InverseFunctions
+   1070.0 ms  ✓ IterTools
+   1727.5 ms  ✓ Statistics
+   9292.7 ms  ✓ BaseDirs
+   1728.7 ms  ✓ Requires
+   3401.8 ms  ✓ Observables
+   4539.0 ms  ✓ OrderedCollections
+    736.0 ms  ✓ DataValueInterfaces
+   5194.6 ms  ✓ Grisu
+   1294.5 ms  ✓ EnumX
+    917.7 ms  ✓ StableRNGs
+   1007.1 ms  ✓ Reexport
+   1003.9 ms  ✓ DocStringExtensions
+   1246.1 ms  ✓ AbstractTrees
+   1708.3 ms  ✓ InlineStrings
+   1451.8 ms  ✓ IntervalSets
+   8696.7 ms  ✓ MacroTools
+    892.2 ms  ✓ Extents
+   1264.4 ms  ✓ RoundingEmulator
+    763.4 ms  ✓ PtrArrays
+   1094.8 ms  ✓ TranscodingStreams
+    863.6 ms  ✓ StableTasks
+    848.9 ms  ✓ InvertedIndices
+   3074.6 ms  ✓ AdaptivePredicates
+   5785.2 ms  ✓ IrrationalConstants
+   3404.1 ms  ✓ LazyModules
+   1063.3 ms  ✓ LRUCache
+   1041.4 ms  ✓ Inflate
+    764.0 ms  ✓ Adapt
+   4369.0 ms  ✓ NaNMath
+    728.1 ms  ✓ DataAPI
+    944.4 ms  ✓ StaticArraysCore
+    982.8 ms  ✓ MappedArrays
+   1795.6 ms  ✓ ProgressMeter
+   3202.2 ms  ✓ ConstructionBase
+   1557.7 ms  ✓ WoodburyMatrices
+   1761.5 ms  ✓ PDMats
+   5387.5 ms  ✓ Crayons
+   3559.1 ms  ✓ SentinelArrays
+   2959.7 ms  ✓ CFTime
+   3980.3 ms  ✓ StructTypes
+    915.2 ms  ✓ Scratch
+   3975.7 ms  ✓ StructUtils
+   1467.0 ms  ✓ Preferences
+   3799.8 ms  ✓ Compat
+   3596.4 ms  ✓ PkgVersion
+   4290.9 ms  ✓ UnicodeFun
+   3883.6 ms  ✓ AbstractFFTs → AbstractFFTsTestExt
+    901.5 ms  ✓ StackViews
+    988.3 ms  ✓ TableTraits
+    948.7 ms  ✓ PaddedViews
+   1149.3 ms  ✓ Primes
+   1310.9 ms  ✓ FillArrays → FillArraysSparseArraysExt
+   1330.8 ms  ✓ InverseFunctions → InverseFunctionsTestExt
+    886.1 ms  ✓ InverseFunctions → InverseFunctionsDatesExt
+   1071.6 ms  ✓ FillArrays → FillArraysStatisticsExt
+   1344.9 ms  ✓ Statistics → SparseArraysExt
+    908.1 ms  ✓ Ratios
+   3117.8 ms  ✓ SignedDistanceFields
+    818.3 ms  ✓ Showoff
+    848.3 ms  ✓ IntervalSets → IntervalSetsRandomExt
+    894.7 ms  ✓ IntervalSets → IntervalSetsStatisticsExt
+   3553.5 ms  ✓ DataStructures
+   6717.2 ms  ✓ FixedPointNumbers
+   1433.8 ms  ✓ AliasTables
+   2044.1 ms  ✓ SimpleTraits
+   1047.1 ms  ✓ CodecZlib
+   1196.6 ms  ✓ LogExpFunctions
+    768.1 ms  ✓ LRUCache → SerializationExt
+   1194.5 ms  ✓ Adapt → AdaptSparseArraysExt
+    922.3 ms  ✓ OffsetArrays → OffsetArraysAdaptExt
+    952.7 ms  ✓ PooledArrays
+    979.6 ms  ✓ ConstructionBase → ConstructionBaseIntervalSetsExt
+   2148.4 ms  ✓ GeoInterface
+    857.6 ms  ✓ ConstructionBase → ConstructionBaseLinearAlgebraExt
+   3180.6 ms  ✓ Missings
+   1263.7 ms  ✓ FillArrays → FillArraysPDMatsExt
+   1511.3 ms  ✓ AxisAlgorithms
+  11321.0 ms  ✓ FileIO
+    785.8 ms  ✓ StructUtils → StructUtilsStaticArraysCoreExt
+   1164.1 ms  ✓ RelocatableFolders
+   1101.3 ms  ✓ JLLWrappers
+   1195.1 ms  ✓ MPIPreferences
+    836.6 ms  ✓ PrecompileTools
+   1027.1 ms  ✓ Compat → CompatLinearAlgebraExt
+    983.1 ms  ✓ MosaicViews
+   1437.2 ms  ✓ AxisArrays
+   3579.2 ms  ✓ ComputePipeline
+   2410.1 ms  ✓ FFTA
+    988.7 ms  ✓ SortingAlgorithms
+   3851.6 ms  ✓ Tables
+    841.1 ms  ✓ Ratios → RatiosFixedPointNumbersExt
+    867.4 ms  ✓ LogExpFunctions → LogExpFunctionsInverseFunctionsExt
+    891.7 ms  ✓ SortTileRecursiveTree
+   1344.6 ms  ✓ CoreMath_jll
+   2360.5 ms  ✓ DiskArrays
+   4273.4 ms  ✓ QuadGK
+   1156.9 ms  ✓ Graphite2_jll
+    943.6 ms  ✓ dlfcn_win32_jll
+   5000.7 ms  ✓ ColorTypes
+   1442.4 ms  ✓ Libmount_jll
+   1392.0 ms  ✓ aws_c_common_jll
+   1355.6 ms  ✓ LLVMOpenMP_jll
+   1289.9 ms  ✓ Bzip2_jll
+   1342.3 ms  ✓ Lz4_jll
+   1371.4 ms  ✓ Xorg_libpciaccess_jll
+   1345.1 ms  ✓ libaec_jll
+   1359.0 ms  ✓ s2n_tls_jll
+   1301.3 ms  ✓ Rmath_jll
+   1343.1 ms  ✓ Xorg_libXau_jll
+   1190.0 ms  ✓ libpng_jll
+   1287.7 ms  ✓ libfdk_aac_jll
+   1247.8 ms  ✓ Imath_jll
+   1244.7 ms  ✓ Giflib_jll
+   1350.5 ms  ✓ LAME_jll
+   1239.7 ms  ✓ LERC_jll
+   1180.3 ms  ✓ EarCut_jll
+   1519.8 ms  ✓ CRlibm_jll
+   1636.2 ms  ✓ XZ_jll
+   2491.3 ms  ✓ JpegTurbo_jll
+   1811.9 ms  ✓ Ogg_jll
+   1670.4 ms  ✓ Xorg_libXdmcp_jll
+   1331.6 ms  ✓ x265_jll
+   1367.0 ms  ✓ libaom_jll
+   1572.1 ms  ✓ Zstd_jll
+   1524.9 ms  ✓ Expat_jll
+   2156.4 ms  ✓ x264_jll
+   1196.9 ms  ✓ Opus_jll
+   1339.0 ms  ✓ Xorg_xtrans_jll
+   1755.8 ms  ✓ MicrosoftMPI_jll
+   1954.0 ms  ✓ Libiconv_jll
+   1668.0 ms  ✓ Libffi_jll
+   1211.1 ms  ✓ isoband_jll
+   1532.5 ms  ✓ OpenSpecFun_jll
+   1584.3 ms  ✓ Libuuid_jll
+   1264.1 ms  ✓ OpenBLASConsistentFPCSR_jll
+   2043.9 ms  ✓ FriBidi_jll
+   3335.4 ms  ✓ MPItrampoline_jll
+   4881.6 ms  ✓ StringManipulation
+  73767.3 ms  ✓ Unitful
+  26069.6 ms  ✓ FilePathsBase
+   7130.1 ms  ✓ ChainRulesCore
+   9290.3 ms  ✓ StatsBase
+   1445.9 ms  ✓ StructUtils → StructUtilsTablesExt
+   5227.4 ms  ✓ StructArrays
+   1623.2 ms  ✓ CoreMath
+   3998.3 ms  ✓ CommonDataModel
+   7320.2 ms  ✓ GeometryOpsCore
+   1406.9 ms  ✓ SQLite_jll
+  51343.2 ms  ✓ StaticArrays
+   1189.8 ms  ✓ ColorTypes → StyledStringsExt
+   2088.6 ms  ✓ aws_checksums_jll
+   2391.2 ms  ✓ aws_c_cal_jll
+   2013.4 ms  ✓ aws_c_compression_jll
+  58929.2 ms  ✓ SIMD
+  10535.6 ms  ✓ ColorVectorSpace
+   2600.3 ms  ✓ aws_c_sdkutils_jll
+   1642.6 ms  ✓ Pixman_jll
+   1957.2 ms  ✓ FreeType2_jll
+   1502.8 ms  ✓ libdrm_jll
+   1680.7 ms  ✓ Rmath
+   1180.4 ms  ✓ CRlibm
+   1329.3 ms  ✓ libsixel_jll
+   2352.8 ms  ✓ OpenEXR_jll
+   1926.6 ms  ✓ libvorbis_jll
+  15143.5 ms  ✓ Colors
+   1744.5 ms  ✓ Blosc_jll
+   3475.1 ms  ✓ CodecZstd
+   1811.7 ms  ✓ libzip_jll
+   1669.4 ms  ✓ Libtiff_jll
+   5040.1 ms  ✓ Xorg_libxcb_jll
+   1623.3 ms  ✓ StringEncodings
+  67142.9 ms  ✓ Parsers
+   1202.3 ms  ✓ Isoband
+   1903.0 ms  ✓ XML2_jll
+   1792.2 ms  ✓ GettextRuntime_jll
+   1179.9 ms  ✓ Unitful → ConstructionBaseUnitfulExt
+   1355.7 ms  ✓ Unitful → NaNMathExt
+   1183.9 ms  ✓ Unitful → InverseFunctionsUnitfulExt
+   1421.1 ms  ✓ Unitful → PrintfExt
+   1173.8 ms  ✓ FilePathsBase → FilePathsBaseMmapExt
+   2677.1 ms  ✓ FilePathsBase → FilePathsBaseTestExt
+   1962.6 ms  ✓ FilePaths
+   6090.1 ms  ✓ SpecialFunctions
+    905.4 ms  ✓ AbstractFFTs → AbstractFFTsChainRulesCoreExt
+    836.4 ms  ✓ StructArrays → StructArraysAdaptExt
+   1370.6 ms  ✓ PDMats → StatsBaseExt
+   4280.5 ms  ✓ ChainRulesCore → ChainRulesCoreSparseArraysExt
+   1191.3 ms  ✓ StructArrays → StructArraysSparseArraysExt
+    863.8 ms  ✓ StructArrays → StructArraysLinearAlgebraExt
+   3020.7 ms  ✓ LogExpFunctions → LogExpFunctionsChainRulesCoreExt
+   1248.5 ms  ✓ StaticArrays → StaticArraysStatisticsExt
+   1155.2 ms  ✓ FillArrays → FillArraysStaticArraysExt
+   1359.0 ms  ✓ Adapt → AdaptStaticArraysExt
+   1230.2 ms  ✓ ConstructionBase → ConstructionBaseStaticArraysExt
+   3999.4 ms  ✓ StaticArrays → StaticArraysChainRulesCoreExt
+   3895.2 ms  ✓ CoordinateTransformations
+   1492.2 ms  ✓ aws_c_io_jll
+   3823.9 ms  ✓ StructArrays → StructArraysStaticArraysExt
+   2977.0 ms  ✓ QOI
+   1672.6 ms  ✓ FreeType
+   2029.1 ms  ✓ Fontconfig_jll
+   3999.2 ms  ✓ Graphics
+   1317.5 ms  ✓ Animations
+   7696.5 ms  ✓ IntervalArithmetic
+   3352.6 ms  ✓ OpenEXR
+   8623.9 ms  ✓ ColorSchemes
+  42156.9 ms  ✓ GeometryBasics
+   3422.4 ms  ✓ PROJ_jll
+   3328.5 ms  ✓ Xorg_libX11_jll
+  56197.1 ms  ✓ Automa
+  67091.7 ms  ✓ ImageCore
+  21538.0 ms  ✓ JSON
+   1514.6 ms  ✓ InlineStrings → ParsersExt
+   2321.3 ms  ✓ Hwloc_jll
+   2867.7 ms  ✓ Glib_jll
+  36075.2 ms  ✓ JSON3
+   1198.3 ms  ✓ ColorVectorSpace → SpecialFunctionsExt
+   4372.2 ms  ✓ SpecialFunctions → SpecialFunctionsChainRulesCoreExt
+   3624.0 ms  ✓ HypergeometricFunctions
+   1636.7 ms  ✓ aws_c_http_jll
+   2322.5 ms  ✓ IntervalArithmetic → IntervalArithmeticSparseArraysExt
+   2143.1 ms  ✓ IntervalArithmetic → IntervalArithmeticIntervalSetsExt
+   9950.9 ms  ✓ Interpolations
+  10821.1 ms  ✓ Geodesy
+    PlotUtils Being precompiled by another process (pid: 21560, pidfile: /home/jules/.julia/compiled/v1.12/PlotUtils/YveHG_XDpJ2.ji.pidfile)
+   4345.5 ms  ✓ IntervalArithmetic → IntervalArithmeticIrrationalConstantsExt
+   2789.3 ms  ✓ IntervalArithmetic → IntervalArithmeticLinearAlgebraExt
+ 109537.6 ms  ✓ PrettyTables
+   4046.9 ms  ✓ GeometryBasics → GeometryBasicsGeoInterfaceExt
+   4020.0 ms  ✓ Packing
+  10271.7 ms  ✓ ShaderAbstractions
+    Xorg_libXrender_jll Being precompiled by another process (pid: 21560, pidfile: /home/jules/.julia/compiled/v1.12/Xorg_libXrender_jll/izQY6_XDpJ2.ji.pidfile)
+    Xorg_libXext_jll Being precompiled by another process (pid: 21560, pidfile: /home/jules/.julia/compiled/v1.12/Xorg_libXext_jll/H6ltV_XDpJ2.ji.pidfile)
+    Xorg_libXfixes_jll Being precompiled by another process (pid: 21560, pidfile: /home/jules/.julia/compiled/v1.12/Xorg_libXfixes_jll/dilDp_XDpJ2.ji.pidfile)
+  11201.9 ms  ✓ FreeTypeAbstraction
+  13392.8 ms  ✓ Proj
+  10464.6 ms  ✓ ImageBase
+  12839.3 ms  ✓ Sixel
+   6175.0 ms  ✓ ColorBrewer
+  17538.2 ms  ✓ JpegTurbo
+  25956.6 ms  ✓ PNGFiles
+    MPIABI_jll Being precompiled by another process (pid: 21560, pidfile: /home/jules/.julia/compiled/v1.12/MPIABI_jll/4sp6G_XDpJ2.ji.pidfile)
+   5571.7 ms  ✓ WeakRefStrings
+    GeoJSON Being precompiled by another process (pid: 21560, pidfile: /home/jules/.julia/compiled/v1.12/GeoJSON/l1tgg_XDpJ2.ji.pidfile)
+    CSV Being precompiled by another process (pid: 21560, pidfile: /home/jules/.julia/compiled/v1.12/CSV/HHBkp_XDpJ2.ji.pidfile)
+    StatsFuns Being precompiled by another process (pid: 21560, pidfile: /home/jules/.julia/compiled/v1.12/StatsFuns/530lR_XDpJ2.ji.pidfile)
+  43305.4 ms  ✓ GridLayoutBase
+   5992.7 ms  ✓ OpenMPI_jll
+   4412.8 ms  ✓ MPICH_jll
+  34659.9 ms  ✓ Xorg_libXrender_jll
+  34659.2 ms  ✓ Xorg_libXext_jll
+  34658.8 ms  ✓ Xorg_libXfixes_jll
+   3598.3 ms  ✓ aws_c_auth_jll
+  10094.5 ms  ✓ ImageAxes
+  14564.3 ms  ✓ MPIABI_jll
+   6391.0 ms  ✓ Interpolations → InterpolationsUnitfulExt
+   5699.8 ms  ✓ Libglvnd_jll
+  27996.1 ms  ✓ ExactPredicates
+   4432.2 ms  ✓ Cairo_jll
+   4199.5 ms  ✓ libva_jll
+  33399.4 ms  ✓ StatsFuns
+   3890.1 ms  ✓ aws_c_s3_jll
+   7585.8 ms  ✓ mpif_jll
+  84660.8 ms  ✓ PlotUtils
+   8350.7 ms  ✓ ImageMetadata
+  42966.4 ms  ✓ MathTeXEngine
+   7437.3 ms  ✓ libwebp_jll
+   4605.1 ms  ✓ HarfBuzz_jll
+   2543.2 ms  ✓ StatsFuns → StatsFunsInverseFunctionsExt
+    Distributions Being precompiled by another process (pid: 21560, pidfile: /home/jules/.julia/compiled/v1.12/Distributions/xILW0_XDpJ2.ji.pidfile)
+    HDF5_jll Being precompiled by another process (pid: 21560, pidfile: /home/jules/.julia/compiled/v1.12/HDF5_jll/w9xrx_XDpJ2.ji.pidfile)
+   8235.6 ms  ✓ StatsFuns → StatsFunsChainRulesCoreExt
+   9072.4 ms  ✓ Netpbm
+   3815.8 ms  ✓ libass_jll
+   3972.2 ms  ✓ Pango_jll
+  16862.5 ms  ✓ Distributions
+  16862.3 ms  ✓ HDF5_jll
+   9786.4 ms  ✓ WebP
+  30652.5 ms  ✓ DelaunayTriangulation
+   5145.1 ms  ✓ FFMPEG_jll
+ 192404.5 ms  ✓ TiffImages
+    HDF5 Being precompiled by another process (pid: 21560, pidfile: /home/jules/.julia/compiled/v1.12/HDF5/L7Dga_XDpJ2.ji.pidfile)
+   6874.4 ms  ✓ Distributions → DistributionsTestExt
+    GeometryOps Being precompiled by another process (pid: 21560, pidfile: /home/jules/.julia/compiled/v1.12/GeometryOps/ScOXP_XDpJ2.ji.pidfile)
+   5849.4 ms  ✓ ImageIO
+  12079.3 ms  ✓ Cairo
+  11576.9 ms  ✓ Distributions → DistributionsChainRulesCoreExt
+   6948.8 ms  ✓ NetCDF_jll
+    NCDatasets Being precompiled by another process (pid: 21560, pidfile: /home/jules/.julia/compiled/v1.12/NCDatasets/lxvtD_XDpJ2.ji.pidfile)
+   5931.6 ms  ✓ KernelDensity
+  15356.3 ms  ✓ GeometryOps
+    GeometryOps → GeometryOpsProjExt Being precompiled by another process (pid: 21560, pidfile: /home/jules/.julia/compiled/v1.12/GeometryOpsProjExt/95pnc_XDpJ2.ji.pidfile)
+  96959.9 ms  ✓ GeoJSON
+  24105.9 ms  ✓ HDF5
+   4443.9 ms  ✓ GeometryOps → GeometryOpsProjExt
+    MAT Being precompiled by another process (pid: 21560, pidfile: /home/jules/.julia/compiled/v1.12/MAT/3FHIv_XDpJ2.ji.pidfile)
+   3976.5 ms  ✓ NaturalEarth
+ 101407.4 ms  ✓ CSV
+   3288.7 ms  ✓ MAT
+  26670.5 ms  ✓ NCDatasets
+ 171489.7 ms  ✓ DataFrames
+   2171.6 ms  ✓ GeometryOps → GeometryOpsDataFramesExt
+ 396786.1 ms  ✓ Makie
+  11558.0 ms  ✓ GeometryOps → GeometryOpsMakieExt
+  11570.4 ms  ✓ GeoJSON → GeoJSONMakieExt
+  12159.3 ms  ✓ GeoInterface → GeoInterfaceMakieExt
+  15677.9 ms  ✓ GeoMakie
+ 135765.4 ms  ✓ CairoMakie
+  11758.0 ms  ✓ TwoTimescaleResilience
+  10856.3 ms  ✓ TwoTimescaleResilience → TwoTimescaleResilienceNCDatasetsExt
+  314 dependencies successfully precompiled in 935 seconds. 42 already precompiled.
+     Testing Running tests...
+┌ Warning: No valid ECOTOX records found for CAS '1336363'. Skipping.
+└ @ Main.ECOTOXParser /app/src/ECOTOXParser.jl:235
+┌ Warning: No valid ECOTOX records found for CAS '1336363'. Skipping.
+└ @ Main.ECOTOXParser /app/src/ECOTOXParser.jl:235
+--- ISIMIP MoA DEB 3x3 Demo ---
+
+Fish Profile Amplification Factor (Fgrid):
+3×3 Matrix{Float64}:
+ 19.4615  19.4615  19.4615
+ 19.4615  19.4615  19.4615
+ 19.4615  19.4615  19.4615
+
+Thermal Mode:
+3×3 Matrix{Float64}:
+ 25.1505  29.8525  34.605
+ 26.711   33.423   37.2075
+ 23.5903  25.1805  26.801
+
+Oxygen Mode:
+3×3 Matrix{Float64}:
+ 22.1505  54.3025   91.805
+ 32.481   71.113   118.157
+ 13.0203  22.2405   32.751
+
+Assimilation Axis:
+3×3 Matrix{Float64}:
+ 46.522    96.1165  167.446
+ 58.7627  118.784   252.602
+ 37.1407   47.122    60.6302
+
+Maintenance Axis:
+3×3 Matrix{Float64}:
+ 346.254  632.241  1017.15
+ 412.69   765.437  1386.95
+ 291.323  347.289   415.916
+
+Adaptive Margin (Agrid):
+3×3 Matrix{Float64}:
+ -161.162  -298.393  -484.573
+ -193.326  -362.158  -669.049
+ -134.818  -161.865  -195.518
+
+Restoring Force (lambda):
+3×3 Matrix{Float64}:
+ 0.04  0.04  0.04
+ 0.04  0.04  0.04
+ 0.04  0.04  0.04
+--- Species Profile Comparison 3x3 Demo ---
+
+Running profile: aquatic_invertebrate
+Mean Amplification: 19.461538461538456
+Max Amplification:  19.46153846153846
+Fgrid raster:
+3×3 Matrix{Float64}:
+ 19.4615  19.4615  19.4615
+ 19.4615  19.4615  19.4615
+ 19.4615  19.4615  19.4615
+
+Running profile: fish
+Mean Amplification: 19.461538461538456
+Max Amplification:  19.46153846153846
+Fgrid raster:
+3×3 Matrix{Float64}:
+ 19.4615  19.4615  19.4615
+ 19.4615  19.4615  19.4615
+ 19.4615  19.4615  19.4615
+
+Running profile: bivalve
+Mean Amplification: 19.461538461538456
+Max Amplification:  19.46153846153846
+Fgrid raster:
+3×3 Matrix{Float64}:
+ 19.4615  19.4615  19.4615
+ 19.4615  19.4615  19.4615
+ 19.4615  19.4615  19.4615
+
+Running profile: human
+Mean Amplification: 19.461538461538456
+Max Amplification:  19.46153846153846
+Fgrid raster:
+3×3 Matrix{Float64}:
+ 19.4615  19.4615  19.4615
+ 19.4615  19.4615  19.4615
+ 19.4615  19.4615  19.4615
+Sample data empty for selected CAS, testing with manual mock DataFrame.
+Test Summary:                | Pass  Total     Time
+TwoTimescaleResilience Tests | 1113   1113  1m32.4s
+     Testing TwoTimescaleResilience tests passed
