@@ -34,4 +34,7 @@ using TwoTimescaleResilience
     include("test_deb_pipeline_recovery_math.jl")
 
     include("test_ecotox.jl")
+    include("test_amp_library.jl")
+    include("test_amp_species_profile.jl")
+    include("test_amp_pipeline_integration.jl")
 end
