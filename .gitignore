@@ -43,3 +43,6 @@ docs/beamer/isimip_moa_deb_estuary_beamer.vrb
 data/ecotox/ecotox_ascii_03_12_2026.zip
 data/ecotox/ecotox_ascii_03_12_2026/chemical_carriers.txt
 data/ecotox/results.txt
+data/ECOTOX_Toxicity_Library_50000.json
+.gitignore
+data/ECOTOX_Toxicity_Library_7440_43_9.json

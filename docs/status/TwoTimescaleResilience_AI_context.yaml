@@ -4,10 +4,10 @@
 
 metadata:
   file_name: "TwoTimescaleResilience_AI_context.yaml"
-  last_updated: "2026-05-23"
+  last_updated: "2026-05-24"
   update_reason: >
-    Full refreshed context after AmP runtime adapter Tranche 1 completion and planning of a new
-    multi-species 3x3 synthetic CairoMakie example script.
+    Full refreshed context after AmP runtime adapter Tranche 1 completion, multi-species 3x3 CairoMakie example planning,
+    and ECOTOX CAS normalization + multi-compound toxicity library builder completion.
   intended_reader: "AI coding assistants and future Copilot/LLM sessions"
 
 project:
@@ -44,7 +44,7 @@ scientific_purpose:
     - "Two separated timescales avoid needing Jacobian ecosystem matrices over large spatial rasters."
     - "Fubini's theorem shows integrated response burden scales as 1/lambda."
     - "Species defense parameters are anchored in Add-my-Pet DEB data."
-    - "Stressor attack parameters are intended to be anchored in EPA ECOTOX-derived NOEC/EC50/effect/taxon summaries."
+    - "Stressor attack parameters are anchored through ECOTOX-derived NOEC/EC50/effect/taxon summaries."
     - "Arbitrary Gamma interaction parameters are being replaced by formal mixture toxicity logic: Concentration Addition and Independent Action."
 
 mathematical_framework:
@@ -116,33 +116,6 @@ mathematical_framework:
         - "amplification_from_margin_grid(Agrid, params::DEBAxisParams; A_control=params.A0)"
 
 core_runtime_structs:
-  BackgroundParams:
-    fields:
-      A0: "Float64 = 1.0"
-      alpha: "Float64 = 1.15"
-      KB: "Float64 = 0.55"
-      hill: "Float64 = 2.0"
-      use_saturating_phi: "Bool = true"
-      lambda_min: "Float64 = 0.04"
-      lambda_max: "Float64 = 1.0"
-      KA: "Float64 = 0.30"
-    role: "Older/general background-stress parameter object."
-  BackgroundStressor:
-    fields:
-      name: "String"
-      value: "Float64"
-      weight: "Float64"
-    role: "Scalar background stressor descriptor."
-  ConditionBufferParams:
-    fields:
-      rho_A: "Float64 = 0.20"
-      rho_M: "Float64 = 0.20"
-      rho_E: "Float64 = 0.10"
-      delta_Z: "Float64 = 0.05"
-      omega_Z: "Float64 = 0.25"
-      Z_min: "Float64 = -1.0"
-      Z_max: "Float64 = 1.0"
-    role: "Optional dynamic condition/reserve buffer parameters."
   DEBAxisParams:
     fields:
       A0: "Float64 = 1.0"
@@ -157,13 +130,6 @@ core_runtime_structs:
     role: "Primary species defense parameter object; target of AmP adapter."
     axis_order: ["assimilation", "maintenance", "growth", "reproduction"]
     note: "alpha_axes are depletion/sensitivity coefficients, not necessarily normalized weights; they need not sum to one."
-  DEBAxisMapping:
-    fields:
-      W: "Matrix{Float64}; rows correspond to assimilation, maintenance, growth, reproduction"
-      interactions: "Union{Nothing, Vector{Matrix{Float64}}} = nothing"
-      clamp_nonnegative: "Bool = true"
-      clamp_unit: "Bool = false"
-    role: "Direct stressor-to-DEB-axis mapping, used by older/direct DEB path."
   ExposureFilter:
     fields:
       multipliers: "Vector{Float64}"
@@ -184,17 +150,6 @@ core_runtime_structs:
       clamp_nonnegative: "Bool = true"
       clamp_unit: "Bool = false"
     role: "Mode-of-action-to-DEB-axis mapping."
-  PulseStressor:
-    fields:
-      name: "String"
-      amplitude: "Float64"
-      t_start: "Float64"
-      t_end: "Float64"
-      k: "Float64"
-      weight: "Float64"
-    role: "Acute pulse/event stressor descriptor."
-  TwoTimescaleSimulationResult:
-    role: "Output object for two-timescale simulations."
   SpeciesProfile:
     fields:
       name: "String"
@@ -205,7 +160,18 @@ core_runtime_structs:
       buffer_params: "Union{Nothing, ConditionBufferParams} = nothing"
       description: "String = empty"
     role: "Central runtime integration object for species-aware modeling."
-    important_note: "Future empirical adapters should construct or populate SpeciesProfile objects rather than redesigning the engine."
+  BackgroundParams:
+    role: "Older/general background-stress parameter object."
+  BackgroundStressor:
+    role: "Scalar background stressor descriptor."
+  ConditionBufferParams:
+    role: "Optional dynamic condition/reserve buffer parameters."
+  DEBAxisMapping:
+    role: "Direct stressor-to-DEB-axis mapping, used by older/direct DEB path."
+  PulseStressor:
+    role: "Acute pulse/event stressor descriptor."
+  TwoTimescaleSimulationResult:
+    role: "Output object for two-timescale simulations."
 
 runtime_execution_graph:
   scalar_or_cell_pipeline:
@@ -255,7 +221,6 @@ package_structure_observed:
         - "data/ecotox/ecotox_ascii_03_12_2026/validation"
     docs:
       role: "LaTeX documentation, manuscript derivations, and presentation material."
-      subdirectories: ["beamer", "tex"]
     examples:
       role: "Executable demos, real raster workflows, NetCDF inspection, animations, and visualization scripts."
     output:
@@ -269,35 +234,15 @@ package_structure_observed:
   src_files:
     TwoTimescaleResilience.jl:
       role: "Main module entrypoint."
-      includes_observed_before_amp_update:
-        - "deb_axes.jl"
-        - "condition_buffer.jl"
-        - "reduced_deb_response.jl"
-        - "mode_of_action.jl"
-        - "default_isimip_moa.jl"
-        - "exposure_filters.jl"
-        - "moa_deb_mapping.jl"
-        - "isimip_deb_pipeline.jl"
-        - "species_defaults.jl"
-        - "isimip_event_response.jl"
-        - "background.jl"
-        - "grids.jl"
-        - "pulses.jl"
-        - "simulation.jl"
-        - "metrics.jl"
-        - "plotting.jl"
-        - "ascii.jl"
-        - "netcdf.jl"
       amp_update: "After AmP Tranche 1, src/amp_library.jl is included and its five functions are exported."
+      ecotox_note: "ECOTOXParser.jl has historically been a sidecar parser module; include/export state in main module should be checked before assuming public API."
     amp_library.jl:
       role: "Runtime AmP JSON loader/adapter implemented in AmP Tranche 1."
     AmP_Translator.jl:
       role: "Offline Add-my-Pet translator; produces AmP species JSON."
       observed_function: "process_species_data()"
     ECOTOXParser.jl:
-      role: "Offline EPA ECOTOX ASCII parser; extracts NOEC/EC50/effect/taxon summaries for target CAS."
-      observed_functions:
-        - "parse_ecotox_data(results_path::String, tests_path::String, species_path::String, target_cas::String)"
+      role: "Offline EPA ECOTOX ASCII parser and now multi-compound toxicity library builder with CAS normalization."
     deb_axes.jl:
       role: "DEB-axis mapping, adaptive margin, restoring force, amplification, grid variants, and pulse-axis response."
     default_isimip_moa.jl:
@@ -317,6 +262,7 @@ empirical_pipelines:
   amp_defense_pipeline:
     source_database: "Add-my-Pet allStat.mat"
     offline_builder: "src/AmP_Translator.jl"
+    runtime_adapter: "src/amp_library.jl"
     current_json_library_path: "data/AmP_Species_Library.json"
     biological_role: "Species-specific defense bounds and DEB physiological parameters."
     observed_json_example:
@@ -350,13 +296,18 @@ empirical_pipelines:
     current_script: "src/ECOTOXParser.jl"
     biological_role: "Empirical attack parameters: NEC/NOEC thresholds, EC50/tolerance scaling, taxonomic and effect-code routing."
     parser_capabilities_reported:
-      - "Parses large ECOTOX ASCII files while bypassing mixed-type formatting traps."
+      - "Parses ECOTOX ASCII pipe-delimited files while bypassing mixed-type formatting traps."
       - "Joins results.txt, tests.txt via test_id, and species.txt via species_number."
+      - "Filters by CAS using normalized digits-only matching."
       - "Calculates medians for NOEC and EC50."
       - "Groups medians by taxonomic class and physiological effect code."
-    runtime_integration_state: "Not yet wired into runtime mappings. Future work should create lightweight ECOTOX adapters."
-    first_pass_formula: "x_j = max(0, C_j - NOEC_j) / (EC50_j - NOEC_j)"
-    suggested_effect_routing:
+      - "Writes flat JSON arrays suitable for runtime adapters."
+      - "Builds one unified toxicity library for multiple compounds/CAS values."
+    runtime_integration_state: >
+      ECOTOX toxicity library builder is now stable enough to produce multi-compound JSON records with cas_norm and cas_hyphenated.
+      Runtime active-stress functions, effect-code-to-DEB-axis routing, and mixture aggregation are not yet implemented unless added later.
+    first_pass_runtime_formula_for_future: "x_j = max(0, C_j - NOEC_j) / (EC50_j - NOEC_j)"
+    suggested_effect_routing_for_future:
       MOR: "maintenance"
       GRO: "growth"
       REP: "reproduction"
@@ -366,61 +317,158 @@ empirical_pipelines:
       DVP: "growth"
       FEC: "reproduction"
 
-implementation_updates:
-  - date: "2026-05-23"
-    tranche: "AmP runtime integration Tranche 1"
-    status: "completed"
-    summary: >
-      Implemented lightweight runtime adapter for Add-my-Pet species JSON library. The adapter loads
-      data/AmP_Species_Library.json using JSON.jl and converts AmP records into existing DEBAxisParams.
-    files_added:
-      - "src/amp_library.jl"
-      - "test/test_amp_library.jl"
-    files_modified:
-      - "src/TwoTimescaleResilience.jl"
-      - "test/runtests.jl"
-      - "test/test_ecotox.jl"
-    main_module_update:
-      included_file: "src/amp_library.jl"
-      new_exports:
-        - "amp_species_key"
-        - "load_amp_species_library"
-        - "validate_amp_record"
-        - "amp_record_to_deb_params"
-        - "amp_species_deb_params"
-    implemented_functions:
-      amp_species_key:
-        signature: "amp_species_key(name::AbstractString)::String"
-        behavior: "Strips leading/trailing whitespace and collapses any run of whitespace to a single underscore; existing underscores are preserved."
-      load_amp_species_library:
-        signature: "load_amp_species_library(path::AbstractString = joinpath(\"data\", \"AmP_Species_Library.json\"))"
-        behavior: "Loads parsed JSON object using JSON.parsefile from JSON.jl. JSON3 is not used."
-      validate_amp_record:
-        signature: "validate_amp_record(record)::Bool"
-        behavior: "Validates A0, alpha_axes, lambda_bounds.KA, lambda_bounds.lambda_min, lambda_bounds.lambda_max; throws ArgumentError for invalid records."
-      amp_record_to_deb_params:
-        signature: "amp_record_to_deb_params(record)::DEBAxisParams"
-        behavior: "Validates and converts one AmP record to DEBAxisParams."
-      amp_species_deb_params:
-        signature: "amp_species_deb_params(library, species_name::AbstractString)::DEBAxisParams"
-        behavior: "Supports exact JSON keys and human-readable names through amp_species_key; missing species throw KeyError; no silent defaults."
-    test_coverage:
-      - "Loads real data/AmP_Species_Library.json."
-      - "Confirms Abatus_cordatus exists."
-      - "Tests species-key normalization including multiple whitespace collapse."
-      - "Validates Abatus_cordatus record."
-      - "Converts Abatus_cordatus to DEBAxisParams and checks A0, alpha_axes, lambda_min, lambda_max, KA."
-      - "Checks flexible lookup for Abatus_cordatus and Abatus cordatus."
-      - "Checks baseline restoring force lambda0 ≈ 0.01097."
-      - "Checks invalid records throw ArgumentError."
-    additional_fix: >
-      Full-suite execution exposed an ECOTOX fixture path issue. Since test_data/sample_results.txt existed,
-      test_ecotox.jl was fixed to resolve fixture paths relative to the test/repository directory using @__DIR__
-      instead of relying on current working directory. ECOTOX scientific logic was not changed.
-    integration_state_after_update: >
-      AmP JSON can now be consumed at runtime as DEBAxisParams. SpeciesProfile construction from AmP is not yet part of the package
-      unless implemented later. Current example scripts can use amp_species_deb_params to replace deb_params in an existing default
-      SpeciesProfile-derived workflow pattern.
+implemented_amp_runtime_adapter:
+  status: "completed"
+  date: "2026-05-23"
+  files_added:
+    - "src/amp_library.jl"
+    - "test/test_amp_library.jl"
+  files_modified:
+    - "src/TwoTimescaleResilience.jl"
+    - "test/runtests.jl"
+    - "test/test_ecotox.jl"
+  exports:
+    - "amp_species_key"
+    - "load_amp_species_library"
+    - "validate_amp_record"
+    - "amp_record_to_deb_params"
+    - "amp_species_deb_params"
+  functions:
+    amp_species_key:
+      signature: "amp_species_key(name::AbstractString)::String"
+      behavior: "Strips leading/trailing whitespace and collapses any run of whitespace to a single underscore; existing underscores are preserved."
+    load_amp_species_library:
+      signature: "load_amp_species_library(path::AbstractString = joinpath(\"data\", \"AmP_Species_Library.json\"))"
+      behavior: "Loads parsed JSON object using JSON.parsefile from JSON.jl. JSON3 is not used."
+    validate_amp_record:
+      signature: "validate_amp_record(record)::Bool"
+      behavior: "Validates A0, alpha_axes, lambda_bounds.KA, lambda_bounds.lambda_min, lambda_bounds.lambda_max; throws ArgumentError for invalid records."
+    amp_record_to_deb_params:
+      signature: "amp_record_to_deb_params(record)::DEBAxisParams"
+      behavior: "Validates and converts one AmP record to DEBAxisParams."
+    amp_species_deb_params:
+      signature: "amp_species_deb_params(library, species_name::AbstractString)::DEBAxisParams"
+      behavior: "Supports exact JSON keys and human-readable names through amp_species_key; missing species throw KeyError; no silent defaults."
+  test_coverage:
+    - "Loads real data/AmP_Species_Library.json."
+    - "Confirms Abatus_cordatus exists."
+    - "Tests species-key normalization including multiple whitespace collapse."
+    - "Validates Abatus_cordatus record."
+    - "Converts Abatus_cordatus to DEBAxisParams and checks A0, alpha_axes, lambda_min, lambda_max, KA."
+    - "Checks flexible lookup for Abatus_cordatus and Abatus cordatus."
+    - "Checks baseline restoring force lambda0 ≈ 0.01097."
+    - "Checks invalid records throw ArgumentError."
+  additional_fix: >
+    Full-suite execution exposed an ECOTOX fixture path issue. Since test_data/sample_results.txt existed,
+    test_ecotox.jl was fixed to resolve fixture paths relative to the test/repository directory using @__DIR__
+    instead of relying on current working directory. ECOTOX scientific logic was not changed.
+
+implemented_ecotox_library_builder:
+  status: "completed"
+  date: "2026-05-24"
+  scope: >
+    Implemented CAS normalization layer and multi-compound ECOTOX toxicity library building. This remains a parser/library-builder layer,
+    not a runtime active-stress or DEB-burden adapter.
+  primary_file: "src/ECOTOXParser.jl"
+  tests_file: "test/test_ecotox.jl"
+  dependencies_used:
+    - "CSV"
+    - "DataFrames"
+    - "Statistics"
+    - "JSON"
+  exports_expected:
+    - "parse_ecotox_data"
+    - "summarize_ecotox_endpoints"
+    - "write_ecotox_library_json"
+    - "build_ecotox_toxicity_library"
+    - "normalize_cas"
+    - "hyphenate_cas"
+    - "build_ecotox_toxicity_library_multi"
+  cas_normalization:
+    normalize_cas:
+      signature: "normalize_cas(cas)::String"
+      behavior: "missing/nothing -> empty string; strips whitespace; removes all non-digit characters; returns digits-only string."
+      examples:
+        - "normalize_cas(\"50-00-0\") == \"50000\""
+        - "normalize_cas(\"50000\") == \"50000\""
+        - "normalize_cas(\" 7440-43-9 \" ) == \"7440439\""
+        - "normalize_cas(\"CAS 50-00-0\") == \"50000\""
+        - "normalize_cas(missing) == \"\""
+        - "normalize_cas(nothing) == \"\""
+    hyphenate_cas:
+      signature: "hyphenate_cas(cas)::String"
+      behavior: >
+        Calls normalize_cas first. If fewer than 4 digits, returns normalized string. Otherwise formats as prefix-middle-check,
+        where prefix is all digits except last 3, middle is second-to-last two digits, check is last digit.
+      examples:
+        - "hyphenate_cas(\"50000\") == \"50-00-0\""
+        - "hyphenate_cas(\"50-00-0\") == \"50-00-0\""
+        - "hyphenate_cas(\"50011\") == \"50-01-1\""
+        - "hyphenate_cas(\"50022\") == \"50-02-2\""
+        - "hyphenate_cas(\"7440439\") == \"7440-43-9\""
+        - "hyphenate_cas(\"123\") == \"123\""
+        - "hyphenate_cas(missing) == \"\""
+        - "hyphenate_cas(nothing) == \"\""
+  parser_matching:
+    parse_ecotox_data: >
+      target_cas and df.test_cas are compared using normalize_cas. Users can pass either digits-only CAS or hyphenated CAS.
+      Empty-normalized target CAS throws ArgumentError.
+  summary_schema:
+    required_columns:
+      - "cas"
+      - "cas_norm"
+      - "cas_hyphenated"
+      - "taxon_class"
+      - "effect_code"
+      - "NOEC_median"
+      - "EC50_median"
+      - "n_NOEC"
+      - "n_EC50"
+    notes:
+      - "cas is retained for backward compatibility and equals cas_norm."
+      - "cas_norm is the stable digits-only matching key."
+      - "cas_hyphenated is for readability/display."
+      - "effect_code is uppercase stripped string."
+      - "taxon_class is stripped string preserving original capitalization."
+      - "Endpoint matching is case-insensitive for NOEC and EC50."
+      - "EC50_median > NOEC_median is not enforced at parser stage; future runtime active-stress validation should handle denominator constraints."
+  json_schema:
+    structure: "flat array of records, not nested by CAS"
+    example_record:
+      cas: "50000"
+      cas_norm: "50000"
+      cas_hyphenated: "50-00-0"
+      taxon_class: "Actinopterygii"
+      effect_code: "MOR"
+      NOEC_median: 2.0
+      EC50_median: 4.5
+      n_NOEC: 8
+      n_EC50: 12
+    missing_values: "Julia missing values are written as JSON null."
+  multi_compound_builder:
+    function: "build_ecotox_toxicity_library_multi(results_path, tests_path, species_path, target_cas_list; output_path=nothing, skip_empty=true)"
+    behavior:
+      - "Accepts multiple CAS values in digits-only or hyphenated form."
+      - "Normalizes and deduplicates CAS values by cas_norm while preserving first-seen order."
+      - "Throws ArgumentError for empty target_cas_list."
+      - "Throws ArgumentError for CAS inputs that normalize to empty strings."
+      - "Processes each unique cas_norm once."
+      - "For empty parsed data, skip with warning when skip_empty=true."
+      - "Combines summaries using vcat(...; cols=:union)."
+      - "If all CAS produce no records, returns an empty DataFrame with the correct schema."
+      - "If output_path is provided and all records are empty, still writes a valid JSON empty array [] to output_path."
+      - "Always returns the combined summary DataFrame."
+  test_coverage:
+    - "normalize_cas handles hyphenated, digits-only, whitespace, text-prefixed, missing, and nothing inputs."
+    - "hyphenate_cas handles digits-only, hyphenated, short, missing, and nothing inputs."
+    - "parse_ecotox_data returns same rows for equivalent digits-only and hyphenated CAS when fixture supports both."
+    - "parse_ecotox_data throws ArgumentError for empty-normalized CAS such as '---'."
+    - "summarize_ecotox_endpoints emits cas, cas_norm, cas_hyphenated and required toxicity columns."
+    - "write_ecotox_library_json writes flat JSON records containing cas_norm and cas_hyphenated."
+    - "build_ecotox_toxicity_library returns summary DataFrame and writes JSON when output_path is provided."
+    - "build_ecotox_toxicity_library_multi accepts duplicate CAS forms and deduplicates by cas_norm."
+    - "build_ecotox_toxicity_library_multi writes one unified JSON file for multiple compounds."
+    - "build_ecotox_toxicity_library_multi throws ArgumentError for empty CAS list and invalid empty-normalized CAS."
 
 current_runtime_usage_after_amp_tranche_1:
   minimal_usage: |
@@ -445,72 +493,73 @@ current_runtime_usage_after_amp_tranche_1:
         deb_params
     )
 
+current_ecotox_library_builder_usage:
+  single_cas_usage: |
+    include("src/ECOTOXParser.jl")
+    using .ECOTOXParser
+
+    summary = build_ecotox_toxicity_library(
+        results_path,
+        tests_path,
+        species_path,
+        "50-00-0";
+        output_path = joinpath("data", "ECOTOX_Toxicity_Library_50000.json")
+    )
+  multi_cas_usage: |
+    include("src/ECOTOXParser.jl")
+    using .ECOTOXParser
+
+    cas_list = ["50-00-0", "7440-43-9"]
+
+    summary = build_ecotox_toxicity_library_multi(
+        results_path,
+        tests_path,
+        species_path,
+        cas_list;
+        output_path = joinpath("data", "ECOTOX_Toxicity_Library.json")
+    )
+  design_note: >
+    The final intended ECOTOX data product is one unified flat JSON array containing many compounds, not one database per CAS.
+
 recommended_next_example_script:
   file_name: "examples/amp_multispecies_synthetic_demo.jl"
+  status: "implemented/working before ECOTOX runtime integration; update status if changed"
   purpose: >
-    Demonstrate the new AmP runtime adapter in a multi-species, synthetic ISIMIP-style workflow using 3x3 grids and CairoMakie heatmaps.
-    The example should not add package features. It should load data/AmP_Species_Library.json, obtain DEBAxisParams for multiple species
-    including Abatus cordatus, run existing isimip_deb_pipeline on zero/low/high synthetic stress vectors, run isimip_deb_pipeline_grid
-    on 3x3 low/high synthetic layer stacks, and graph amplification grids.
+    Demonstrate the AmP runtime adapter in a multi-species, synthetic ISIMIP-style workflow using 3x3 grids and CairoMakie heatmaps.
+    It loads data/AmP_Species_Library.json, obtains DEBAxisParams for multiple species including Abatus cordatus,
+    runs existing pipelines, and graphs amplification grids.
+  key_scientific_result_observed: >
+    Low cumulative stress produces amplification near 1. Moderate cumulative stress can show spatial gradients.
+    High cumulative stress can push A below zero and collapse lambda to lambda_min, making amplification spatially uniform per species.
+    This saturation is expected model behavior, not a plotting bug.
   constraints:
-    - "Do not modify src/ code."
-    - "Do not modify tests."
-    - "Do not add dependencies."
-    - "Do not implement amp_species_profile."
-    - "Do not implement ECOTOX."
-    - "Do not implement mixture toxicity."
-    - "Do not use NetCDF."
-    - "Keep the example lightweight."
-    - "CairoMakie may be used because project examples already use it."
-    - "The script may write small PNG figures under output/amp_multispecies_synthetic_demo/."
-  required_behavior:
-    - "Run with: julia examples/amp_multispecies_synthetic_demo.jl"
-    - "Use Pkg.activate(joinpath(@__DIR__, \"..\")) pattern."
-    - "Use TwoTimescaleResilience, Statistics, and CairoMakie."
-    - "Load AmP library from joinpath(@__DIR__, \"..\", \"data\", \"AmP_Species_Library.json\")."
-    - "Select 3-5 species from sorted library keys and ensure Abatus_cordatus is included."
-    - "Use Dict{String, Any} for species_params to avoid relying on DEBAxisParams export visibility."
-    - "Print species parameters: A0, alpha_axes, lambda_min, lambda_max, KA, baseline lambda0."
-    - "Reuse fish_profile only for exposure_filter, moa_mapping, and moa_deb_mapping; replace deb_params with AmP-derived params."
-    - "Run single-cell scenarios: zeros(7), fill(0.1,7), fill(0.5,7)."
-    - "Print tables for A, lambda, and amplification."
-    - "Define spatial 3x3 patterns: gradient low and higher/clamped high pattern."
-    - "Run isimip_deb_pipeline_grid for low/high 3x3 layer stacks for each species."
-    - "Print mean/max amplification and mean A/lambda summaries."
-    - "Create CairoMakie heatmap figure for high-stress amplification grids across species."
-    - "Create CairoMakie 1x2 low-vs-high amplification figure for Abatus_cordatus if available."
-    - "Save figures under output/amp_multispecies_synthetic_demo/."
-  suggested_3x3_patterns: |
-    gradient_3x3 = [
-        0.0  0.1  0.2;
-        0.1  0.3  0.5;
-        0.2  0.5  0.8
-    ]
-    grid_pattern_low = gradient_3x3
-    grid_pattern_high = clamp.(0.5 .* gradient_3x3 .+ 0.4, 0.0, 1.0)
-    layers_low = [copy(grid_pattern_low) for _ in 1:7]
-    layers_high = [copy(grid_pattern_high) for _ in 1:7]
-  output_files:
-    - "output/amp_multispecies_synthetic_demo/amp_multispecies_amplification_high.png"
-    - "output/amp_multispecies_synthetic_demo/amp_multispecies_amplification_low_high_abatus.png"
-  non_goals:
-    - "Do not create new package API."
-    - "Do not use real raster/NetCDF data."
-    - "Do not make publication-grade maps; this is a lightweight adapter demonstration."
+    - "Do not modify src/ code for this example."
+    - "Do not implement ECOTOX or mixture toxicity in this example."
+    - "Use fish_profile only for exposure_filter, moa_mapping, and moa_deb_mapping; replace deb_params with AmP-derived params."
 
 future_work:
+  ecotox_runtime_adapter_next:
+    description: >
+      Now that ECOTOX can produce a unified multi-compound toxicity library, the next development stage should implement runtime adapter functions
+      that load that JSON, validate records, compute active stress from concentration/NOEC/EC50, route ECOTOX effect codes to DEB axes,
+      and eventually handle CA/IA mixture logic.
+    suggested_new_file: "src/ecotox_library.jl"
+    suggested_tests: "test/test_ecotox_library.jl"
+    likely_tranches:
+      - "Load/validate ECOTOX toxicity JSON records."
+      - "Implement ecotox_active_stress(C, NOEC, EC50) = max(0, C - NOEC)/(EC50 - NOEC)."
+      - "Implement ecotox_effect_to_deb_axis(effect_code)."
+      - "Convert one record + concentration to DEB-axis burden."
+      - "Aggregate multiple records/chemicals by effect/axis."
+      - "Add CA for same effect and IA for distinct effects if needed."
   amp_tranche_2_optional:
     description: "Add amp_species_profile(...) constructor to package later if desired."
     target_api: "amp_species_profile(library, species_name; exposure_filter, moa_mapping, moa_deb_mapping, name=..., description=...)::SpeciesProfile"
-  ecotox_runtime_adapters:
-    description: "Create lightweight ECOTOX library loader and adapters to active stress/effect routing/DEB-axis burden."
-    likely_files:
-      - "src/ecotox_library.jl"
-      - "test/test_ecotox_library.jl"
   documentation:
     - "Add README architecture section centered on SpeciesProfile and empirical adapters."
     - "Add table mapping mathematical symbols to code fields."
     - "Document AmP JSON schema and current adapter functions."
+    - "Document ECOTOX JSON schema, CAS normalization, and multi-compound builder."
 
 communication_template_for_future_ai_sessions: |
   Project: TwoTimescaleResilience.jl in repository burdenDK.
@@ -519,5 +568,5 @@ communication_template_for_future_ai_sessions: |
   Core pipeline: values/layers -> ExposureFilter -> ModeOfActionMapping -> MoAToDEBMapping -> DEBAxisParams -> margin -> lambda -> amplification.
   Existing spatial engine: isimip_deb_pipeline and isimip_deb_pipeline_grid.
   AmP Tranche 1 is complete: src/amp_library.jl provides load_amp_species_library and amp_species_deb_params to convert AmP JSON records to DEBAxisParams.
-  Current example work should use amp_species_deb_params with fish_profile-derived exposure/mapping assumptions; do not implement new package features unless asked.
-  ECOTOX parser extracts NOEC/EC50 grouped by taxon/effect and still needs adapters into mappings or DEB-axis burden.
+  ECOTOX library-builder stage is complete: ECOTOXParser.jl supports normalize_cas, hyphenate_cas, normalized parse matching, cas_norm/cas_hyphenated summary schema, and build_ecotox_toxicity_library_multi for unified multi-compound JSON.
+  ECOTOX runtime active-stress and DEB-axis burden adapters are the next logical step but are not yet implemented unless later updates say otherwise.
