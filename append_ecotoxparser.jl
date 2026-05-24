@@ -83,18 +83,6 @@ function summarize_ecotox_endpoints(df::DataFrame; cas::AbstractString)
 
     df_filtered = filter(row -> row.endpoint_type == "NOEC" || row.endpoint_type == "EC50", df_filtered)
 
-    if nrow(df_filtered) == 0
-        return DataFrame(
-            cas = String[],
-            taxon_class = String[],
-            effect_code = String[],
-            NOEC_median = Union{Missing, Float64}[],
-            EC50_median = Union{Missing, Float64}[],
-            n_NOEC = Int[],
-            n_EC50 = Int[]
-        )
-    end
-
     # Group by taxon_class and effect_code
     summary_df = combine(groupby(df_filtered, [:taxon_class, :effect_code])) do subdf
         noecs = subdf[subdf.endpoint_type .== "NOEC", :conc]

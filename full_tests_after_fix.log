@@ -1,0 +1,83 @@
+--- ISIMIP MoA DEB 3x3 Demo ---
+
+Fish Profile Amplification Factor (Fgrid):
+3×3 Matrix{Float64}:
+ 19.4615  19.4615  19.4615
+ 19.4615  19.4615  19.4615
+ 19.4615  19.4615  19.4615
+
+Thermal Mode:
+3×3 Matrix{Float64}:
+ 25.1505  29.8525  34.605
+ 26.711   33.423   37.2075
+ 23.5903  25.1805  26.801
+
+Oxygen Mode:
+3×3 Matrix{Float64}:
+ 22.1505  54.3025   91.805
+ 32.481   71.113   118.157
+ 13.0203  22.2405   32.751
+
+Assimilation Axis:
+3×3 Matrix{Float64}:
+ 46.522    96.1165  167.446
+ 58.7627  118.784   252.602
+ 37.1407   47.122    60.6302
+
+Maintenance Axis:
+3×3 Matrix{Float64}:
+ 346.254  632.241  1017.15
+ 412.69   765.437  1386.95
+ 291.323  347.289   415.916
+
+Adaptive Margin (Agrid):
+3×3 Matrix{Float64}:
+ -161.162  -298.393  -484.573
+ -193.326  -362.158  -669.049
+ -134.818  -161.865  -195.518
+
+Restoring Force (lambda):
+3×3 Matrix{Float64}:
+ 0.04  0.04  0.04
+ 0.04  0.04  0.04
+ 0.04  0.04  0.04
+--- Species Profile Comparison 3x3 Demo ---
+
+Running profile: aquatic_invertebrate
+Mean Amplification: 19.461538461538456
+Max Amplification:  19.46153846153846
+Fgrid raster:
+3×3 Matrix{Float64}:
+ 19.4615  19.4615  19.4615
+ 19.4615  19.4615  19.4615
+ 19.4615  19.4615  19.4615
+
+Running profile: fish
+Mean Amplification: 19.461538461538456
+Max Amplification:  19.46153846153846
+Fgrid raster:
+3×3 Matrix{Float64}:
+ 19.4615  19.4615  19.4615
+ 19.4615  19.4615  19.4615
+ 19.4615  19.4615  19.4615
+
+Running profile: bivalve
+Mean Amplification: 19.461538461538456
+Max Amplification:  19.46153846153846
+Fgrid raster:
+3×3 Matrix{Float64}:
+ 19.4615  19.4615  19.4615
+ 19.4615  19.4615  19.4615
+ 19.4615  19.4615  19.4615
+
+Running profile: human
+Mean Amplification: 19.461538461538456
+Max Amplification:  19.46153846153846
+Fgrid raster:
+3×3 Matrix{Float64}:
+ 19.4615  19.4615  19.4615
+ 19.4615  19.4615  19.4615
+ 19.4615  19.4615  19.4615
+Sample data empty for selected CAS, testing with manual mock DataFrame.
+Test Summary:                | Pass  Total     Time
+TwoTimescaleResilience Tests | 1065   1065  1m07.1s
