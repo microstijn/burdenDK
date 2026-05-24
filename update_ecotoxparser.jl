@@ -83,18 +83,6 @@ function summarize_ecotox_endpoints(df::DataFrame; cas::AbstractString)
 
     df_filtered = filter(row -> row.endpoint_type == "NOEC" || row.endpoint_type == "EC50", df_filtered)
 
-    if nrow(df_filtered) == 0
-        return DataFrame(
-            cas = String[],
-            taxon_class = String[],
-            effect_code = String[],
-            NOEC_median = Union{Missing, Float64}[],
-            EC50_median = Union{Missing, Float64}[],
-            n_NOEC = Int[],
-            n_EC50 = Int[]
-        )
-    end
-
     # Group by taxon_class and effect_code
     summary_df = combine(groupby(df_filtered, [:taxon_class, :effect_code])) do subdf
         noecs = subdf[subdf.endpoint_type .== "NOEC", :conc]
@@ -109,55 +97,11 @@ function summarize_ecotox_endpoints(df::DataFrame; cas::AbstractString)
         (NOEC_median = NOEC_median, EC50_median = EC50_median, n_NOEC = n_NOEC, n_EC50 = n_EC50)
     end
 
-    if nrow(summary_df) > 0
-        summary_df.cas = fill(strip(cas), nrow(summary_df))
-    else
-        summary_df.cas = String[]
-    end
+    # We also need to attach cas
+    summary_df.cas = fill(strip(cas), nrow(summary_df))
 
     # Reorder columns to match schema
     select!(summary_df, :cas, :taxon_class, :effect_code, :NOEC_median, :EC50_median, :n_NOEC, :n_EC50)
-
-    return summary_df
-end
-
-function write_ecotox_library_json(summary_df::DataFrame, output_path::AbstractString)
-    # Convert DataFrame to array of dicts to correctly handle missing => null via JSON.jl
-    records = []
-    for row in eachrow(summary_df)
-        d = Dict{String, Any}()
-        for name in propertynames(summary_df)
-            val = row[name]
-            d[string(name)] = ismissing(val) ? nothing : val
-        end
-        push!(records, d)
-    end
-
-    # Create parent directories if they don't exist
-    dir = dirname(output_path)
-    if !isempty(dir) && !isdir(dir)
-        mkpath(dir)
-    end
-
-    open(output_path, "w") do io
-        JSON.print(io, records, 2)
-    end
-    return output_path
-end
-
-function build_ecotox_toxicity_library(
-    results_path::String,
-    tests_path::String,
-    species_path::String,
-    target_cas::String;
-    output_path::Union{Nothing, AbstractString}=nothing
-)
-    df = parse_ecotox_data(results_path, tests_path, species_path, target_cas)
-    summary_df = summarize_ecotox_endpoints(df; cas=target_cas)
-
-    if output_path !== nothing
-        write_ecotox_library_json(summary_df, output_path)
-    end
 
     return summary_df
 end
