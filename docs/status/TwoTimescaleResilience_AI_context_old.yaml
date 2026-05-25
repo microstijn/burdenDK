@@ -4,10 +4,10 @@
 
 metadata:
   file_name: "TwoTimescaleResilience_AI_context.yaml"
-  last_updated: "2026-05-25"
+  last_updated: "2026-05-24"
   update_reason: >
-    Full refreshed context after AmP runtime adapter completion, ECOTOX parser/library-builder completion,
-    ECOTOX runtime adapter completion, and creation/planning of multi-species multi-compound ECOTOX+AmP examples.
+    Full refreshed context after AmP runtime adapter Tranche 1 completion, multi-species 3x3 CairoMakie example planning,
+    and ECOTOX CAS normalization + multi-compound toxicity library builder completion.
   intended_reader: "AI coding assistants and future Copilot/LLM sessions"
 
 project:
@@ -17,15 +17,15 @@ project:
   language: "Julia"
   local_path_observed: "C:\\Users\\peete074\\OneDrive - Wageningen University & Research\\programming\\burdenDK"
   one_sentence_summary: >
-    TwoTimescaleResilience is a species-aware, spatial Julia framework that maps environmental stressors and empirical
-    ecotoxicological records into Dynamic Energy Budget-informed physiological vulnerability maps, expressed as an
-    Amplification Factor F that quantifies how chronic background stress magnifies the burden of acute perturbations.
+    TwoTimescaleResilience is a species-aware, spatial Julia framework that maps raw environmental raster stressors
+    into Dynamic Energy Budget-informed physiological vulnerability maps, expressed as an Amplification Factor F that
+    quantifies how chronic background stress magnifies the burden of acute perturbations.
 
 ai_usage_instructions:
   - "Do not propose a new package architecture unless explicitly asked; the package already exists."
   - "Treat src/isimip_deb_pipeline.jl as the existing spatial/runtime engine."
-  - "Treat SpeciesProfile as the central runtime integration object for ISIMIP-style workflows."
-  - "Treat AmP and ECOTOX as empirical parameter sources adapted into existing runtime structs and functions."
+  - "Treat SpeciesProfile as the central runtime integration object."
+  - "Treat AmP and ECOTOX as empirical parameter sources that should be adapted into existing runtime structs."
   - "Prefer adapter functions and examples over rewrites."
   - "When helping with code, align with existing structs: ExposureFilter, ModeOfActionMapping, MoAToDEBMapping, DEBAxisParams, SpeciesProfile."
   - "Distinguish repository folder burdenDK from model/framework/module name TwoTimescaleResilience."
@@ -45,7 +45,7 @@ scientific_purpose:
     - "Fubini's theorem shows integrated response burden scales as 1/lambda."
     - "Species defense parameters are anchored in Add-my-Pet DEB data."
     - "Stressor attack parameters are anchored through ECOTOX-derived NOEC/EC50/effect/taxon summaries."
-    - "Arbitrary Gamma interaction parameters are being replaced by formal mixture toxicity logic: Concentration Addition and Independent Action; current ECOTOX runtime aggregation is axis-wise additive, with full CA/IA reserved for later work."
+    - "Arbitrary Gamma interaction parameters are being replaced by formal mixture toxicity logic: Concentration Addition and Independent Action."
 
 mathematical_framework:
   notation:
@@ -68,10 +68,9 @@ mathematical_framework:
     nec_thresholding:
       description: "For empirical toxicants, concentrations below the No Effect Concentration create zero physiological burden."
       preferred_equation: "x_j = max(0, (C_ambient,j - NEC_j) / cstar_j)"
-      implemented_ecotox_runtime_equation: "x = max(0, C - NOEC_median) / (EC50_median - NOEC_median)"
-      ecotox_approximation: "cstar_j is approximated as EC50_median - NOEC_median."
+      ecotox_approximation: "cstar_j may be approximated as EC50_j - NOEC_j; mapping slope W = 1 / (EC50 - NOEC)."
     mode_of_action_mapping:
-      description: "Effective exposure is mapped into biological modes of action for ISIMIP-style runtime workflows."
+      description: "Effective exposure is mapped into biological modes of action."
       equation_linear: "m = U e"
       legacy_equation_with_interactions: "m_r = sum_j U_{rj} e_j + sum_{j<k} Gamma_{jk}^{(r)} e_j e_k"
       code_object: "ModeOfActionMapping"
@@ -82,18 +81,10 @@ mathematical_framework:
       equation_linear: "s = W m"
       code_object: "MoAToDEBMapping"
       deb_axis_order: ["assimilation", "maintenance", "growth", "reproduction"]
-    ecotox_direct_attack_mapping:
-      description: >
-        ECOTOX runtime adapter can bypass the generic ISIMIP MoA layer for scalar/empirical toxicity calculations.
-        It converts ECOTOX effect codes directly into DEB-axis burden, then uses existing DEB response machinery.
-      active_stress_equation: "x = max(0, C - NOEC_median) / (EC50_median - NOEC_median)"
-      burden_mapping: "record + concentration -> (assimilation, maintenance, growth, reproduction)"
-      response_mapping: "burden + DEBAxisParams -> A, lambda, amplification"
     mixture_toxicity:
       description: >
-        Empirical ECOTOX workflows should eventually avoid arbitrary Gamma interaction scalars. Use Concentration Addition for
-        stressors sharing effect/MoA and Independent Action for distinct effects/MoAs. Current runtime implementation aggregates
-        records axis-wise after endpoint routing; full CA/IA is future work.
+        Empirical ECOTOX workflows should avoid arbitrary Gamma interaction scalars. Use Concentration Addition for
+        stressors sharing effect/MoA and Independent Action for distinct effects/MoAs.
       concentration_addition:
         condition: "same MoA or same ECOTOX effect code"
         equation: "TU_total = sum_j TU_j"
@@ -101,6 +92,9 @@ mathematical_framework:
         condition: "distinct MoAs/effect codes"
         equation_probability_form: "Stress_total = 1 - prod_j (1 - E_j)"
         bounded_transform_if_needed: "E_j = x_j / (1 + x_j) for unbounded x_j"
+      implementation_note: >
+        Existing mapping structs retain interactions::Union{Nothing, Vector{Matrix{Float64}}}. For empirical ECOTOX workflows,
+        set interactions = nothing and apply CA/IA in an adapter/preprocessing step.
     adaptive_margin:
       description: "Aggregate DEB-axis burden depletes species-specific baseline adaptive margin."
       equation: "A = A0 + omega_Z Z - dot(alpha_axes, s_axes)"
@@ -165,7 +159,7 @@ core_runtime_structs:
       deb_params: "DEBAxisParams"
       buffer_params: "Union{Nothing, ConditionBufferParams} = nothing"
       description: "String = empty"
-    role: "Central runtime integration object for species-aware ISIMIP-style modeling."
+    role: "Central runtime integration object for species-aware modeling."
   BackgroundParams:
     role: "Older/general background-stress parameter object."
   BackgroundStressor:
@@ -180,26 +174,20 @@ core_runtime_structs:
     role: "Output object for two-timescale simulations."
 
 runtime_execution_graph:
-  isimip_scalar_or_cell_pipeline:
+  scalar_or_cell_pipeline:
     - "values::AbstractVector -> apply_exposure_filter(values, profile.exposure_filter)"
     - "effective_exposure -> mode_of_action(effective_exposure, profile.moa_mapping)"
     - "modes -> moa_to_deb_axes(modes, profile.moa_deb_mapping)"
     - "DEB axes -> deb_adaptive_margin(axes, profile.deb_params)"
     - "margin -> restoring_force_from_margin(margin, profile.deb_params)"
     - "margin -> amplification_from_margin(margin, profile.deb_params)"
-  isimip_grid_pipeline:
+  grid_pipeline:
     - "layers::Vector{Matrix{Float64}} -> apply_exposure_filter_grid"
     - "filtered layers -> mode_of_action_grid"
     - "mode grids -> moa_to_deb_axes_grid"
     - "DEB-axis grids -> deb_adaptive_margin_grid"
     - "margin grid -> restoring_force_from_margin_grid"
     - "margin grid -> amplification_from_margin_grid"
-  ecotox_runtime_pipeline:
-    - "load_ecotox_library -> vector of JSON records"
-    - "ecotox_filter_records -> relevant records by CAS/taxon/effect"
-    - "concentrations Dict + records -> ecotox_records_to_deb_burden"
-    - "burden + DEBAxisParams -> ecotox_burden_to_response"
-    - "response contains A, lambda, amplification"
   existing_pipeline_entrypoints:
     - "isimip_deb_pipeline(values, exposure_filter, moa_mapping, moa_deb_mapping, deb_params; ...)"
     - "isimip_deb_pipeline_grid(layers, exposure_filter, moa_mapping, moa_deb_mapping, deb_params; ...)"
@@ -227,10 +215,9 @@ runtime_execution_graph:
 package_structure_observed:
   root_directories:
     data:
-      role: "Committed empirical/runtime data and raw/semi-raw ECOTOX data."
+      role: "Raw/semi-raw empirical data, including AmP_Species_Library.json and ECOTOX ASCII data."
       notable_paths:
         - "data/AmP_Species_Library.json"
-        - "data/ECOTOX_Toxicity_Library.json"
         - "data/ecotox/ecotox_ascii_03_12_2026/validation"
     docs:
       role: "LaTeX documentation, manuscript derivations, and presentation material."
@@ -247,18 +234,15 @@ package_structure_observed:
   src_files:
     TwoTimescaleResilience.jl:
       role: "Main module entrypoint."
-      amp_update: "After AmP Tranche 1, src/amp_library.jl is included and its functions are exported."
-      ecotox_runtime_update: "After ECOTOX runtime adapter completion, src/ecotox_library.jl is included and its functions are exported."
-      ecotox_parser_note: "ECOTOXParser.jl remains the offline builder for data/ECOTOX_Toxicity_Library.json."
+      amp_update: "After AmP Tranche 1, src/amp_library.jl is included and its five functions are exported."
+      ecotox_note: "ECOTOXParser.jl has historically been a sidecar parser module; include/export state in main module should be checked before assuming public API."
     amp_library.jl:
       role: "Runtime AmP JSON loader/adapter implemented in AmP Tranche 1."
-    ecotox_library.jl:
-      role: "Runtime ECOTOX JSON loader, validator, active-stress calculator, effect router, DEB-burden adapter, response adapter, and record lookup helper."
     AmP_Translator.jl:
       role: "Offline Add-my-Pet translator; produces AmP species JSON."
       observed_function: "process_species_data()"
     ECOTOXParser.jl:
-      role: "Offline EPA ECOTOX ASCII parser and multi-compound toxicity library builder with CAS normalization."
+      role: "Offline EPA ECOTOX ASCII parser and now multi-compound toxicity library builder with CAS normalization."
     deb_axes.jl:
       role: "DEB-axis mapping, adaptive margin, restoring force, amplification, grid variants, and pulse-axis response."
     default_isimip_moa.jl:
@@ -273,43 +257,6 @@ package_structure_observed:
       role: "Environmental-variable-to-mode-of-action transformations."
     species_defaults.jl:
       role: "Default SpeciesProfile constructors for generic taxa such as fish_profile()."
-
-evidence_and_committed_data:
-  amp_library:
-    path: "data/AmP_Species_Library.json"
-    status: "committed repo data file"
-  ecotox_library:
-    path: "data/ECOTOX_Toxicity_Library.json"
-    status: "committed repo data file"
-    observed_records_count: 1050
-    example_first_record:
-      EC50_median: 11.5
-      NOEC_median: 8.32
-      cas: "7647145"
-      cas_hyphenated: "7647-14-5"
-      cas_norm: "7647145"
-      effect_code: "MOR"
-      n_EC50: 4
-      n_NOEC: 64
-      taxon_class: "Actinopterygii"
-    observed_effect_codes_examples:
-      - "MOR"
-      - "BEH"
-      - "GRO"
-      - "REP"
-      - "POP"
-      - "FDB"
-      - "ENZ"
-      - "DVP"
-    observed_taxon_classes_examples:
-      - "Actinopterygii"
-      - "Bivalvia"
-      - "Branchiopoda"
-      - "Liliopsida"
-      - "Malacostraca"
-      - "Monogononta"
-      - "Sordariomycetes"
-      - "Echinoidea"
 
 empirical_pipelines:
   amp_defense_pipeline:
@@ -346,9 +293,7 @@ empirical_pipelines:
       expected_approx: 0.01097
   ecotox_attack_pipeline:
     source_database: "EPA ECOTOX ASCII database"
-    offline_builder: "src/ECOTOXParser.jl"
-    runtime_adapter: "src/ecotox_library.jl"
-    current_json_library_path: "data/ECOTOX_Toxicity_Library.json"
+    current_script: "src/ECOTOXParser.jl"
     biological_role: "Empirical attack parameters: NEC/NOEC thresholds, EC50/tolerance scaling, taxonomic and effect-code routing."
     parser_capabilities_reported:
       - "Parses ECOTOX ASCII pipe-delimited files while bypassing mixed-type formatting traps."
@@ -358,37 +303,19 @@ empirical_pipelines:
       - "Groups medians by taxonomic class and physiological effect code."
       - "Writes flat JSON arrays suitable for runtime adapters."
       - "Builds one unified toxicity library for multiple compounds/CAS values."
-    runtime_capabilities_reported:
-      - "Loads and validates committed data/ECOTOX_Toxicity_Library.json."
-      - "Computes active stress using max(0, C - NOEC)/(EC50 - NOEC)."
-      - "Routes ECOTOX effect codes to DEB axes."
-      - "Converts one ECOTOX record + concentration to a four-axis DEB burden."
-      - "Aggregates multiple ECOTOX records/chemicals axis-wise into one DEB burden."
-      - "Combines ECOTOX burden with DEBAxisParams to compute A, lambda, and amplification."
-      - "Filters records by CAS, taxon_class, and effect_code."
-    first_pass_runtime_formula: "x_j = max(0, C_j - NOEC_j) / (EC50_j - NOEC_j)"
-    effect_routing_current:
-      maintenance:
-        - "MOR"
-        - "ITX"
-        - "MPH"
-        - "BEH"
-        - "POP"
-        - "ENZ"
-        - "FDB"
-      growth:
-        - "GRO"
-        - "DVP"
-      reproduction:
-        - "REP"
-        - "FEC"
-      assimilation:
-        - "BCM"
-        - "FEED"
-        - "FED"
-        - "ING"
-        - "FOOD"
-    effect_routing_note: "Unknown effect codes throw ArgumentError; ambiguous listed systemic codes route to maintenance as explicit placeholder."
+    runtime_integration_state: >
+      ECOTOX toxicity library builder is now stable enough to produce multi-compound JSON records with cas_norm and cas_hyphenated.
+      Runtime active-stress functions, effect-code-to-DEB-axis routing, and mixture aggregation are not yet implemented unless added later.
+    first_pass_runtime_formula_for_future: "x_j = max(0, C_j - NOEC_j) / (EC50_j - NOEC_j)"
+    suggested_effect_routing_for_future:
+      MOR: "maintenance"
+      GRO: "growth"
+      REP: "reproduction"
+      feeding_or_ingestion_or_BCM: "assimilation"
+      ITX: "maintenance"
+      MPH: "maintenance"
+      DVP: "growth"
+      FEC: "reproduction"
 
 implemented_amp_runtime_adapter:
   status: "completed"
@@ -422,12 +349,26 @@ implemented_amp_runtime_adapter:
     amp_species_deb_params:
       signature: "amp_species_deb_params(library, species_name::AbstractString)::DEBAxisParams"
       behavior: "Supports exact JSON keys and human-readable names through amp_species_key; missing species throw KeyError; no silent defaults."
+  test_coverage:
+    - "Loads real data/AmP_Species_Library.json."
+    - "Confirms Abatus_cordatus exists."
+    - "Tests species-key normalization including multiple whitespace collapse."
+    - "Validates Abatus_cordatus record."
+    - "Converts Abatus_cordatus to DEBAxisParams and checks A0, alpha_axes, lambda_min, lambda_max, KA."
+    - "Checks flexible lookup for Abatus_cordatus and Abatus cordatus."
+    - "Checks baseline restoring force lambda0 ≈ 0.01097."
+    - "Checks invalid records throw ArgumentError."
+  additional_fix: >
+    Full-suite execution exposed an ECOTOX fixture path issue. Since test_data/sample_results.txt existed,
+    test_ecotox.jl was fixed to resolve fixture paths relative to the test/repository directory using @__DIR__
+    instead of relying on current working directory. ECOTOX scientific logic was not changed.
 
 implemented_ecotox_library_builder:
   status: "completed"
   date: "2026-05-24"
   scope: >
-    Implemented CAS normalization layer and multi-compound ECOTOX toxicity library building. This remains the parser/library-builder layer.
+    Implemented CAS normalization layer and multi-compound ECOTOX toxicity library building. This remains a parser/library-builder layer,
+    not a runtime active-stress or DEB-burden adapter.
   primary_file: "src/ECOTOXParser.jl"
   tests_file: "test/test_ecotox.jl"
   dependencies_used:
@@ -456,10 +397,22 @@ implemented_ecotox_library_builder:
         - "normalize_cas(nothing) == \"\""
     hyphenate_cas:
       signature: "hyphenate_cas(cas)::String"
-      behavior: "Formats normalized CAS digits as prefix-middle-check; short strings return unchanged."
+      behavior: >
+        Calls normalize_cas first. If fewer than 4 digits, returns normalized string. Otherwise formats as prefix-middle-check,
+        where prefix is all digits except last 3, middle is second-to-last two digits, check is last digit.
       examples:
         - "hyphenate_cas(\"50000\") == \"50-00-0\""
+        - "hyphenate_cas(\"50-00-0\") == \"50-00-0\""
+        - "hyphenate_cas(\"50011\") == \"50-01-1\""
+        - "hyphenate_cas(\"50022\") == \"50-02-2\""
         - "hyphenate_cas(\"7440439\") == \"7440-43-9\""
+        - "hyphenate_cas(\"123\") == \"123\""
+        - "hyphenate_cas(missing) == \"\""
+        - "hyphenate_cas(nothing) == \"\""
+  parser_matching:
+    parse_ecotox_data: >
+      target_cas and df.test_cas are compared using normalize_cas. Users can pass either digits-only CAS or hyphenated CAS.
+      Empty-normalized target CAS throws ArgumentError.
   summary_schema:
     required_columns:
       - "cas"
@@ -478,9 +431,19 @@ implemented_ecotox_library_builder:
       - "effect_code is uppercase stripped string."
       - "taxon_class is stripped string preserving original capitalization."
       - "Endpoint matching is case-insensitive for NOEC and EC50."
-      - "EC50_median > NOEC_median is not enforced at parser stage; runtime validation handles denominator constraints."
+      - "EC50_median > NOEC_median is not enforced at parser stage; future runtime active-stress validation should handle denominator constraints."
   json_schema:
     structure: "flat array of records, not nested by CAS"
+    example_record:
+      cas: "50000"
+      cas_norm: "50000"
+      cas_hyphenated: "50-00-0"
+      taxon_class: "Actinopterygii"
+      effect_code: "MOR"
+      NOEC_median: 2.0
+      EC50_median: 4.5
+      n_NOEC: 8
+      n_EC50: 12
     missing_values: "Julia missing values are written as JSON null."
   multi_compound_builder:
     function: "build_ecotox_toxicity_library_multi(results_path, tests_path, species_path, target_cas_list; output_path=nothing, skip_empty=true)"
@@ -490,135 +453,31 @@ implemented_ecotox_library_builder:
       - "Throws ArgumentError for empty target_cas_list."
       - "Throws ArgumentError for CAS inputs that normalize to empty strings."
       - "Processes each unique cas_norm once."
+      - "For empty parsed data, skip with warning when skip_empty=true."
       - "Combines summaries using vcat(...; cols=:union)."
       - "If all CAS produce no records, returns an empty DataFrame with the correct schema."
       - "If output_path is provided and all records are empty, still writes a valid JSON empty array [] to output_path."
       - "Always returns the combined summary DataFrame."
-
-implemented_ecotox_runtime_adapter:
-  status: "completed"
-  date: "2026-05-25"
-  scope: >
-    Implemented runtime adapter from committed ECOTOX toxicity JSON to active stress, DEB-axis burden, and DEB response.
-    This adapter consumes data/ECOTOX_Toxicity_Library.json and does not rebuild it.
-  primary_file: "src/ecotox_library.jl"
-  tests_file: "test/test_ecotox_library.jl"
-  main_module_update: "src/TwoTimescaleResilience.jl includes ecotox_library.jl and exports runtime adapter functions."
-  committed_runtime_data: "data/ECOTOX_Toxicity_Library.json"
-  dependencies_used:
-    - "JSON"
-    - "Statistics if needed"
-    - "Base Julia"
-  exported_functions:
-    - "load_ecotox_library"
-    - "validate_ecotox_record"
-    - "ecotox_active_stress"
-    - "ecotox_effect_to_deb_axis"
-    - "deb_axis_index"
-    - "ecotox_record_to_deb_burden"
-    - "ecotox_records_to_deb_burden"
-    - "ecotox_burden_to_response"
-    - "ecotox_filter_records"
-    - "ecotox_records_for_taxon"
-  functions:
-    load_ecotox_library:
-      signature: "load_ecotox_library(path::AbstractString = normpath(joinpath(@__DIR__, \"..\", \"data\", \"ECOTOX_Toxicity_Library.json\")))"
-      behavior: "Loads committed flat ECOTOX JSON array using JSON.parsefile. Does not call ECOTOXParser or rebuild JSON."
-    validate_ecotox_record:
-      signature: "validate_ecotox_record(record)::Bool"
-      required_fields:
-        - "cas"
-        - "cas_norm"
-        - "cas_hyphenated"
-        - "taxon_class"
-        - "effect_code"
-        - "NOEC_median"
-        - "EC50_median"
-        - "n_NOEC"
-        - "n_EC50"
-      behavior: "Validates non-empty key fields, finite nonnegative NOEC, finite EC50, EC50 > NOEC, and nonnegative count fields. Throws ArgumentError if invalid."
-    ecotox_active_stress:
-      signature: "ecotox_active_stress(concentration, NOEC, EC50)::Float64"
-      equation: "max(0.0, concentration - NOEC) / (EC50 - NOEC)"
-      behavior: "Does not clamp above 1. Throws ArgumentError for non-finite inputs, NOEC < 0, or EC50 <= NOEC."
-    ecotox_effect_to_deb_axis:
-      signature: "ecotox_effect_to_deb_axis(effect_code)::Symbol"
-      behavior: "Uppercase/strip effect code; returns :assimilation, :maintenance, :growth, or :reproduction; unknown codes throw ArgumentError."
-    deb_axis_index:
-      signature: "deb_axis_index(axis::Symbol)::Int"
-      mapping: "assimilation=1, maintenance=2, growth=3, reproduction=4"
-    ecotox_record_to_deb_burden:
-      signature: "ecotox_record_to_deb_burden(concentration, record)"
-      behavior: "Validates record, computes active stress, routes effect_code to a DEB axis, and returns NamedTuple burdens."
-      return_fields: ["assimilation", "maintenance", "growth", "reproduction"]
-    ecotox_records_to_deb_burden:
-      signature: "ecotox_records_to_deb_burden(concentrations, records)"
-      behavior: >
-        Aggregates multiple ECOTOX records axis-wise. Concentrations is a Dict mapping CAS to ambient concentration.
-        CAS keys may be hyphenated or digits-only. Missing concentrations skip records. Empty records return zero burden.
-      note: "This is axis-wise additive aggregation, not full CA/IA mixture toxicity."
-    ecotox_burden_to_response:
-      signature: "ecotox_burden_to_response(burden, params::DEBAxisParams)"
-      behavior: "Converts ECOTOX burden to existing DEB response: A, lambda, amplification. Does not modify deb_adaptive_margin."
-    ecotox_filter_records:
-      signature: "ecotox_filter_records(library; cas=nothing, taxon_class=nothing, effect_code=nothing)"
-      behavior: >
-        Filters flat ECOTOX library records. CAS may be nothing/String/vector and matches normalized digits. taxon_class may be
-        nothing/String/vector and matches case-insensitive stripped strings. effect_code may be nothing/String/vector and matches
-        uppercase stripped strings. Values inside each field are OR; fields combine with AND.
-    ecotox_records_for_taxon:
-      signature: "ecotox_records_for_taxon(library, taxon_class; cas=nothing, effect_code=nothing)"
-      behavior: "Convenience alias around ecotox_filter_records."
   test_coverage:
-    - "Loads committed data/ECOTOX_Toxicity_Library.json directly; does not rebuild with ECOTOXParser."
-    - "Validates first real record and invalid mutated records."
-    - "Tests active stress below NOEC, at NOEC, at EC50, and above EC50."
-    - "Tests effect routing for MOR, GRO, REP, FEC, DVP, BCM, BEH, POP, ENZ, FDB, and unknown codes."
-    - "Tests one-record-to-burden for maintenance/growth/reproduction/assimilation routes."
-    - "Tests multi-record axis-wise aggregation and CAS normalization of concentration keys."
-    - "Tests burden-to-response with synthetic DEBAxisParams and optional AmP integration."
-    - "Tests record filtering by CAS, taxon_class, effect_code, combined filters, vectors as OR conditions, and nonexistent filters returning empty vectors."
+    - "normalize_cas handles hyphenated, digits-only, whitespace, text-prefixed, missing, and nothing inputs."
+    - "hyphenate_cas handles digits-only, hyphenated, short, missing, and nothing inputs."
+    - "parse_ecotox_data returns same rows for equivalent digits-only and hyphenated CAS when fixture supports both."
+    - "parse_ecotox_data throws ArgumentError for empty-normalized CAS such as '---'."
+    - "summarize_ecotox_endpoints emits cas, cas_norm, cas_hyphenated and required toxicity columns."
+    - "write_ecotox_library_json writes flat JSON records containing cas_norm and cas_hyphenated."
+    - "build_ecotox_toxicity_library returns summary DataFrame and writes JSON when output_path is provided."
+    - "build_ecotox_toxicity_library_multi accepts duplicate CAS forms and deduplicates by cas_norm."
+    - "build_ecotox_toxicity_library_multi writes one unified JSON file for multiple compounds."
+    - "build_ecotox_toxicity_library_multi throws ArgumentError for empty CAS list and invalid empty-normalized CAS."
 
-current_runtime_usage_after_amp_and_ecotox:
-  amp_minimal_usage: |
+current_runtime_usage_after_amp_tranche_1:
+  minimal_usage: |
     using TwoTimescaleResilience
 
     amp = load_amp_species_library()
     params = amp_species_deb_params(amp, "Abatus cordatus")
     lambda0 = restoring_force_from_margin(params.A0, params)
-  ecotox_minimal_usage: |
-    using TwoTimescaleResilience
-
-    ecotox = load_ecotox_library()
-    records = ecotox_filter_records(
-        ecotox;
-        cas = "7647-14-5",
-        taxon_class = "Actinopterygii",
-        effect_code = "MOR"
-    )
-    concentrations = Dict("7647-14-5" => 20.0)
-    burden = ecotox_records_to_deb_burden(concentrations, records)
-  full_empirical_chain_usage: |
-    using TwoTimescaleResilience
-
-    amp = load_amp_species_library()
-    params = amp_species_deb_params(amp, "Abatus cordatus")
-
-    ecotox = load_ecotox_library()
-    records = ecotox_filter_records(
-        ecotox;
-        cas = "7647-14-5",
-        taxon_class = "Actinopterygii",
-        effect_code = "MOR"
-    )
-
-    concentrations = Dict("7647-14-5" => 20.0)
-    burden = ecotox_records_to_deb_burden(concentrations, records)
-    response = ecotox_burden_to_response(burden, params)
-
-    response.A
-    response.lambda
-    response.amplification
+  expected_lambda0_for_abatus: "approximately 0.01097"
   profile_like_usage_without_amp_species_profile: |
     base_profile = fish_profile()
     exposure_filter = base_profile.exposure_filter
@@ -659,54 +518,40 @@ current_ecotox_library_builder_usage:
         cas_list;
         output_path = joinpath("data", "ECOTOX_Toxicity_Library.json")
     )
-  design_note: "The intended ECOTOX data product is one unified flat JSON array containing many compounds, not one database per CAS."
+  design_note: >
+    The final intended ECOTOX data product is one unified flat JSON array containing many compounds, not one database per CAS.
 
-examples_status:
-  amp_multispecies_synthetic_demo:
-    file_name: "examples/amp_multispecies_synthetic_demo.jl"
-    status: "implemented/working before ECOTOX runtime integration; update if changed"
-    purpose: >
-      Demonstrates the AmP runtime adapter in a multi-species, synthetic ISIMIP-style workflow using 3x3 grids and CairoMakie heatmaps.
-    key_scientific_result_observed: >
-      Low cumulative stress produces amplification near 1. Moderate cumulative stress can show spatial gradients.
-      High cumulative stress can push A below zero and collapse lambda to lambda_min, making amplification spatially uniform per species.
-      This saturation is expected model behavior, not a plotting bug.
-  ecotox_amp_multispecies_multicompound_demo:
-    file_name: "examples/ecotox_amp_multispecies_multicompound_demo.jl"
-    status: "planned or implemented after ECOTOX runtime adapter; update if executed"
-    purpose: >
-      Scalar demonstration of 3 species x 3 compounds using committed AmP and ECOTOX libraries, active stress, aggregated DEB burden,
-      and species-specific A/lambda/amplification responses.
-    preferred_species:
-      - "Abatus cordatus"
-      - "Podarcis muralis"
-      - "Thalia democratica"
-    preferred_compounds:
-      - "7647-14-5" # sodium chloride / salinity proxy
-      - "7440-43-9" # cadmium / metal toxicity proxy
-      - "7440-50-8" # copper / metal toxicity proxy
-  ecotox_amp_multispecies_multicompound_3x3_grid_demo:
-    file_name: "examples/ecotox_amp_multispecies_multicompound_3x3_grid_demo.jl"
-    status: "planned or implemented after ECOTOX runtime adapter; update if executed"
-    purpose: >
-      3x3 conceptual grid demonstration of 3 species x 3 compounds, with compound-specific concentration grids scaled to each record's
-      NOEC/EC50, active-stress grids, aggregated DEB-axis burden grids, and species-specific A/lambda/amplification grids.
-    expected_outputs:
-      - "output/ecotox_amp_multispecies_multicompound_3x3_grid_demo/ecotox_active_stress_compounds.png"
-      - "output/ecotox_amp_multispecies_multicompound_3x3_grid_demo/ecotox_aggregated_deb_burdens.png"
-      - "output/ecotox_amp_multispecies_multicompound_3x3_grid_demo/ecotox_amp_species_amplification_grids.png"
-      - "optional: output/ecotox_amp_multispecies_multicompound_3x3_grid_demo/ecotox_amp_species_A_grids.png"
+recommended_next_example_script:
+  file_name: "examples/amp_multispecies_synthetic_demo.jl"
+  status: "implemented/working before ECOTOX runtime integration; update status if changed"
+  purpose: >
+    Demonstrate the AmP runtime adapter in a multi-species, synthetic ISIMIP-style workflow using 3x3 grids and CairoMakie heatmaps.
+    It loads data/AmP_Species_Library.json, obtains DEBAxisParams for multiple species including Abatus cordatus,
+    runs existing pipelines, and graphs amplification grids.
+  key_scientific_result_observed: >
+    Low cumulative stress produces amplification near 1. Moderate cumulative stress can show spatial gradients.
+    High cumulative stress can push A below zero and collapse lambda to lambda_min, making amplification spatially uniform per species.
+    This saturation is expected model behavior, not a plotting bug.
+  constraints:
+    - "Do not modify src/ code for this example."
+    - "Do not implement ECOTOX or mixture toxicity in this example."
+    - "Use fish_profile only for exposure_filter, moa_mapping, and moa_deb_mapping; replace deb_params with AmP-derived params."
 
 future_work:
-  ecotox_mixture_toxicity:
+  ecotox_runtime_adapter_next:
     description: >
-      Upgrade current axis-wise additive ECOTOX aggregation to formal mixture toxicity. Same effect/MoA should use Concentration Addition;
-      distinct effects/MoAs can use Independent Action after bounded effect transformation if needed.
-    likely_file: "src/ecotox_library.jl or new mixture_toxicity.jl"
-  ecotox_isimip_raster_integration:
-    description: >
-      Connect ECOTOX runtime attack adapter to real ISIMIP/DynQual rasters by mapping raster variables or chemical concentration layers into
-      ECOTOX records/concentrations and then DEB-axis burdens. Start with synthetic rasters before real NetCDF.
+      Now that ECOTOX can produce a unified multi-compound toxicity library, the next development stage should implement runtime adapter functions
+      that load that JSON, validate records, compute active stress from concentration/NOEC/EC50, route ECOTOX effect codes to DEB axes,
+      and eventually handle CA/IA mixture logic.
+    suggested_new_file: "src/ecotox_library.jl"
+    suggested_tests: "test/test_ecotox_library.jl"
+    likely_tranches:
+      - "Load/validate ECOTOX toxicity JSON records."
+      - "Implement ecotox_active_stress(C, NOEC, EC50) = max(0, C - NOEC)/(EC50 - NOEC)."
+      - "Implement ecotox_effect_to_deb_axis(effect_code)."
+      - "Convert one record + concentration to DEB-axis burden."
+      - "Aggregate multiple records/chemicals by effect/axis."
+      - "Add CA for same effect and IA for distinct effects if needed."
   amp_tranche_2_optional:
     description: "Add amp_species_profile(...) constructor to package later if desired."
     target_api: "amp_species_profile(library, species_name; exposure_filter, moa_mapping, moa_deb_mapping, name=..., description=...)::SpeciesProfile"
@@ -714,15 +559,14 @@ future_work:
     - "Add README architecture section centered on SpeciesProfile and empirical adapters."
     - "Add table mapping mathematical symbols to code fields."
     - "Document AmP JSON schema and current adapter functions."
-    - "Document ECOTOX JSON schema, CAS normalization, multi-compound builder, and runtime adapter functions."
+    - "Document ECOTOX JSON schema, CAS normalization, and multi-compound builder."
 
 communication_template_for_future_ai_sessions: |
   Project: TwoTimescaleResilience.jl in repository burdenDK.
   The package already has a runtime pipeline. Do not redesign it.
   Main runtime object: SpeciesProfile(name, exposure_filter, moa_mapping, moa_deb_mapping, deb_params, buffer_params).
-  Core ISIMIP pipeline: values/layers -> ExposureFilter -> ModeOfActionMapping -> MoAToDEBMapping -> DEBAxisParams -> margin -> lambda -> amplification.
+  Core pipeline: values/layers -> ExposureFilter -> ModeOfActionMapping -> MoAToDEBMapping -> DEBAxisParams -> margin -> lambda -> amplification.
   Existing spatial engine: isimip_deb_pipeline and isimip_deb_pipeline_grid.
-  AmP runtime adapter is complete: src/amp_library.jl provides load_amp_species_library and amp_species_deb_params to convert AmP JSON records to DEBAxisParams.
-  ECOTOX parser/library-builder stage is complete: ECOTOXParser.jl supports normalize_cas, hyphenate_cas, normalized parse matching, cas_norm/cas_hyphenated summary schema, and build_ecotox_toxicity_library_multi for unified multi-compound JSON.
-  ECOTOX runtime adapter is complete: src/ecotox_library.jl loads data/ECOTOX_Toxicity_Library.json, validates records, computes active stress, routes effect codes to DEB axes, converts records/concentrations to DEB burdens, aggregates burdens axis-wise, computes DEB responses, and filters records.
-  Next logical work is examples and then mixture toxicity/raster integration, not redesign.
+  AmP Tranche 1 is complete: src/amp_library.jl provides load_amp_species_library and amp_species_deb_params to convert AmP JSON records to DEBAxisParams.
+  ECOTOX library-builder stage is complete: ECOTOXParser.jl supports normalize_cas, hyphenate_cas, normalized parse matching, cas_norm/cas_hyphenated summary schema, and build_ecotox_toxicity_library_multi for unified multi-compound JSON.
+  ECOTOX runtime active-stress and DEB-axis burden adapters are the next logical step but are not yet implemented unless later updates say otherwise.
