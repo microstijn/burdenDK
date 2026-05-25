@@ -14,7 +14,8 @@ export ecotox_burden_to_response
 export ecotox_filter_records, ecotox_records_for_taxon
 
 export load_compound_memory_library, validate_compound_memory_record
-export compound_retention, ecotox_default_retention
+export compound_retention,
+    compound_bioaccumulation_factor, ecotox_default_retention
 
 export EcotoxExposureState, get_internal_burden, set_internal_burden!, reset_internal_burdens!
 export update_internal_burden!

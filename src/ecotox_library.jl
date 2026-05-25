@@ -107,6 +107,25 @@ end
 
 ecotox_default_retention(cas; memory_library=nothing) = compound_retention(cas; memory_library=memory_library)
 
+function compound_bioaccumulation_factor(cas; memory_library=nothing)::Float64
+    cas_norm = _normalize_cas_runtime(cas)
+    if isempty(cas_norm)
+        return 1.0
+    end
+
+    lib = memory_library === nothing ? load_compound_memory_library() : memory_library
+
+    for record in lib
+        if string(record["cas_norm"]) == cas_norm
+            validate_compound_memory_record(record)
+            return Float64(record["bioaccumulation_factor"])
+        end
+    end
+
+    return 1.0
+end
+
+
 Base.@kwdef mutable struct EcotoxExposureState
     internal_burdens::Dict{String, Float64} = Dict{String, Float64}()
 end
@@ -144,6 +163,7 @@ function update_internal_burden!(
     cas,
     concentration;
     retention = nothing,
+    bioaccumulation_factor = nothing,
     memory_library = nothing
 )::Float64
     cas_norm = _normalize_cas_runtime(cas)
@@ -162,8 +182,14 @@ function update_internal_burden!(
         throw(ArgumentError("retention must be finite and satisfy 0.0 <= rho < 1.0"))
     end
 
+    K = bioaccumulation_factor === nothing ? compound_bioaccumulation_factor(cas_norm; memory_library=memory_library) : Float64(bioaccumulation_factor)
+
+    if !isfinite(K) || K < 0.0
+        throw(ArgumentError("bioaccumulation_factor must be finite and >= 0.0"))
+    end
+
     B_old = get_internal_burden(state, cas_norm)
-    B_new = rho * B_old + (1.0 - rho) * C
+    B_new = rho * B_old + (1.0 - rho) * K * C
 
     set_internal_burden!(state, cas_norm, B_new)
     return B_new
@@ -290,6 +316,7 @@ function ecotox_records_to_deb_burden_stateful!(
     concentrations,
     records;
     retention = nothing,
+    bioaccumulation_factor = nothing,
     memory_library = nothing
 )
     norm_concentrations = Dict{String, Float64}()
@@ -323,7 +350,15 @@ function ecotox_records_to_deb_burden_stateful!(
             rho = get(norm_retention, cas_norm, nothing)
         end
 
-        B = update_internal_burden!(state, cas_norm, C; retention=rho, memory_library=memory_library)
+        K = nothing
+        if bioaccumulation_factor isa Number
+            K = Float64(bioaccumulation_factor)
+        elseif bioaccumulation_factor isa Dict
+            norm_k = Dict(string(_normalize_cas_runtime(k)) => v for (k,v) in bioaccumulation_factor)
+            K = get(norm_k, cas_norm, nothing)
+        end
+
+        B = update_internal_burden!(state, cas_norm, C; retention=rho, bioaccumulation_factor=K, memory_library=memory_library)
         burden = ecotox_record_to_deb_burden(B, record)
 
         total_A += burden.assimilation
@@ -424,7 +459,7 @@ function load_compound_memory_library(
 end
 
 function validate_compound_memory_record(record)::Bool
-    required_keys = ["cas_norm", "cas_hyphenated", "chemical_name", "memory_class", "retention_rho_monthly", "basis", "confidence", "notes"]
+    required_keys = ["cas_norm", "cas_hyphenated", "chemical_name", "memory_class", "retention_rho_monthly", "bioaccumulation_factor", "basis", "confidence", "notes"]
     for key in required_keys
         if !haskey(record, key)
             throw(ArgumentError("Record is missing required field: $key"))
@@ -455,6 +490,20 @@ function validate_compound_memory_record(record)::Bool
 
     if !isfinite(rho) || rho < 0.0 || rho >= 1.0
         throw(ArgumentError("retention_rho_monthly must be finite and satisfy 0.0 <= rho < 1.0"))
+    end
+
+    k_raw = record["bioaccumulation_factor"]
+    if ismissing(k_raw) || isnothing(k_raw)
+        throw(ArgumentError("bioaccumulation_factor cannot be missing"))
+    end
+    k_val = try
+        Float64(k_raw)
+    catch
+        throw(ArgumentError("bioaccumulation_factor must be numeric"))
+    end
+
+    if !isfinite(k_val) || k_val < 0.0
+        throw(ArgumentError("bioaccumulation_factor must be finite and >= 0.0"))
     end
 
     return true
