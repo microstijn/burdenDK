@@ -9,9 +9,15 @@ export amp_species_key, load_amp_species_library, validate_amp_record, amp_recor
 
 export load_ecotox_library, validate_ecotox_record, ecotox_active_stress
 export ecotox_effect_to_deb_axis, deb_axis_index
-export ecotox_record_to_deb_burden, ecotox_records_to_deb_burden
+export ecotox_record_to_deb_burden, ecotox_records_to_deb_burden, ecotox_records_to_deb_burden_stateful!
 export ecotox_burden_to_response
 export ecotox_filter_records, ecotox_records_for_taxon
+
+export load_compound_memory_library, validate_compound_memory_record
+export compound_retention, ecotox_default_retention
+
+export EcotoxExposureState, get_internal_burden, set_internal_burden!, reset_internal_burdens!
+export update_internal_burden!
 
 include("deb_axes.jl")
 include("condition_buffer.jl")

@@ -244,3 +244,199 @@ using TwoTimescaleResilience
         @test length(vec_test_tax) == length(t)
     end
 end
+
+@testset "ECOTOX Memory Library: Tranche 1" begin
+    using CSV
+    memory_path = joinpath(@__DIR__, "..", "data", "Compound_Memory_Library.csv")
+    @test isfile(memory_path)
+
+    df = CSV.File(memory_path)
+
+    cols = propertynames(df)
+    @test :cas_norm in cols
+    @test :cas_hyphenated in cols
+    @test :chemical_name in cols
+    @test :memory_class in cols
+    @test :retention_rho_monthly in cols
+    @test :basis in cols
+    @test :confidence in cols
+    @test :notes in cols
+
+    cas_norms = string.(df.cas_norm)
+    @test "7440439" in cas_norms
+    @test "7647145" in cas_norms
+    @test "7439976" in cas_norms
+    @test "9002884" in cas_norms
+
+    @test all(0.0 .<= df.retention_rho_monthly .< 1.0)
+end
+
+@testset "ECOTOX Memory Library: Tranche 2" begin
+    memory = load_compound_memory_library()
+    @test length(memory) > 0
+
+    @test validate_compound_memory_record(first(memory)) == true
+    @test all(validate_compound_memory_record(r) for r in memory)
+
+    bad1 = deepcopy(first(memory))
+    bad1 = typeof(bad1)(k => k == "cas_norm" ? "" : v for (k,v) in pairs(bad1))
+    @test_throws ArgumentError validate_compound_memory_record(bad1)
+
+    bad2 = deepcopy(first(memory))
+    bad2 = typeof(bad2)(k => k == "chemical_name" ? "" : v for (k,v) in pairs(bad2))
+    @test_throws ArgumentError validate_compound_memory_record(bad2)
+
+    bad3 = deepcopy(first(memory))
+    bad3 = typeof(bad3)(k => k == "retention_rho_monthly" ? -0.1 : v for (k,v) in pairs(bad3))
+    @test_throws ArgumentError validate_compound_memory_record(bad3)
+
+    bad4 = deepcopy(first(memory))
+    bad4 = typeof(bad4)(k => k == "retention_rho_monthly" ? 1.0 : v for (k,v) in pairs(bad4))
+    @test_throws ArgumentError validate_compound_memory_record(bad4)
+
+    bad5 = deepcopy(first(memory))
+    bad5 = typeof(bad5)(k => k == "retention_rho_monthly" ? NaN : v for (k,v) in pairs(bad5))
+    @test_throws ArgumentError validate_compound_memory_record(bad5)
+
+    bad6 = deepcopy(first(memory))
+    delete!(bad6, "cas_norm")
+    @test_throws ArgumentError validate_compound_memory_record(bad6)
+end
+
+@testset "ECOTOX Memory Library: Tranche 3" begin
+    memory = load_compound_memory_library()
+
+    @test compound_retention("7647-14-5"; memory_library=memory) == 0.0
+    @test compound_retention("7647145"; memory_library=memory) == 0.0
+
+    @test compound_retention("7440-43-9"; memory_library=memory) ≈ 0.90
+    @test compound_retention("7440439"; memory_library=memory) ≈ 0.90
+
+    @test compound_retention("7439-97-6"; memory_library=memory) ≈ 0.95
+    @test compound_retention("9002-88-4"; memory_library=memory) ≈ 0.95
+
+    @test compound_retention("000-00-0"; memory_library=memory) == 0.0
+    @test compound_retention("---"; memory_library=memory) == 0.0
+
+    @test ecotox_default_retention("7440-43-9"; memory_library=memory) ≈ compound_retention("7440-43-9"; memory_library=memory)
+end
+
+@testset "ECOTOX Memory Library: Tranche 4" begin
+    state = EcotoxExposureState()
+
+    @test get_internal_burden(state, "7440-43-9") == 0.0
+
+    set_internal_burden!(state, "7440-43-9", 12.5)
+
+    @test get_internal_burden(state, "7440-43-9") ≈ 12.5
+    @test get_internal_burden(state, "7440439") ≈ 12.5
+
+    @test_throws ArgumentError set_internal_burden!(state, "7440-43-9", -1.0)
+    @test_throws ArgumentError set_internal_burden!(state, "7440-43-9", NaN)
+
+    reset_internal_burdens!(state)
+    @test get_internal_burden(state, "7440-43-9") == 0.0
+end
+
+@testset "ECOTOX Memory Library: Tranche 5" begin
+    state = EcotoxExposureState()
+    B = update_internal_burden!(state, "7647-14-5", 10.0; retention=0.0)
+    @test B ≈ 10.0
+
+    B2 = update_internal_burden!(state, "7647-14-5", 0.0; retention=0.0)
+    @test B2 ≈ 0.0
+
+    state = EcotoxExposureState()
+
+    B1 = update_internal_burden!(state, "7440-43-9", 10.0; retention=0.9)
+    @test B1 ≈ 1.0
+
+    B2 = update_internal_burden!(state, "7440-43-9", 10.0; retention=0.9)
+    @test B2 ≈ 1.9
+
+    B3 = update_internal_burden!(state, "7440-43-9", 0.0; retention=0.9)
+    @test B3 ≈ 1.71
+
+    memory = load_compound_memory_library()
+    state = EcotoxExposureState()
+    B = update_internal_burden!(state, "7440-43-9", 10.0; memory_library=memory)
+    @test B ≈ 1.0
+
+    @test_throws ArgumentError update_internal_burden!(state, "7440-43-9", -1.0)
+    @test_throws ArgumentError update_internal_burden!(state, "7440-43-9", NaN)
+    @test_throws ArgumentError update_internal_burden!(state, "7440-43-9", 10.0; retention=-0.1)
+    @test_throws ArgumentError update_internal_burden!(state, "7440-43-9", 10.0; retention=1.0)
+end
+
+@testset "ECOTOX Memory Library: Tranche 6" begin
+    record = Dict(
+        "cas" => "7440439",
+        "cas_norm" => "7440439",
+        "cas_hyphenated" => "7440-43-9",
+        "taxon_class" => "Actinopterygii",
+        "effect_code" => "MOR",
+        "NOEC_median" => 2.0,
+        "EC50_median" => 4.0,
+        "n_NOEC" => 1,
+        "n_EC50" => 1
+    )
+
+    state = EcotoxExposureState()
+
+    # Month 1
+    concentrations = Dict("7440-43-9" => 10.0)
+    burden1 = ecotox_records_to_deb_burden_stateful!(state, concentrations, [record]; retention=0.9)
+
+    @test get_internal_burden(state, "7440-43-9") ≈ 1.0
+    @test burden1.maintenance == 0.0
+
+    # Month 2
+    burden2 = ecotox_records_to_deb_burden_stateful!(state, concentrations, [record]; retention=0.9)
+    @test get_internal_burden(state, "7440-43-9") ≈ 1.9
+    @test burden2.maintenance == 0.0
+
+    # Month 3
+    burden3 = ecotox_records_to_deb_burden_stateful!(state, concentrations, [record]; retention=0.9)
+    @test get_internal_burden(state, "7440-43-9") ≈ 2.71
+    @test burden3.maintenance ≈ (2.71 - 2.0) / (4.0 - 2.0)
+
+    # Decay test
+    concentrations_zero = Dict("7440-43-9" => 0.0)
+    B_before = get_internal_burden(state, "7440-43-9")
+    burden_decay = ecotox_records_to_deb_burden_stateful!(state, concentrations_zero, [record]; retention=0.9)
+    B_after = get_internal_burden(state, "7440-43-9")
+    @test B_after < B_before
+    @test B_after > 0.0
+
+    # Non-accumulative equivalence
+    state_salt = EcotoxExposureState()
+    record_salt = deepcopy(record)
+    record_salt["cas"] = "7647145"
+    record_salt["cas_norm"] = "7647145"
+    record_salt["cas_hyphenated"] = "7647-14-5"
+
+    burden_stateful = ecotox_records_to_deb_burden_stateful!(
+        state_salt,
+        Dict("7647-14-5" => 10.0),
+        [record_salt];
+        retention=0.0
+    )
+
+    burden_stateless = ecotox_records_to_deb_burden(
+        Dict("7647-14-5" => 10.0),
+        [record_salt]
+    )
+
+    @test burden_stateful.maintenance ≈ burden_stateless.maintenance
+
+    # Data-driven retention
+    memory = load_compound_memory_library()
+    state_data = EcotoxExposureState()
+    burden_data = ecotox_records_to_deb_burden_stateful!(
+        state_data,
+        Dict("7440-43-9" => 10.0),
+        [record];
+        memory_library=memory
+    )
+    @test get_internal_burden(state_data, "7440-43-9") ≈ 1.0
+end
