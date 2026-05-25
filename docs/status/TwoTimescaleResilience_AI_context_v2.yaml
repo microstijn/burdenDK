@@ -1,0 +1,352 @@
+# TwoTimescaleResilience / burdenDK AI Context File
+# Purpose: machine-readable project memory for future AI assistants and coding tools.
+# Last major update: complete AmP + ECOTOX + compound memory + diagnostics state.
+
+metadata:
+  file_name: "TwoTimescaleResilience_AI_context.yaml"
+  last_updated: "2026-05-25"
+  update_reason: >
+    Final comprehensive update after AmP runtime adapter, ECOTOX parser/library-builder,
+    ECOTOX runtime adapter, data-driven compound memory, bioaccumulation factor,
+    monthly memory diagnostics, analytical species response-capacity diagnostics,
+    and final TeX documentation with 3x3 visual toy grids and second-month memory carryover grid.
+  intended_reader: "AI coding assistants and future Copilot/LLM sessions"
+
+project:
+  repository_directory_name: "burdenDK"
+  main_framework_name: "TwoTimescaleResilience"
+  main_julia_module: "TwoTimescaleResilience"
+  language: "Julia"
+  one_sentence_summary: >
+    TwoTimescaleResilience maps environmental stressors, ECOTOX toxicological attack records,
+    compound memory states, and AmP-derived species defense parameters into Dynamic Energy
+    Budget-informed adaptive margin, restoring force, and amplification outputs.
+
+ai_usage_instructions:
+  - "Do not redesign the package architecture unless explicitly asked."
+  - "Treat SpeciesProfile as the central runtime object for ISIMIP-style workflows."
+  - "Treat src/isimip_deb_pipeline.jl as the existing spatial/runtime engine."
+  - "Treat AmP, ECOTOX, and Compound Memory as empirical data/adapters layered onto existing runtime machinery."
+  - "Prefer examples, diagnostics, and adapter functions over rewrites."
+  - "Keep chemical memory B_t separate from physiological condition memory Z_t."
+  - "Do not jump to raster integration before validating monthly-memory and response-capacity diagnostics."
+
+core_model_summary:
+  state_variables:
+    ambient_concentration: "C_{j,t}"
+    internal_chemical_burden: "B_{j,t}"
+    active_ecotox_stress: "x_{j,t}"
+    deb_axis_burden: "s_t = (s_A, s_M, s_G, s_R)"
+    adaptive_margin: "A_t"
+    restoring_force: "lambda_t"
+    amplification_factor: "F_t"
+  central_equations:
+    chemical_memory: "B_{j,t} = rho_j * B_{j,t-1} + (1 - rho_j) * K_j * C_{j,t}"
+    active_stress: "x_{j,t} = max(0, B_or_C - NOEC_j) / (EC50_j - NOEC_j)"
+    adaptive_margin_no_Z: "A_t = A0 - dot(alpha_axes, s_t)"
+    adaptive_margin_with_future_Z: "A_t = A0 + omega_Z * Z_t - dot(alpha_axes, s_t)"
+    restoring_force: "lambda(A) = lambda_min + (lambda_max - lambda_min) * max(A,0) / (KA + max(A,0))"
+    amplification: "F_t = lambda(A0) / lambda(A_t)"
+    fmax: "Fmax = lambda(A0) / lambda_min"
+    single_axis_collapse: "x_collapse_axis = A0 / alpha_axis, or Inf if alpha_axis <= 0"
+  interpretation:
+    - "rho controls monthly persistence/carryover."
+    - "K controls equilibrium internal magnification/bioaccumulation."
+    - "rho=0 and K=1 recovers stateless ECOTOX concentration behavior."
+    - "Large active stress does not guarantee large amplification; amplification is bounded by Fmax and sensitivity of lambda(A)."
+
+committed_data_files:
+  amp_species_library:
+    path: "data/AmP_Species_Library.json"
+    role: "AmP-derived species defense parameters."
+  ecotox_toxicity_library:
+    path: "data/ECOTOX_Toxicity_Library.json"
+    role: "Flat ECOTOX toxicity record library with CAS, taxon_class, effect_code, NOEC_median, EC50_median."
+    observed_records_count: 1050
+    example_first_record:
+      cas: "7647145"
+      cas_norm: "7647145"
+      cas_hyphenated: "7647-14-5"
+      taxon_class: "Actinopterygii"
+      effect_code: "MOR"
+      NOEC_median: 8.32
+      EC50_median: 11.5
+      n_NOEC: 64
+      n_EC50: 4
+  compound_memory_library:
+    path: "data/Compound_Memory_Library.csv"
+    role: "Data-driven monthly retention rho and bioaccumulation factor K by CAS."
+    required_columns:
+      - "cas_norm"
+      - "cas_hyphenated"
+      - "chemical_name"
+      - "memory_class"
+      - "retention_rho_monthly"
+      - "bioaccumulation_factor"
+      - "basis"
+      - "confidence"
+      - "notes"
+    default_unknown_retention: 0.0
+    default_unknown_bioaccumulation_factor: 1.0
+    caveat: "rho and K are first-pass class-default modeling proxies unless later replaced by measured TK data."
+  amp_species_response_capacity:
+    path: "output/amp_species_response_capacity_diagnostics/amp_species_response_capacity.csv"
+    role: "Analytical species-level response capacity diagnostics derived from AmP DEBAxisParams."
+    uploaded_file: "amp_species_response_capacity.csv"
+    observed_rows: 7335
+    observed_columns: 20
+    fmax_summary:
+      min: 1.00000315386
+      median: 1.05941381682
+      max: 11.4324521716
+    min_x_collapse_summary:
+      min: 0.00743330973431
+      median: 17695.412164
+      max_finite: 3113395.45463
+    preferred_species_observed:
+      - species_key: "Abatus_cordatus"
+        species_name: "Abatus cordatus"
+        A0: 1539.98711089
+        lambda0: 0.0109736795902
+        Fmax: 1.22061734847
+        min_x_collapse: 1981.65934591
+        most_sensitive_axis: "growth"
+      - species_key: "Podarcis_muralis"
+        species_name: "Podarcis muralis"
+        A0: 19519.6221591
+        lambda0: 0.0152693011973
+        Fmax: 6.65977691343
+        min_x_collapse: 22158.675075
+        most_sensitive_axis: "maintenance"
+      - species_key: "Thalia_democratica"
+        species_name: "Thalia democratica"
+        A0: 116847.172082
+        lambda0: 0.542457418997
+        Fmax: 7.92307692308
+        min_x_collapse: 11345.8604091
+        most_sensitive_axis: "maintenance"
+    top_5_by_Fmax:
+      - species_key: "Pleuronectes_quadrituberculatus"
+        species_name: "Pleuronectes quadrituberculatus"
+        Fmax: 11.4324521716
+        min_x_collapse: 90842.7650456
+        most_sensitive_axis: "reproduction"
+      - species_key: "Lophius_piscatorius"
+        species_name: "Lophius piscatorius"
+        Fmax: 9.79023099483
+        min_x_collapse: 186517.387014
+        most_sensitive_axis: "reproduction"
+      - species_key: "Euproctus_platycephalus"
+        species_name: "Euproctus platycephalus"
+        Fmax: 9.31077406133
+        min_x_collapse: 10294.2757485
+        most_sensitive_axis: "maintenance"
+      - species_key: "Lithophaga_lithophaga"
+        species_name: "Lithophaga lithophaga"
+        Fmax: 8.30617413157
+        min_x_collapse: 141266.801851
+        most_sensitive_axis: "maintenance"
+      - species_key: "Thalia_democratica"
+        species_name: "Thalia democratica"
+        Fmax: 7.92307692308
+        min_x_collapse: 11345.8604091
+        most_sensitive_axis: "maintenance"
+    top_5_lowest_min_x_collapse:
+      - species_key: "Isosecuriflustra_tenuis"
+        species_name: "Isosecuriflustra tenuis"
+        Fmax: 1.04048582996
+        min_x_collapse: 0.00743330973431
+        most_sensitive_axis: "maintenance"
+      - species_key: "Nematoflustra_flagellata"
+        species_name: "Nematoflustra flagellata"
+        Fmax: 1.04048582996
+        min_x_collapse: 0.00842453196715
+        most_sensitive_axis: "maintenance"
+      - species_key: "Euglesa_casertana"
+        species_name: "Euglesa casertana"
+        Fmax: 1.08472050602
+        min_x_collapse: 0.303078834855
+        most_sensitive_axis: "maintenance"
+      - species_key: "Heleobia_australis"
+        species_name: "Heleobia australis"
+        Fmax: 1.08547008547
+        min_x_collapse: 0.696430679698
+        most_sensitive_axis: "maintenance"
+      - species_key: "Pisidium_amnicum"
+        species_name: "Pisidium amnicum"
+        Fmax: 1.00155699128
+        min_x_collapse: 1.00456396652
+        most_sensitive_axis: "maintenance"
+
+implemented_components:
+  amp_runtime_adapter:
+    status: "completed"
+    primary_file: "src/amp_library.jl"
+    tests_file: "test/test_amp_library.jl"
+    exports:
+      - "amp_species_key"
+      - "load_amp_species_library"
+      - "validate_amp_record"
+      - "amp_record_to_deb_params"
+      - "amp_species_deb_params"
+    purpose: "Convert AmP JSON records into DEBAxisParams."
+  ecotox_parser_library_builder:
+    status: "completed"
+    primary_file: "src/ECOTOXParser.jl"
+    tests_file: "test/test_ecotox.jl"
+    exports:
+      - "parse_ecotox_data"
+      - "summarize_ecotox_endpoints"
+      - "write_ecotox_library_json"
+      - "build_ecotox_toxicity_library"
+      - "build_ecotox_toxicity_library_multi"
+      - "normalize_cas"
+      - "hyphenate_cas"
+    purpose: "Build flat multi-compound ECOTOX toxicity JSON from raw ECOTOX ASCII files."
+  ecotox_runtime_adapter:
+    status: "completed"
+    primary_file: "src/ecotox_library.jl"
+    tests_file: "test/test_ecotox_library.jl"
+    exports:
+      - "load_ecotox_library"
+      - "validate_ecotox_record"
+      - "ecotox_active_stress"
+      - "ecotox_effect_to_deb_axis"
+      - "deb_axis_index"
+      - "ecotox_record_to_deb_burden"
+      - "ecotox_records_to_deb_burden"
+      - "ecotox_burden_to_response"
+      - "ecotox_filter_records"
+      - "ecotox_records_for_taxon"
+    purpose: "Consume committed ECOTOX JSON and compute stateless DEB-axis burden and response."
+  compound_memory_and_bioaccumulation:
+    status: "completed"
+    primary_file: "src/ecotox_library.jl"
+    data_file: "data/Compound_Memory_Library.csv"
+    tests_file: "test/test_ecotox_library.jl"
+    exports_expected:
+      - "load_compound_memory_library"
+      - "validate_compound_memory_record"
+      - "compound_retention"
+      - "compound_bioaccumulation_factor"
+      - "ecotox_default_retention"
+      - "EcotoxExposureState"
+      - "get_internal_burden"
+      - "set_internal_burden!"
+      - "reset_internal_burdens!"
+      - "update_internal_burden!"
+      - "ecotox_records_to_deb_burden_stateful!"
+    implemented_equation: "B_new = rho * B_old + (1.0 - rho) * K * concentration"
+    behavior_notes:
+      - "Stateful function mutates EcotoxExposureState."
+      - "Stateful burden uses internal burden B as effective concentration in ECOTOX stress."
+      - "Stateless ecotox_records_to_deb_burden remains unchanged."
+      - "retention and bioaccumulation_factor can be explicit scalars, per-CAS Dicts, or data-driven from memory_library."
+  response_capacity_diagnostics:
+    status: "completed"
+    primary_example: "examples/amp_species_response_capacity_diagnostics.jl"
+    output_csv: "output/amp_species_response_capacity_diagnostics/amp_species_response_capacity.csv"
+    output_figures:
+      - "output/amp_species_response_capacity_diagnostics/Fmax_distribution.png"
+      - "output/amp_species_response_capacity_diagnostics/min_x_collapse_distribution.png"
+      - "output/amp_species_response_capacity_diagnostics/Fmax_vs_collapse_burden.png"
+      - "output/amp_species_response_capacity_diagnostics/lambda_curves_selected_species.png"
+    purpose: >
+      Analytical diagnostic for whether AmP-derived species are structurally capable of large amplification.
+      Computes Fmax and single-axis collapse thresholds from DEBAxisParams.
+  tex_documentation:
+    status: "updated"
+    title: "Mathematical Derivation of the TwoTimescaleResilience Framework: Species-Aware Vulnerability with AmP Defense, ECOTOX Attack, and Compound Memory"
+    latest_update: >
+      TeX now combines the updated mathematical derivation with small 3x3 toy grids, including a second-month memory carryover grid showing
+      C_2 = 0 while B_2 = rho * B_1 remains positive, producing persistent active stress and amplification.
+
+important_runtime_usage:
+  stateless_ecotox_chain: |
+    amp = load_amp_species_library()
+    params = amp_species_deb_params(amp, "Abatus cordatus")
+    ecotox = load_ecotox_library()
+    records = ecotox_filter_records(ecotox; cas="7647-14-5", effect_code="MOR")
+    burden = ecotox_records_to_deb_burden(Dict("7647-14-5" => 20.0), records)
+    response = ecotox_burden_to_response(burden, params)
+  stateful_memory_chain: |
+    amp = load_amp_species_library()
+    params = amp_species_deb_params(amp, "Abatus cordatus")
+    ecotox = load_ecotox_library()
+    memory = load_compound_memory_library()
+    records = ecotox_filter_records(ecotox; cas="7440-43-9", effect_code="MOR")
+    state = EcotoxExposureState()
+    burden = ecotox_records_to_deb_burden_stateful!(
+        state,
+        Dict("7440-43-9" => 100.0),
+        records;
+        memory_library=memory
+    )
+    response = ecotox_burden_to_response(burden, params)
+  response_capacity_formulae: |
+    lambda0 = restoring_force_from_margin(params.A0, params)
+    Fmax = lambda0 / params.lambda_min
+    x_collapse_axis = params.A0 / alpha_axis
+
+examples_status:
+  implemented_or_planned:
+    - file: "examples/amp_multispecies_synthetic_demo.jl"
+      purpose: "AmP multi-species synthetic 3x3 stress demonstration."
+    - file: "examples/ecotox_amp_monthly_memory_demo.jl"
+      purpose: "Stateless vs stateful monthly memory demo, typically cadmium with rho and K."
+    - file: "examples/ecotox_amp_response_sensitivity_diagnostics.jl"
+      purpose: "Numerical/visual diagnostic of response sensitivity under parameter variants."
+    - file: "examples/amp_species_response_capacity_diagnostics.jl"
+      purpose: "Analytical species response-capacity diagnostic using Fmax and collapse thresholds."
+    - file: "examples/ecotox_amp_multispecies_multicompound_demo.jl"
+      purpose: "Scalar 3 species x 3 compounds demonstration; planned/implemented depending repo state."
+    - file: "examples/ecotox_amp_multispecies_multicompound_3x3_grid_demo.jl"
+      purpose: "3x3 conceptual grid for 3 species x 3 compounds; planned/implemented depending repo state."
+    - file: "examples/ecotox_amp_multispecies_multicompound_monthly_memory_demo.jl"
+      purpose: "Recommended next diagnostic: 3 species x 3 compounds x 12 months memory demo."
+
+current_development_position:
+  completed_steps:
+    - "AmP runtime adapter."
+    - "ECOTOX parser/library builder with CAS normalization and multi-compound JSON."
+    - "ECOTOX runtime adapter."
+    - "Data-driven compound memory with retention rho."
+    - "Bioaccumulation factor K and updated internal burden equation."
+    - "Monthly memory demo inspection showing B_stateful and x_stateful carry over after C returns to zero."
+    - "Analytical species response-capacity diagnostic."
+    - "TeX documentation updated with equations and 3x3 toy grids, including second-month memory carryover."
+  immediate_next_steps:
+    - "Use response-capacity diagnostics to select meaningful species for multi-species examples."
+    - "Create/inspect 3 species x 3 compounds x 12 months monthly-memory diagnostic example."
+    - "Add diagnostic plots for C_t, B_t, x_t, DEB-axis burdens, A_t, lambda_t, and F_t."
+    - "Only after diagnostics are stable, implement formal mixture toxicity."
+    - "After mixture toxicity, consider physiological condition memory Z_t."
+    - "Finally connect to real monthly ISIMIP/DynQual rasters."
+
+future_work:
+  monthly_multispecies_multicompound_memory_demo:
+    description: >
+      Use response-capacity diagnostics to choose one robust/low-response species, one intermediate species, and one high-response species.
+      Use one non-accumulative compound such as NaCl, one bioaccumulative metal such as cadmium, and one strongly persistent compound/proxy
+      such as mercury or a plastic. Show C_t, B_t, x_t, axis burdens, A_t, lambda_t, and F_t over 12 months.
+  formal_mixture_toxicity:
+    description: >
+      Replace current axis-wise additive aggregation with formal mixture logic. Same effect/MoA should use Concentration Addition;
+      distinct effects/MoAs should use Independent Action or bounded axis-level aggregation.
+  physiological_condition_memory_Z:
+    description: >
+      Add organism-level physiological condition carryover Z_t after chemical memory and mixture diagnostics are stable.
+      Keep Z_t distinct from chemical burden B_t.
+  raster_integration:
+    description: >
+      Connect monthly ISIMIP/DynQual rasters to ECOTOX attack and AmP defense after synthetic/monthly diagnostics are validated.
+
+communication_template_for_future_ai_sessions: |
+  Project: TwoTimescaleResilience.jl in repository burdenDK.
+  Do not redesign the package. The runtime pipeline already exists.
+  AmP defense is complete via src/amp_library.jl and data/AmP_Species_Library.json.
+  ECOTOX attack is complete via ECOTOXParser.jl for offline JSON building and src/ecotox_library.jl for runtime loading, validation, active stress, effect routing, DEB burden, response, and filtering.
+  Compound memory is complete via data/Compound_Memory_Library.csv and stateful ECOTOX functions. The implemented equation is B_new = rho*B_old + (1-rho)*K*C.
+  Analytical response-capacity diagnostics are complete and produce amp_species_response_capacity.csv with Fmax and x_collapse metrics.
+  The latest TeX documentation includes both mathematical derivation and 3x3 toy grids, including a second-month memory carryover grid.
+  Next logical work is the 3 species x 3 compounds x 12 months diagnostic example and diagnostic plots. Do not jump to real rasters or physiological Z_t prematurely.
