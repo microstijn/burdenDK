@@ -1,4 +1,5 @@
 import JSON
+import CSV
 
 function load_ecotox_library(path::AbstractString = normpath(joinpath(@__DIR__, "..", "data", "ECOTOX_Toxicity_Library.json")))
     if !isfile(path)
@@ -84,6 +85,88 @@ function validate_ecotox_record(record)::Bool
     _as_nonnegative_int(record["n_EC50"], "n_EC50")
 
     return true
+end
+
+function compound_retention(cas; memory_library=nothing)::Float64
+    cas_norm = _normalize_cas_runtime(cas)
+    if isempty(cas_norm)
+        return 0.0
+    end
+
+    lib = memory_library === nothing ? load_compound_memory_library() : memory_library
+
+    for record in lib
+        if string(record["cas_norm"]) == cas_norm
+            validate_compound_memory_record(record)
+            return Float64(record["retention_rho_monthly"])
+        end
+    end
+
+    return 0.0
+end
+
+ecotox_default_retention(cas; memory_library=nothing) = compound_retention(cas; memory_library=memory_library)
+
+Base.@kwdef mutable struct EcotoxExposureState
+    internal_burdens::Dict{String, Float64} = Dict{String, Float64}()
+end
+
+function get_internal_burden(state::EcotoxExposureState, cas)::Float64
+    cas_norm = _normalize_cas_runtime(cas)
+    if isempty(cas_norm)
+        return 0.0
+    end
+    return get(state.internal_burdens, cas_norm, 0.0)
+end
+
+function set_internal_burden!(state::EcotoxExposureState, cas, value)::EcotoxExposureState
+    cas_norm = _normalize_cas_runtime(cas)
+    if isempty(cas_norm)
+        return state
+    end
+
+    val = Float64(value)
+    if !isfinite(val) || val < 0.0
+        throw(ArgumentError("Internal burden value must be finite and >= 0"))
+    end
+
+    state.internal_burdens[cas_norm] = val
+    return state
+end
+
+function reset_internal_burdens!(state::EcotoxExposureState)::EcotoxExposureState
+    empty!(state.internal_burdens)
+    return state
+end
+
+function update_internal_burden!(
+    state::EcotoxExposureState,
+    cas,
+    concentration;
+    retention = nothing,
+    memory_library = nothing
+)::Float64
+    cas_norm = _normalize_cas_runtime(cas)
+    if isempty(cas_norm)
+        return 0.0
+    end
+
+    C = Float64(concentration)
+    if !isfinite(C) || C < 0.0
+        throw(ArgumentError("concentration must be finite and >= 0"))
+    end
+
+    rho = retention === nothing ? compound_retention(cas_norm; memory_library=memory_library) : Float64(retention)
+
+    if !isfinite(rho) || rho < 0.0 || rho >= 1.0
+        throw(ArgumentError("retention must be finite and satisfy 0.0 <= rho < 1.0"))
+    end
+
+    B_old = get_internal_burden(state, cas_norm)
+    B_new = rho * B_old + (1.0 - rho) * C
+
+    set_internal_burden!(state, cas_norm, B_new)
+    return B_new
 end
 
 function ecotox_active_stress(concentration, NOEC, EC50)::Float64
@@ -202,6 +285,61 @@ function ecotox_records_to_deb_burden(concentrations, records)
     )
 end
 
+function ecotox_records_to_deb_burden_stateful!(
+    state::EcotoxExposureState,
+    concentrations,
+    records;
+    retention = nothing,
+    memory_library = nothing
+)
+    norm_concentrations = Dict{String, Float64}()
+    for (k, v) in concentrations
+        k_norm = _normalize_cas_runtime(k)
+        if !isempty(k_norm)
+            norm_concentrations[k_norm] = Float64(v)
+        end
+    end
+
+    total_A = 0.0
+    total_M = 0.0
+    total_G = 0.0
+    total_R = 0.0
+
+    for record in records
+        validate_ecotox_record(record)
+
+        cas_norm = record["cas_norm"]
+        if !haskey(norm_concentrations, cas_norm)
+            continue
+        end
+
+        C = norm_concentrations[cas_norm]
+
+        rho = nothing
+        if retention isa Number
+            rho = Float64(retention)
+        elseif retention isa Dict
+            norm_retention = Dict(string(_normalize_cas_runtime(k)) => v for (k,v) in retention)
+            rho = get(norm_retention, cas_norm, nothing)
+        end
+
+        B = update_internal_burden!(state, cas_norm, C; retention=rho, memory_library=memory_library)
+        burden = ecotox_record_to_deb_burden(B, record)
+
+        total_A += burden.assimilation
+        total_M += burden.maintenance
+        total_G += burden.growth
+        total_R += burden.reproduction
+    end
+
+    return (
+        assimilation = total_A,
+        maintenance = total_M,
+        growth = total_G,
+        reproduction = total_R
+    )
+end
+
 function ecotox_burden_to_response(burden, params::DEBAxisParams)
     A = deb_adaptive_margin(burden, params)
     lambda = restoring_force_from_margin(A, params)
@@ -265,4 +403,59 @@ end
 
 function ecotox_records_for_taxon(library, taxon_class; cas=nothing, effect_code=nothing)
     return ecotox_filter_records(library; taxon_class=taxon_class, cas=cas, effect_code=effect_code)
+end
+
+function load_compound_memory_library(
+    path::AbstractString = normpath(joinpath(@__DIR__, "..", "data", "Compound_Memory_Library.csv"))
+)
+    if !isfile(path)
+        throw(ArgumentError("Compound memory library file not found at path: $path"))
+    end
+    df = CSV.File(path)
+    records = []
+    for row in df
+        record = Dict{String, Any}()
+        for k in propertynames(row)
+            record[string(k)] = row[k]
+        end
+        push!(records, record)
+    end
+    return records
+end
+
+function validate_compound_memory_record(record)::Bool
+    required_keys = ["cas_norm", "cas_hyphenated", "chemical_name", "memory_class", "retention_rho_monthly", "basis", "confidence", "notes"]
+    for key in required_keys
+        if !haskey(record, key)
+            throw(ArgumentError("Record is missing required field: $key"))
+        end
+    end
+
+    cas_norm = string(record["cas_norm"])
+    if isempty(strip(cas_norm)) || !occursin(r"^\d+$", strip(cas_norm))
+        throw(ArgumentError("cas_norm must be a non-empty digits-only string"))
+    end
+
+    for key in ["cas_hyphenated", "chemical_name", "memory_class", "basis", "confidence"]
+        val = record[key]
+        if ismissing(val) || isnothing(val) || (isa(val, AbstractString) && isempty(strip(string(val))))
+            throw(ArgumentError("$key must be a non-empty string"))
+        end
+    end
+
+    rho_raw = record["retention_rho_monthly"]
+    if ismissing(rho_raw) || isnothing(rho_raw)
+        throw(ArgumentError("retention_rho_monthly cannot be missing"))
+    end
+    rho = try
+        Float64(rho_raw)
+    catch
+        throw(ArgumentError("retention_rho_monthly must be numeric"))
+    end
+
+    if !isfinite(rho) || rho < 0.0 || rho >= 1.0
+        throw(ArgumentError("retention_rho_monthly must be finite and satisfy 0.0 <= rho < 1.0"))
+    end
+
+    return true
 end
