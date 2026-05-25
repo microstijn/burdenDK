@@ -7,7 +7,9 @@ metadata:
   last_updated: "2026-05-25"
   update_reason: >
     Full refreshed context after AmP runtime adapter completion, ECOTOX parser/library-builder completion,
-    ECOTOX runtime adapter completion, and creation/planning of multi-species multi-compound ECOTOX+AmP examples.
+    ECOTOX runtime adapter completion, data-driven compound memory completion, and bioaccumulation-factor
+    extension completion. The project is now ready for monthly-memory demo inspection and then a
+    3 species x 3 compounds x 12 months memory demonstration.
   intended_reader: "AI coding assistants and future Copilot/LLM sessions"
 
 project:
@@ -17,16 +19,17 @@ project:
   language: "Julia"
   local_path_observed: "C:\\Users\\peete074\\OneDrive - Wageningen University & Research\\programming\\burdenDK"
   one_sentence_summary: >
-    TwoTimescaleResilience is a species-aware, spatial Julia framework that maps environmental stressors and empirical
-    ecotoxicological records into Dynamic Energy Budget-informed physiological vulnerability maps, expressed as an
-    Amplification Factor F that quantifies how chronic background stress magnifies the burden of acute perturbations.
+    TwoTimescaleResilience is a species-aware, spatial Julia framework that maps environmental stressors,
+    empirical ecotoxicological records, and compound memory states into Dynamic Energy Budget-informed
+    physiological vulnerability outputs, expressed as an Amplification Factor F quantifying how chronic
+    background stress magnifies the burden of acute perturbations.
 
 ai_usage_instructions:
   - "Do not propose a new package architecture unless explicitly asked; the package already exists."
   - "Treat src/isimip_deb_pipeline.jl as the existing spatial/runtime engine."
   - "Treat SpeciesProfile as the central runtime integration object for ISIMIP-style workflows."
-  - "Treat AmP and ECOTOX as empirical parameter sources adapted into existing runtime structs and functions."
-  - "Prefer adapter functions and examples over rewrites."
+  - "Treat AmP, ECOTOX, and Compound Memory as empirical parameter/data layers adapted into existing runtime structs and functions."
+  - "Prefer adapter functions, examples, diagnostics, and tests over rewrites."
   - "When helping with code, align with existing structs: ExposureFilter, ModeOfActionMapping, MoAToDEBMapping, DEBAxisParams, SpeciesProfile."
   - "Distinguish repository folder burdenDK from model/framework/module name TwoTimescaleResilience."
   - "If new implementation details are added, update this YAML."
@@ -34,7 +37,7 @@ ai_usage_instructions:
 scientific_purpose:
   problem_statement: >
     Traditional environmental vulnerability assessments often map stressors directly to hazard indices or use
-    regulatory threshold exceedance alone. This framework instead maps ambient chronic stress into physiological
+    regulatory threshold exceedance alone. This framework instead maps chronic stressors into physiological
     depletion of a species-specific adaptive margin and computes how that depletion weakens restoring force.
     The output is an amplification factor describing how much larger the response burden of an acute event becomes
     under stressed versus pristine background conditions.
@@ -45,14 +48,19 @@ scientific_purpose:
     - "Fubini's theorem shows integrated response burden scales as 1/lambda."
     - "Species defense parameters are anchored in Add-my-Pet DEB data."
     - "Stressor attack parameters are anchored through ECOTOX-derived NOEC/EC50/effect/taxon summaries."
-    - "Arbitrary Gamma interaction parameters are being replaced by formal mixture toxicity logic: Concentration Addition and Independent Action; current ECOTOX runtime aggregation is axis-wise additive, with full CA/IA reserved for later work."
+    - "Compound memory now separates retention/carryover rho from bioaccumulation/internal magnification K."
+    - "Arbitrary Gamma interaction parameters are being replaced by formal mixture toxicity logic; current ECOTOX runtime aggregation remains axis-wise additive, with full CA/IA reserved for later work."
 
 mathematical_framework:
   notation:
     grid_cell: "g"
-    time_or_month_index: "m"
+    time_or_month_index: "t or m"
     species_or_target_group: "q"
-    raw_environment_vector: "R_{g,m}"
+    raw_environment_vector: "R_{g,t}"
+    ambient_chemical_concentration: "C_{j,t}"
+    internal_chemical_burden: "B_{j,t}"
+    retention_factor: "rho_j"
+    bioaccumulation_factor: "K_j"
     effective_exposure: "e_j^(q)"
     mode_of_action_vector: "m_r^(q)"
     deb_axis_vector: "s_a^(q), a in {A,M,G,R}"
@@ -62,13 +70,26 @@ mathematical_framework:
   phases:
     exposure_filtering:
       description: "Raw environmental variables are converted into species-specific effective exposure by contact/use/habitat multipliers."
-      equation: "e_{j,g,m}^{(q)} = h_j^{(q)} R_{j,g,m}"
+      equation: "e_{j,g,t}^{(q)} = h_j^{(q)} R_{j,g,t}"
       code_object: "ExposureFilter"
       code_field: "multipliers::Vector{Float64}"
+    chemical_memory:
+      description: >
+        Persistent or bioaccumulative compounds can carry over across months through an internal burden state.
+        The implemented memory model has retention rho and bioaccumulation/internal magnification K as distinct parameters.
+      implemented_equation: "B_{j,t} = rho_j * B_{j,t-1} + (1 - rho_j) * K_j * C_{j,t}"
+      interpretation:
+        rho: "monthly carryover/persistence; 0 means no memory, values near 1 mean slow decay"
+        K: "equilibrium internal magnification factor; K=1 preserves concentration scale, K>1 represents bioaccumulation/internal load magnification"
+      limiting_cases:
+        stateless_equivalence: "rho=0 and K=1 implies B_t = C_t"
+        retention_only: "rho>0 and K=1 implies lag/carryover without magnification"
+        bioaccumulation: "rho>0 and K>1 implies carryover plus magnified internal burden"
+        constant_exposure_equilibrium: "for constant C, B_t -> K*C"
+      implementation_note: "Chemical memory B_t is separate from physiological condition memory Z_t. Z_t is not implemented in this task."
     nec_thresholding:
-      description: "For empirical toxicants, concentrations below the No Effect Concentration create zero physiological burden."
-      preferred_equation: "x_j = max(0, (C_ambient,j - NEC_j) / cstar_j)"
-      implemented_ecotox_runtime_equation: "x = max(0, C - NOEC_median) / (EC50_median - NOEC_median)"
+      description: "For empirical toxicants, concentrations or internal burdens below the No Effect Concentration create zero physiological burden."
+      implemented_ecotox_runtime_equation: "x = max(0, B_or_C - NOEC_median) / (EC50_median - NOEC_median)"
       ecotox_approximation: "cstar_j is approximated as EC50_median - NOEC_median."
     mode_of_action_mapping:
       description: "Effective exposure is mapped into biological modes of action for ISIMIP-style runtime workflows."
@@ -86,8 +107,8 @@ mathematical_framework:
       description: >
         ECOTOX runtime adapter can bypass the generic ISIMIP MoA layer for scalar/empirical toxicity calculations.
         It converts ECOTOX effect codes directly into DEB-axis burden, then uses existing DEB response machinery.
-      active_stress_equation: "x = max(0, C - NOEC_median) / (EC50_median - NOEC_median)"
-      burden_mapping: "record + concentration -> (assimilation, maintenance, growth, reproduction)"
+      active_stress_equation: "x = max(0, B_or_C - NOEC_median) / (EC50_median - NOEC_median)"
+      burden_mapping: "record + concentration/internal burden -> (assimilation, maintenance, growth, reproduction)"
       response_mapping: "burden + DEBAxisParams -> A, lambda, amplification"
     mixture_toxicity:
       description: >
@@ -136,6 +157,10 @@ core_runtime_structs:
     role: "Primary species defense parameter object; target of AmP adapter."
     axis_order: ["assimilation", "maintenance", "growth", "reproduction"]
     note: "alpha_axes are depletion/sensitivity coefficients, not necessarily normalized weights; they need not sum to one."
+  EcotoxExposureState:
+    fields:
+      internal_burdens: "Dict{String, Float64}; keys are normalized digits-only CAS strings"
+    role: "Mutable runtime state carrying internal compound burdens across months."
   ExposureFilter:
     fields:
       multipliers: "Vector{Float64}"
@@ -171,7 +196,7 @@ core_runtime_structs:
   BackgroundStressor:
     role: "Scalar background stressor descriptor."
   ConditionBufferParams:
-    role: "Optional dynamic condition/reserve buffer parameters."
+    role: "Optional dynamic condition/reserve buffer parameters; not yet used for monthly physiological carryover in current memory implementation."
   DEBAxisMapping:
     role: "Direct stressor-to-DEB-axis mapping, used by older/direct DEB path."
   PulseStressor:
@@ -194,12 +219,18 @@ runtime_execution_graph:
     - "DEB-axis grids -> deb_adaptive_margin_grid"
     - "margin grid -> restoring_force_from_margin_grid"
     - "margin grid -> amplification_from_margin_grid"
-  ecotox_runtime_pipeline:
+  ecotox_stateless_runtime_pipeline:
     - "load_ecotox_library -> vector of JSON records"
     - "ecotox_filter_records -> relevant records by CAS/taxon/effect"
     - "concentrations Dict + records -> ecotox_records_to_deb_burden"
     - "burden + DEBAxisParams -> ecotox_burden_to_response"
     - "response contains A, lambda, amplification"
+  ecotox_stateful_memory_pipeline:
+    - "load_compound_memory_library -> memory records with retention rho and bioaccumulation K"
+    - "EcotoxExposureState -> stores B_j,t by cas_norm"
+    - "update_internal_burden! -> B_new = rho*B_old + (1-rho)*K*C"
+    - "ecotox_records_to_deb_burden_stateful! -> updates B and uses B as effective ECOTOX concentration"
+    - "ecotox_burden_to_response -> A, lambda, amplification"
   existing_pipeline_entrypoints:
     - "isimip_deb_pipeline(values, exposure_filter, moa_mapping, moa_deb_mapping, deb_params; ...)"
     - "isimip_deb_pipeline_grid(layers, exposure_filter, moa_mapping, moa_deb_mapping, deb_params; ...)"
@@ -231,6 +262,7 @@ package_structure_observed:
       notable_paths:
         - "data/AmP_Species_Library.json"
         - "data/ECOTOX_Toxicity_Library.json"
+        - "data/Compound_Memory_Library.csv"
         - "data/ecotox/ecotox_ascii_03_12_2026/validation"
     docs:
       role: "LaTeX documentation, manuscript derivations, and presentation material."
@@ -247,13 +279,15 @@ package_structure_observed:
   src_files:
     TwoTimescaleResilience.jl:
       role: "Main module entrypoint."
-      amp_update: "After AmP Tranche 1, src/amp_library.jl is included and its functions are exported."
-      ecotox_runtime_update: "After ECOTOX runtime adapter completion, src/ecotox_library.jl is included and its functions are exported."
+      amp_update: "src/amp_library.jl is included and its functions are exported."
+      ecotox_runtime_update: "src/ecotox_library.jl is included and its functions are exported."
       ecotox_parser_note: "ECOTOXParser.jl remains the offline builder for data/ECOTOX_Toxicity_Library.json."
     amp_library.jl:
-      role: "Runtime AmP JSON loader/adapter implemented in AmP Tranche 1."
+      role: "Runtime AmP JSON loader/adapter."
     ecotox_library.jl:
-      role: "Runtime ECOTOX JSON loader, validator, active-stress calculator, effect router, DEB-burden adapter, response adapter, and record lookup helper."
+      role: >
+        Runtime ECOTOX JSON loader, validator, active-stress calculator, effect router, DEB-burden adapter,
+        response adapter, record lookup helper, compound memory loader, retention/K lookup, and stateful internal burden updater.
     AmP_Translator.jl:
       role: "Offline Add-my-Pet translator; produces AmP species JSON."
       observed_function: "process_species_data()"
@@ -301,15 +335,40 @@ evidence_and_committed_data:
       - "FDB"
       - "ENZ"
       - "DVP"
-    observed_taxon_classes_examples:
-      - "Actinopterygii"
-      - "Bivalvia"
-      - "Branchiopoda"
-      - "Liliopsida"
-      - "Malacostraca"
-      - "Monogononta"
-      - "Sordariomycetes"
-      - "Echinoidea"
+  compound_memory_library:
+    path: "data/Compound_Memory_Library.csv"
+    status: "committed repo data file"
+    required_columns:
+      - "cas_norm"
+      - "cas_hyphenated"
+      - "chemical_name"
+      - "memory_class"
+      - "retention_rho_monthly"
+      - "bioaccumulation_factor"
+      - "basis"
+      - "confidence"
+      - "notes"
+    interpretation:
+      retention_rho_monthly: "monthly carryover/persistence factor rho in [0,1)"
+      bioaccumulation_factor: "internal magnification/equilibrium factor K, default 1.0"
+    example_values:
+      sodium_chloride:
+        cas_norm: "7647145"
+        retention_rho_monthly: 0.0
+        bioaccumulation_factor: 1.0
+      cadmium:
+        cas_norm: "7440439"
+        retention_rho_monthly: 0.90
+        bioaccumulation_factor: 10.0
+      mercury:
+        cas_norm: "7439976"
+        retention_rho_monthly: 0.95
+        bioaccumulation_factor: 20.0
+      polyethylene:
+        cas_norm: "9002884"
+        retention_rho_monthly: 0.95
+        bioaccumulation_factor: 5.0
+    caution: "Current rho and K values are first-pass class-default modeling proxies, not measured compound-specific TK parameters."
 
 empirical_pipelines:
   amp_defense_pipeline:
@@ -318,23 +377,6 @@ empirical_pipelines:
     runtime_adapter: "src/amp_library.jl"
     current_json_library_path: "data/AmP_Species_Library.json"
     biological_role: "Species-specific defense bounds and DEB physiological parameters."
-    observed_json_example:
-      species_key: "Abatus_cordatus"
-      record:
-        A0: 1539.9871108901957
-        alpha_axes:
-          - 0.0006493560841700461
-          - 0.4250074376301585
-          - 0.77712
-          - 0.22287999999999997
-        auxiliary_metrics:
-          L_m: 2.3529
-          p_Am: 41.91844915843113
-          p_M: 13.8449
-        lambda_bounds:
-          KA: 461.99613326705867
-          lambda_max: 0.011568702452292915
-          lambda_min: 0.00899027004972587
     adapter_mapping_to_runtime:
       A0: "DEBAxisParams.A0"
       alpha_axes: "DEBAxisParams.alpha_axes as NTuple{4, Float64}; order assimilation, maintenance, growth, reproduction"
@@ -350,45 +392,31 @@ empirical_pipelines:
     runtime_adapter: "src/ecotox_library.jl"
     current_json_library_path: "data/ECOTOX_Toxicity_Library.json"
     biological_role: "Empirical attack parameters: NEC/NOEC thresholds, EC50/tolerance scaling, taxonomic and effect-code routing."
-    parser_capabilities_reported:
-      - "Parses ECOTOX ASCII pipe-delimited files while bypassing mixed-type formatting traps."
-      - "Joins results.txt, tests.txt via test_id, and species.txt via species_number."
-      - "Filters by CAS using normalized digits-only matching."
-      - "Calculates medians for NOEC and EC50."
-      - "Groups medians by taxonomic class and physiological effect code."
-      - "Writes flat JSON arrays suitable for runtime adapters."
-      - "Builds one unified toxicity library for multiple compounds/CAS values."
     runtime_capabilities_reported:
       - "Loads and validates committed data/ECOTOX_Toxicity_Library.json."
-      - "Computes active stress using max(0, C - NOEC)/(EC50 - NOEC)."
+      - "Computes active stress using max(0, C_or_B - NOEC)/(EC50 - NOEC)."
       - "Routes ECOTOX effect codes to DEB axes."
-      - "Converts one ECOTOX record + concentration to a four-axis DEB burden."
+      - "Converts one ECOTOX record + concentration/internal burden to a four-axis DEB burden."
       - "Aggregates multiple ECOTOX records/chemicals axis-wise into one DEB burden."
       - "Combines ECOTOX burden with DEBAxisParams to compute A, lambda, and amplification."
       - "Filters records by CAS, taxon_class, and effect_code."
-    first_pass_runtime_formula: "x_j = max(0, C_j - NOEC_j) / (EC50_j - NOEC_j)"
     effect_routing_current:
-      maintenance:
-        - "MOR"
-        - "ITX"
-        - "MPH"
-        - "BEH"
-        - "POP"
-        - "ENZ"
-        - "FDB"
-      growth:
-        - "GRO"
-        - "DVP"
-      reproduction:
-        - "REP"
-        - "FEC"
-      assimilation:
-        - "BCM"
-        - "FEED"
-        - "FED"
-        - "ING"
-        - "FOOD"
+      maintenance: ["MOR", "ITX", "MPH", "BEH", "POP", "ENZ", "FDB"]
+      growth: ["GRO", "DVP"]
+      reproduction: ["REP", "FEC"]
+      assimilation: ["BCM", "FEED", "FED", "ING", "FOOD"]
     effect_routing_note: "Unknown effect codes throw ArgumentError; ambiguous listed systemic codes route to maintenance as explicit placeholder."
+  compound_memory_pipeline:
+    data_file: "data/Compound_Memory_Library.csv"
+    runtime_adapter: "src/ecotox_library.jl"
+    biological_role: "Compound-specific internal burden carryover and bioaccumulation/magnification for persistent compounds."
+    implemented_update: "B_new = rho * B_old + (1 - rho) * K * C"
+    default_behavior:
+      unknown_retention: 0.0
+      unknown_bioaccumulation_factor: 1.0
+      stateless_limit: "rho=0 and K=1 gives B=C"
+    relation_to_ecotox: "ECOTOX thresholds act on effective concentration/internal burden B for stateful calculations."
+    relation_to_deb: "Stateful ECOTOX burden is fed to ecotox_burden_to_response with DEBAxisParams."
 
 implemented_amp_runtime_adapter:
   status: "completed"
@@ -396,45 +424,19 @@ implemented_amp_runtime_adapter:
   files_added:
     - "src/amp_library.jl"
     - "test/test_amp_library.jl"
-  files_modified:
-    - "src/TwoTimescaleResilience.jl"
-    - "test/runtests.jl"
-    - "test/test_ecotox.jl"
   exports:
     - "amp_species_key"
     - "load_amp_species_library"
     - "validate_amp_record"
     - "amp_record_to_deb_params"
     - "amp_species_deb_params"
-  functions:
-    amp_species_key:
-      signature: "amp_species_key(name::AbstractString)::String"
-      behavior: "Strips leading/trailing whitespace and collapses any run of whitespace to a single underscore; existing underscores are preserved."
-    load_amp_species_library:
-      signature: "load_amp_species_library(path::AbstractString = joinpath(\"data\", \"AmP_Species_Library.json\"))"
-      behavior: "Loads parsed JSON object using JSON.parsefile from JSON.jl. JSON3 is not used."
-    validate_amp_record:
-      signature: "validate_amp_record(record)::Bool"
-      behavior: "Validates A0, alpha_axes, lambda_bounds.KA, lambda_bounds.lambda_min, lambda_bounds.lambda_max; throws ArgumentError for invalid records."
-    amp_record_to_deb_params:
-      signature: "amp_record_to_deb_params(record)::DEBAxisParams"
-      behavior: "Validates and converts one AmP record to DEBAxisParams."
-    amp_species_deb_params:
-      signature: "amp_species_deb_params(library, species_name::AbstractString)::DEBAxisParams"
-      behavior: "Supports exact JSON keys and human-readable names through amp_species_key; missing species throw KeyError; no silent defaults."
 
 implemented_ecotox_library_builder:
   status: "completed"
   date: "2026-05-24"
-  scope: >
-    Implemented CAS normalization layer and multi-compound ECOTOX toxicity library building. This remains the parser/library-builder layer.
+  scope: "Implemented CAS normalization layer and multi-compound ECOTOX toxicity library building."
   primary_file: "src/ECOTOXParser.jl"
   tests_file: "test/test_ecotox.jl"
-  dependencies_used:
-    - "CSV"
-    - "DataFrames"
-    - "Statistics"
-    - "JSON"
   exports_expected:
     - "parse_ecotox_data"
     - "summarize_ecotox_endpoints"
@@ -443,23 +445,6 @@ implemented_ecotox_library_builder:
     - "normalize_cas"
     - "hyphenate_cas"
     - "build_ecotox_toxicity_library_multi"
-  cas_normalization:
-    normalize_cas:
-      signature: "normalize_cas(cas)::String"
-      behavior: "missing/nothing -> empty string; strips whitespace; removes all non-digit characters; returns digits-only string."
-      examples:
-        - "normalize_cas(\"50-00-0\") == \"50000\""
-        - "normalize_cas(\"50000\") == \"50000\""
-        - "normalize_cas(\" 7440-43-9 \" ) == \"7440439\""
-        - "normalize_cas(\"CAS 50-00-0\") == \"50000\""
-        - "normalize_cas(missing) == \"\""
-        - "normalize_cas(nothing) == \"\""
-    hyphenate_cas:
-      signature: "hyphenate_cas(cas)::String"
-      behavior: "Formats normalized CAS digits as prefix-middle-check; short strings return unchanged."
-      examples:
-        - "hyphenate_cas(\"50000\") == \"50-00-0\""
-        - "hyphenate_cas(\"7440439\") == \"7440-43-9\""
   summary_schema:
     required_columns:
       - "cas"
@@ -471,29 +456,8 @@ implemented_ecotox_library_builder:
       - "EC50_median"
       - "n_NOEC"
       - "n_EC50"
-    notes:
-      - "cas is retained for backward compatibility and equals cas_norm."
-      - "cas_norm is the stable digits-only matching key."
-      - "cas_hyphenated is for readability/display."
-      - "effect_code is uppercase stripped string."
-      - "taxon_class is stripped string preserving original capitalization."
-      - "Endpoint matching is case-insensitive for NOEC and EC50."
-      - "EC50_median > NOEC_median is not enforced at parser stage; runtime validation handles denominator constraints."
   json_schema:
     structure: "flat array of records, not nested by CAS"
-    missing_values: "Julia missing values are written as JSON null."
-  multi_compound_builder:
-    function: "build_ecotox_toxicity_library_multi(results_path, tests_path, species_path, target_cas_list; output_path=nothing, skip_empty=true)"
-    behavior:
-      - "Accepts multiple CAS values in digits-only or hyphenated form."
-      - "Normalizes and deduplicates CAS values by cas_norm while preserving first-seen order."
-      - "Throws ArgumentError for empty target_cas_list."
-      - "Throws ArgumentError for CAS inputs that normalize to empty strings."
-      - "Processes each unique cas_norm once."
-      - "Combines summaries using vcat(...; cols=:union)."
-      - "If all CAS produce no records, returns an empty DataFrame with the correct schema."
-      - "If output_path is provided and all records are empty, still writes a valid JSON empty array [] to output_path."
-      - "Always returns the combined summary DataFrame."
 
 implemented_ecotox_runtime_adapter:
   status: "completed"
@@ -505,10 +469,6 @@ implemented_ecotox_runtime_adapter:
   tests_file: "test/test_ecotox_library.jl"
   main_module_update: "src/TwoTimescaleResilience.jl includes ecotox_library.jl and exports runtime adapter functions."
   committed_runtime_data: "data/ECOTOX_Toxicity_Library.json"
-  dependencies_used:
-    - "JSON"
-    - "Statistics if needed"
-    - "Base Julia"
   exported_functions:
     - "load_ecotox_library"
     - "validate_ecotox_record"
@@ -520,146 +480,134 @@ implemented_ecotox_runtime_adapter:
     - "ecotox_burden_to_response"
     - "ecotox_filter_records"
     - "ecotox_records_for_taxon"
+  important_notes:
+    - "ecotox_records_to_deb_burden is stateless and axis-wise additive."
+    - "ecotox_records_to_deb_burden_stateful! is separate and mutates EcotoxExposureState when compound memory is active."
+
+implemented_compound_memory_and_bioaccumulation:
+  status: "completed"
+  date: "2026-05-25"
+  scope: >
+    Implemented data-driven chemical memory for persistent/bioaccumulative compounds with separate retention rho and
+    bioaccumulation/internal magnification factor K.
+  data_file_added_or_updated: "data/Compound_Memory_Library.csv"
+  primary_code_file: "src/ecotox_library.jl"
+  tests_file: "test/test_ecotox_library.jl"
+  main_module_update: "src/TwoTimescaleResilience.jl exports compound memory/stateful ECOTOX functions as needed."
+  exported_functions_expected:
+    - "load_compound_memory_library"
+    - "validate_compound_memory_record"
+    - "compound_retention"
+    - "compound_bioaccumulation_factor"
+    - "ecotox_default_retention"
+    - "EcotoxExposureState"
+    - "get_internal_burden"
+    - "set_internal_burden!"
+    - "reset_internal_burdens!"
+    - "update_internal_burden!"
+    - "ecotox_records_to_deb_burden_stateful!"
   functions:
-    load_ecotox_library:
-      signature: "load_ecotox_library(path::AbstractString = normpath(joinpath(@__DIR__, \"..\", \"data\", \"ECOTOX_Toxicity_Library.json\")))"
-      behavior: "Loads committed flat ECOTOX JSON array using JSON.parsefile. Does not call ECOTOXParser or rebuild JSON."
-    validate_ecotox_record:
-      signature: "validate_ecotox_record(record)::Bool"
+    load_compound_memory_library:
+      signature: "load_compound_memory_library(path::AbstractString = normpath(joinpath(@__DIR__, \"..\", \"data\", \"Compound_Memory_Library.csv\")))"
+      behavior: "Loads committed compound memory CSV. Should work independent of current working directory."
+    validate_compound_memory_record:
+      signature: "validate_compound_memory_record(record)::Bool"
       required_fields:
-        - "cas"
         - "cas_norm"
         - "cas_hyphenated"
-        - "taxon_class"
-        - "effect_code"
-        - "NOEC_median"
-        - "EC50_median"
-        - "n_NOEC"
-        - "n_EC50"
-      behavior: "Validates non-empty key fields, finite nonnegative NOEC, finite EC50, EC50 > NOEC, and nonnegative count fields. Throws ArgumentError if invalid."
-    ecotox_active_stress:
-      signature: "ecotox_active_stress(concentration, NOEC, EC50)::Float64"
-      equation: "max(0.0, concentration - NOEC) / (EC50 - NOEC)"
-      behavior: "Does not clamp above 1. Throws ArgumentError for non-finite inputs, NOEC < 0, or EC50 <= NOEC."
-    ecotox_effect_to_deb_axis:
-      signature: "ecotox_effect_to_deb_axis(effect_code)::Symbol"
-      behavior: "Uppercase/strip effect code; returns :assimilation, :maintenance, :growth, or :reproduction; unknown codes throw ArgumentError."
-    deb_axis_index:
-      signature: "deb_axis_index(axis::Symbol)::Int"
-      mapping: "assimilation=1, maintenance=2, growth=3, reproduction=4"
-    ecotox_record_to_deb_burden:
-      signature: "ecotox_record_to_deb_burden(concentration, record)"
-      behavior: "Validates record, computes active stress, routes effect_code to a DEB axis, and returns NamedTuple burdens."
-      return_fields: ["assimilation", "maintenance", "growth", "reproduction"]
-    ecotox_records_to_deb_burden:
-      signature: "ecotox_records_to_deb_burden(concentrations, records)"
+        - "chemical_name"
+        - "memory_class"
+        - "retention_rho_monthly"
+        - "bioaccumulation_factor"
+        - "basis"
+        - "confidence"
+        - "notes"
+      behavior: "Validates required fields, rho in [0,1), and K finite >= 0. Throws ArgumentError if invalid."
+    compound_retention:
+      signature: "compound_retention(cas; memory_library=nothing)::Float64"
+      behavior: "Returns data-driven rho; unknown or empty CAS returns 0.0; missing default CSV should raise clear error."
+    compound_bioaccumulation_factor:
+      signature: "compound_bioaccumulation_factor(cas; memory_library=nothing)::Float64"
+      behavior: "Returns data-driven K; unknown or empty CAS returns 1.0; missing default CSV should raise clear error."
+    ecotox_default_retention:
+      signature: "ecotox_default_retention(cas; memory_library=nothing)::Float64"
+      behavior: "Alias/wrapper around data-driven compound_retention."
+    EcotoxExposureState:
+      behavior: "Mutable state storing internal_burdens::Dict{String, Float64} keyed by normalized CAS."
+    get_internal_burden:
+      signature: "get_internal_burden(state::EcotoxExposureState, cas)::Float64"
+      behavior: "Returns stored internal burden or 0.0 if absent."
+    set_internal_burden!:
+      signature: "set_internal_burden!(state::EcotoxExposureState, cas, value)::EcotoxExposureState"
+      behavior: "Sets finite nonnegative internal burden under normalized CAS."
+    reset_internal_burdens!:
+      signature: "reset_internal_burdens!(state::EcotoxExposureState)::EcotoxExposureState"
+      behavior: "Clears internal burden dictionary."
+    update_internal_burden!:
+      signature: "update_internal_burden!(state::EcotoxExposureState, cas, concentration; retention=nothing, bioaccumulation_factor=nothing, memory_library=nothing)::Float64"
+      implemented_equation: "B_new = rho * B_old + (1.0 - rho) * K * concentration"
+      priority_rules:
+        retention:
+          - "explicit numeric retention overrides all compounds"
+          - "retention Dict uses normalized CAS keys where present"
+          - "otherwise use compound_retention(cas; memory_library=memory_library)"
+        bioaccumulation_factor:
+          - "explicit numeric K overrides all compounds"
+          - "K Dict uses normalized CAS keys where present"
+          - "otherwise use compound_bioaccumulation_factor(cas; memory_library=memory_library)"
+      validation: "concentration finite >=0; 0<=rho<1; K finite >=0; invalid explicit overrides throw ArgumentError."
+    ecotox_records_to_deb_burden_stateful!:
+      signature: "ecotox_records_to_deb_burden_stateful!(state::EcotoxExposureState, concentrations, records; retention=nothing, bioaccumulation_factor=nothing, memory_library=nothing)"
       behavior: >
-        Aggregates multiple ECOTOX records axis-wise. Concentrations is a Dict mapping CAS to ambient concentration.
-        CAS keys may be hyphenated or digits-only. Missing concentrations skip records. Empty records return zero burden.
-      note: "This is axis-wise additive aggregation, not full CA/IA mixture toxicity."
-    ecotox_burden_to_response:
-      signature: "ecotox_burden_to_response(burden, params::DEBAxisParams)"
-      behavior: "Converts ECOTOX burden to existing DEB response: A, lambda, amplification. Does not modify deb_adaptive_margin."
-    ecotox_filter_records:
-      signature: "ecotox_filter_records(library; cas=nothing, taxon_class=nothing, effect_code=nothing)"
-      behavior: >
-        Filters flat ECOTOX library records. CAS may be nothing/String/vector and matches normalized digits. taxon_class may be
-        nothing/String/vector and matches case-insensitive stripped strings. effect_code may be nothing/String/vector and matches
-        uppercase stripped strings. Values inside each field are OR; fields combine with AND.
-    ecotox_records_for_taxon:
-      signature: "ecotox_records_for_taxon(library, taxon_class; cas=nothing, effect_code=nothing)"
-      behavior: "Convenience alias around ecotox_filter_records."
+        Normalizes concentration CAS keys, updates internal burden per compound, uses B as effective concentration in ECOTOX active stress,
+        routes records to axes, and returns aggregate DEB burden. Leaves stateless ecotox_records_to_deb_burden untouched.
   test_coverage:
-    - "Loads committed data/ECOTOX_Toxicity_Library.json directly; does not rebuild with ECOTOXParser."
-    - "Validates first real record and invalid mutated records."
-    - "Tests active stress below NOEC, at NOEC, at EC50, and above EC50."
-    - "Tests effect routing for MOR, GRO, REP, FEC, DVP, BCM, BEH, POP, ENZ, FDB, and unknown codes."
-    - "Tests one-record-to-burden for maintenance/growth/reproduction/assimilation routes."
-    - "Tests multi-record axis-wise aggregation and CAS normalization of concentration keys."
-    - "Tests burden-to-response with synthetic DEBAxisParams and optional AmP integration."
-    - "Tests record filtering by CAS, taxon_class, effect_code, combined filters, vectors as OR conditions, and nonexistent filters returning empty vectors."
+    - "Compound_Memory_Library.csv exists and has required columns including bioaccumulation_factor."
+    - "All rho values satisfy 0 <= rho < 1 and all K values are finite >= 0."
+    - "Specific K values checked: cadmium 10, mercury 20, sodium chloride 1, polyethylene 5."
+    - "validate_compound_memory_record rejects missing/invalid K."
+    - "compound_bioaccumulation_factor returns known K values and defaults unknown CAS to 1.0."
+    - "update_internal_burden! preserves previous behavior when K=1."
+    - "update_internal_burden! magnifies burden when K>1."
+    - "Data-driven cadmium update with rho=0.9 and K=10 gives B=10 for C=10 from zero state."
+    - "Stateful burden aggregation supports scalar K, Dict K, and data-driven K."
+    - "Non-accumulative salt with rho=0 and K=1 matches stateless burden behavior."
 
-current_runtime_usage_after_amp_and_ecotox:
-  amp_minimal_usage: |
-    using TwoTimescaleResilience
-
-    amp = load_amp_species_library()
-    params = amp_species_deb_params(amp, "Abatus cordatus")
-    lambda0 = restoring_force_from_margin(params.A0, params)
-  ecotox_minimal_usage: |
-    using TwoTimescaleResilience
-
-    ecotox = load_ecotox_library()
-    records = ecotox_filter_records(
-        ecotox;
-        cas = "7647-14-5",
-        taxon_class = "Actinopterygii",
-        effect_code = "MOR"
-    )
-    concentrations = Dict("7647-14-5" => 20.0)
-    burden = ecotox_records_to_deb_burden(concentrations, records)
-  full_empirical_chain_usage: |
+current_runtime_usage_after_amp_ecotox_and_memory:
+  full_stateful_empirical_chain_usage: |
     using TwoTimescaleResilience
 
     amp = load_amp_species_library()
     params = amp_species_deb_params(amp, "Abatus cordatus")
 
     ecotox = load_ecotox_library()
+    memory = load_compound_memory_library()
+
     records = ecotox_filter_records(
         ecotox;
-        cas = "7647-14-5",
-        taxon_class = "Actinopterygii",
+        cas = "7440-43-9",
         effect_code = "MOR"
     )
 
-    concentrations = Dict("7647-14-5" => 20.0)
-    burden = ecotox_records_to_deb_burden(concentrations, records)
+    state = EcotoxExposureState()
+    concentrations = Dict("7440-43-9" => 100.0)
+
+    burden = ecotox_records_to_deb_burden_stateful!(
+        state,
+        concentrations,
+        records;
+        memory_library = memory
+    )
+
     response = ecotox_burden_to_response(burden, params)
 
     response.A
     response.lambda
     response.amplification
-  profile_like_usage_without_amp_species_profile: |
-    base_profile = fish_profile()
-    exposure_filter = base_profile.exposure_filter
-    moa_mapping = base_profile.moa_mapping
-    moa_deb_mapping = base_profile.moa_deb_mapping
-    deb_params = amp_species_deb_params(amp, "Abatus cordatus")
-
-    result = isimip_deb_pipeline(
-        zeros(7),
-        exposure_filter,
-        moa_mapping,
-        moa_deb_mapping,
-        deb_params
-    )
-
-current_ecotox_library_builder_usage:
-  single_cas_usage: |
-    include("src/ECOTOXParser.jl")
-    using .ECOTOXParser
-
-    summary = build_ecotox_toxicity_library(
-        results_path,
-        tests_path,
-        species_path,
-        "50-00-0";
-        output_path = joinpath("data", "ECOTOX_Toxicity_Library_50000.json")
-    )
-  multi_cas_usage: |
-    include("src/ECOTOXParser.jl")
-    using .ECOTOXParser
-
-    cas_list = ["50-00-0", "7440-43-9"]
-
-    summary = build_ecotox_toxicity_library_multi(
-        results_path,
-        tests_path,
-        species_path,
-        cas_list;
-        output_path = joinpath("data", "ECOTOX_Toxicity_Library.json")
-    )
-  design_note: "The intended ECOTOX data product is one unified flat JSON array containing many compounds, not one database per CAS."
+  stateless_vs_stateful_interpretation: >
+    Stateless calculations use ambient concentration C directly. Stateful calculations update internal burden B using rho and K,
+    then use B as effective concentration for ECOTOX active stress. After ambient C returns to zero, B can remain >0 and decay slowly,
+    so amplification can persist after exposure ends.
 
 examples_status:
   amp_multispecies_synthetic_demo:
@@ -667,46 +615,78 @@ examples_status:
     status: "implemented/working before ECOTOX runtime integration; update if changed"
     purpose: >
       Demonstrates the AmP runtime adapter in a multi-species, synthetic ISIMIP-style workflow using 3x3 grids and CairoMakie heatmaps.
-    key_scientific_result_observed: >
-      Low cumulative stress produces amplification near 1. Moderate cumulative stress can show spatial gradients.
-      High cumulative stress can push A below zero and collapse lambda to lambda_min, making amplification spatially uniform per species.
-      This saturation is expected model behavior, not a plotting bug.
   ecotox_amp_multispecies_multicompound_demo:
     file_name: "examples/ecotox_amp_multispecies_multicompound_demo.jl"
     status: "planned or implemented after ECOTOX runtime adapter; update if executed"
     purpose: >
       Scalar demonstration of 3 species x 3 compounds using committed AmP and ECOTOX libraries, active stress, aggregated DEB burden,
       and species-specific A/lambda/amplification responses.
-    preferred_species:
-      - "Abatus cordatus"
-      - "Podarcis muralis"
-      - "Thalia democratica"
-    preferred_compounds:
-      - "7647-14-5" # sodium chloride / salinity proxy
-      - "7440-43-9" # cadmium / metal toxicity proxy
-      - "7440-50-8" # copper / metal toxicity proxy
   ecotox_amp_multispecies_multicompound_3x3_grid_demo:
     file_name: "examples/ecotox_amp_multispecies_multicompound_3x3_grid_demo.jl"
     status: "planned or implemented after ECOTOX runtime adapter; update if executed"
     purpose: >
       3x3 conceptual grid demonstration of 3 species x 3 compounds, with compound-specific concentration grids scaled to each record's
       NOEC/EC50, active-stress grids, aggregated DEB-axis burden grids, and species-specific A/lambda/amplification grids.
-    expected_outputs:
-      - "output/ecotox_amp_multispecies_multicompound_3x3_grid_demo/ecotox_active_stress_compounds.png"
-      - "output/ecotox_amp_multispecies_multicompound_3x3_grid_demo/ecotox_aggregated_deb_burdens.png"
-      - "output/ecotox_amp_multispecies_multicompound_3x3_grid_demo/ecotox_amp_species_amplification_grids.png"
-      - "optional: output/ecotox_amp_multispecies_multicompound_3x3_grid_demo/ecotox_amp_species_A_grids.png"
+  ecotox_amp_monthly_memory_demo:
+    file_name: "examples/ecotox_amp_monthly_memory_demo.jl"
+    status: "implemented or to be inspected after bioaccumulation factor update"
+    purpose: >
+      Demonstrates stateless versus stateful ECOTOX response over 12 months for a bioaccumulative compound such as cadmium,
+      using data-driven retention rho and bioaccumulation factor K from Compound_Memory_Library.csv.
+    expected_behavior: >
+      During pulse months, internal burden B rises. After ambient concentration C returns to zero, B decays slowly and can keep
+      active stress and amplification elevated relative to stateless response.
+    recommended_table_columns:
+      - "month"
+      - "C"
+      - "B_stateful"
+      - "x_stateless"
+      - "x_stateful"
+      - "F_stateless"
+      - "F_stateful"
+      - "A_stateful"
+      - "lambda_stateful"
+
+current_development_position:
+  completed_steps:
+    - "1. Finish bioaccumulation factor implementation."
+    - "2. Update YAML."
+  immediate_next_steps:
+    - "3. Run monthly memory demo and inspect output."
+    - "4. Create 3 species x 3 compounds x 12 months memory demo."
+    - "5. Add diagnostic plots."
+    - "6. Only then implement formal mixture toxicity."
+    - "7. Then implement physiological Z_t carryover."
+    - "8. Finally connect to real monthly ISIMIP/DynQual rasters."
+  recommended_next_action: >
+    Run examples/ecotox_amp_monthly_memory_demo.jl and inspect whether stateful B, x_stateful, and F_stateful remain elevated after ambient C returns to zero.
+    If effects are still too small, adjust demonstration species/record/pulse scale, not the equations.
 
 future_work:
+  monthly_multispecies_multicompound_memory_demo:
+    description: >
+      Create a 3 species x 3 compounds x 12 months memory demo. Use one non-accumulative compound such as NaCl, one metal such as cadmium,
+      and one strongly persistent compound/proxy such as mercury or a plastic. Show C_t, B_t, x_t, axis burdens, A_t, lambda_t, and F_t.
+  diagnostic_plots:
+    recommended_panels:
+      - "ambient concentration C_t"
+      - "internal burden B_t"
+      - "active ECOTOX stress x_t"
+      - "DEB-axis burden s_A/s_M/s_G/s_R"
+      - "adaptive margin A_t"
+      - "amplification F_t"
   ecotox_mixture_toxicity:
     description: >
       Upgrade current axis-wise additive ECOTOX aggregation to formal mixture toxicity. Same effect/MoA should use Concentration Addition;
       distinct effects/MoAs can use Independent Action after bounded effect transformation if needed.
-    likely_file: "src/ecotox_library.jl or new mixture_toxicity.jl"
+  physiological_condition_memory_Z:
+    description: >
+      Add organism-level physiological condition carryover Z_t after chemical memory is stable. Keep Z_t separate from chemical burden B_t.
+      Existing ConditionBufferParams likely provide the hook, but implementation should be tested in separate tranches.
   ecotox_isimip_raster_integration:
     description: >
-      Connect ECOTOX runtime attack adapter to real ISIMIP/DynQual rasters by mapping raster variables or chemical concentration layers into
-      ECOTOX records/concentrations and then DEB-axis burdens. Start with synthetic rasters before real NetCDF.
+      Connect ECOTOX runtime attack adapter to real monthly ISIMIP/DynQual rasters by mapping raster variables or chemical concentration layers
+      into ECOTOX records/concentrations and then DEB-axis burdens. Start with synthetic rasters before real NetCDF.
   amp_tranche_2_optional:
     description: "Add amp_species_profile(...) constructor to package later if desired."
     target_api: "amp_species_profile(library, species_name; exposure_filter, moa_mapping, moa_deb_mapping, name=..., description=...)::SpeciesProfile"
@@ -714,7 +694,7 @@ future_work:
     - "Add README architecture section centered on SpeciesProfile and empirical adapters."
     - "Add table mapping mathematical symbols to code fields."
     - "Document AmP JSON schema and current adapter functions."
-    - "Document ECOTOX JSON schema, CAS normalization, multi-compound builder, and runtime adapter functions."
+    - "Document ECOTOX JSON schema, CAS normalization, multi-compound builder, runtime adapter functions, compound memory rho, and bioaccumulation factor K."
 
 communication_template_for_future_ai_sessions: |
   Project: TwoTimescaleResilience.jl in repository burdenDK.
@@ -725,4 +705,5 @@ communication_template_for_future_ai_sessions: |
   AmP runtime adapter is complete: src/amp_library.jl provides load_amp_species_library and amp_species_deb_params to convert AmP JSON records to DEBAxisParams.
   ECOTOX parser/library-builder stage is complete: ECOTOXParser.jl supports normalize_cas, hyphenate_cas, normalized parse matching, cas_norm/cas_hyphenated summary schema, and build_ecotox_toxicity_library_multi for unified multi-compound JSON.
   ECOTOX runtime adapter is complete: src/ecotox_library.jl loads data/ECOTOX_Toxicity_Library.json, validates records, computes active stress, routes effect codes to DEB axes, converts records/concentrations to DEB burdens, aggregates burdens axis-wise, computes DEB responses, and filters records.
-  Next logical work is examples and then mixture toxicity/raster integration, not redesign.
+  Compound memory is complete: data/Compound_Memory_Library.csv provides retention_rho_monthly and bioaccumulation_factor; EcotoxExposureState and update_internal_burden! implement B_new = rho*B_old + (1-rho)*K*C; stateful ECOTOX burden uses B as effective concentration.
+  Current next step is to run and inspect the monthly memory demo, then build a 3 species x 3 compounds x 12 months diagnostic example. Do not jump to raster integration or physiological Z_t before validating memory diagnostics.

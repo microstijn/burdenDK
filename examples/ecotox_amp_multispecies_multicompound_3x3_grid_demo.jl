@@ -44,7 +44,7 @@ function main()
     # ------------------------------------------------------------
     # Species selection
     # ------------------------------------------------------------
-    preferred_species = ["Abatus cordatus", "Podarcis muralis", "Thalia democratica"]
+    preferred_species = ["Abatus_cordatus", "Podarcis_muralis", "Thalia_democratica"]
     selected_species_names = String[]
     species_params = Dict{String, Any}()
 
