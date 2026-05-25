@@ -258,6 +258,7 @@ end
     @test :chemical_name in cols
     @test :memory_class in cols
     @test :retention_rho_monthly in cols
+    @test :bioaccumulation_factor in cols
     @test :basis in cols
     @test :confidence in cols
     @test :notes in cols
@@ -269,6 +270,22 @@ end
     @test "9002884" in cas_norms
 
     @test all(0.0 .<= df.retention_rho_monthly .< 1.0)
+
+    @test all(isa.(df.bioaccumulation_factor, Real))
+    @test all(isfinite.(df.bioaccumulation_factor))
+    @test all(0.0 .<= df.bioaccumulation_factor)
+
+    cd_row = first(filter(r -> string(r.cas_norm) == "7440439", df))
+    @test cd_row.bioaccumulation_factor ≈ 10.0
+
+    hg_row = first(filter(r -> string(r.cas_norm) == "7439976", df))
+    @test hg_row.bioaccumulation_factor ≈ 20.0
+
+    nacl_row = first(filter(r -> string(r.cas_norm) == "7647145", df))
+    @test nacl_row.bioaccumulation_factor ≈ 1.0
+
+    pe_row = first(filter(r -> string(r.cas_norm) == "9002884", df))
+    @test pe_row.bioaccumulation_factor ≈ 5.0
 end
 
 @testset "ECOTOX Memory Library: Tranche 2" begin
@@ -301,6 +318,23 @@ end
     bad6 = deepcopy(first(memory))
     delete!(bad6, "cas_norm")
     @test_throws ArgumentError validate_compound_memory_record(bad6)
+
+    # Tranche 2 new validations
+    bad7 = deepcopy(first(memory))
+    delete!(bad7, "bioaccumulation_factor")
+    @test_throws ArgumentError validate_compound_memory_record(bad7)
+
+    bad8 = deepcopy(first(memory))
+    bad8 = typeof(bad8)(k => k == "bioaccumulation_factor" ? -1.0 : v for (k,v) in pairs(bad8))
+    @test_throws ArgumentError validate_compound_memory_record(bad8)
+
+    bad9 = deepcopy(first(memory))
+    bad9 = typeof(bad9)(k => k == "bioaccumulation_factor" ? NaN : v for (k,v) in pairs(bad9))
+    @test_throws ArgumentError validate_compound_memory_record(bad9)
+
+    bad10 = deepcopy(first(memory))
+    bad10 = typeof(bad10)(k => k == "bioaccumulation_factor" ? "not-a-number" : v for (k,v) in pairs(bad10))
+    @test_throws ArgumentError validate_compound_memory_record(bad10)
 end
 
 @testset "ECOTOX Memory Library: Tranche 3" begin
@@ -319,6 +353,18 @@ end
     @test compound_retention("---"; memory_library=memory) == 0.0
 
     @test ecotox_default_retention("7440-43-9"; memory_library=memory) ≈ compound_retention("7440-43-9"; memory_library=memory)
+
+    @test compound_bioaccumulation_factor("7647-14-5"; memory_library=memory) ≈ 1.0
+    @test compound_bioaccumulation_factor("7647145"; memory_library=memory) ≈ 1.0
+
+    @test compound_bioaccumulation_factor("7440-43-9"; memory_library=memory) ≈ 10.0
+    @test compound_bioaccumulation_factor("7440439"; memory_library=memory) ≈ 10.0
+
+    @test compound_bioaccumulation_factor("7439-97-6"; memory_library=memory) ≈ 20.0
+    @test compound_bioaccumulation_factor("9002-88-4"; memory_library=memory) ≈ 5.0
+
+    @test compound_bioaccumulation_factor("000-00-0"; memory_library=memory) == 1.0
+    @test compound_bioaccumulation_factor("---"; memory_library=memory) == 1.0
 end
 
 @testset "ECOTOX Memory Library: Tranche 4" begin
@@ -340,32 +386,69 @@ end
 
 @testset "ECOTOX Memory Library: Tranche 5" begin
     state = EcotoxExposureState()
-    B = update_internal_burden!(state, "7647-14-5", 10.0; retention=0.0)
+    B = update_internal_burden!(state, "7647-14-5", 10.0; retention=0.0, bioaccumulation_factor=1.0)
     @test B ≈ 10.0
 
-    B2 = update_internal_burden!(state, "7647-14-5", 0.0; retention=0.0)
+    B2 = update_internal_burden!(state, "7647-14-5", 0.0; retention=0.0, bioaccumulation_factor=1.0)
     @test B2 ≈ 0.0
 
     state = EcotoxExposureState()
 
-    B1 = update_internal_burden!(state, "7440-43-9", 10.0; retention=0.9)
+    B1 = update_internal_burden!(state, "7440-43-9", 10.0; retention=0.9, bioaccumulation_factor=1.0)
     @test B1 ≈ 1.0
 
-    B2 = update_internal_burden!(state, "7440-43-9", 10.0; retention=0.9)
+    B2 = update_internal_burden!(state, "7440-43-9", 10.0; retention=0.9, bioaccumulation_factor=1.0)
     @test B2 ≈ 1.9
 
-    B3 = update_internal_burden!(state, "7440-43-9", 0.0; retention=0.9)
+    B3 = update_internal_burden!(state, "7440-43-9", 0.0; retention=0.9, bioaccumulation_factor=1.0)
     @test B3 ≈ 1.71
 
     memory = load_compound_memory_library()
     state = EcotoxExposureState()
     B = update_internal_burden!(state, "7440-43-9", 10.0; memory_library=memory)
-    @test B ≈ 1.0
+    # cadmium rho=0.9, K=10.0, so B=0.1*10*10=10.0
+    @test B ≈ 10.0
 
     @test_throws ArgumentError update_internal_burden!(state, "7440-43-9", -1.0)
     @test_throws ArgumentError update_internal_burden!(state, "7440-43-9", NaN)
     @test_throws ArgumentError update_internal_burden!(state, "7440-43-9", 10.0; retention=-0.1)
     @test_throws ArgumentError update_internal_burden!(state, "7440-43-9", 10.0; retention=1.0)
+
+    # K=1 old behavior
+    state = EcotoxExposureState()
+    B1 = update_internal_burden!(state, "7440-43-9", 10.0; retention=0.9, bioaccumulation_factor=1.0)
+    @test B1 ≈ 1.0
+
+    B2 = update_internal_burden!(state, "7440-43-9", 10.0; retention=0.9, bioaccumulation_factor=1.0)
+    @test B2 ≈ 1.9
+
+    # magnification
+    state = EcotoxExposureState()
+    B1 = update_internal_burden!(state, "7440-43-9", 10.0; retention=0.9, bioaccumulation_factor=10.0)
+    @test B1 ≈ 10.0
+
+    B2 = update_internal_burden!(state, "7440-43-9", 10.0; retention=0.9, bioaccumulation_factor=10.0)
+    @test B2 ≈ 19.0
+
+    B3 = update_internal_burden!(state, "7440-43-9", 0.0; retention=0.9, bioaccumulation_factor=10.0)
+    @test B3 ≈ 17.1
+
+    # data-driven K
+    memory = load_compound_memory_library()
+    state = EcotoxExposureState()
+    B = update_internal_burden!(state, "7440-43-9", 10.0; memory_library=memory)
+    # cadmium rho=0.9, K=10.0, so B=0.1*10*10=10
+    @test B ≈ 10.0
+
+    # non-accumulative salt
+    state = EcotoxExposureState()
+    B = update_internal_burden!(state, "7647-14-5", 10.0; memory_library=memory)
+    # sodium chloride rho=0, K=1, so B=10
+    @test B ≈ 10.0
+
+    # Invalid K
+    @test_throws ArgumentError update_internal_burden!(state, "7440-43-9", 10.0; bioaccumulation_factor=-1.0)
+    @test_throws ArgumentError update_internal_burden!(state, "7440-43-9", 10.0; bioaccumulation_factor=NaN)
 end
 
 @testset "ECOTOX Memory Library: Tranche 6" begin
@@ -385,25 +468,25 @@ end
 
     # Month 1
     concentrations = Dict("7440-43-9" => 10.0)
-    burden1 = ecotox_records_to_deb_burden_stateful!(state, concentrations, [record]; retention=0.9)
+    burden1 = ecotox_records_to_deb_burden_stateful!(state, concentrations, [record]; retention=0.9, bioaccumulation_factor=1.0)
 
     @test get_internal_burden(state, "7440-43-9") ≈ 1.0
     @test burden1.maintenance == 0.0
 
     # Month 2
-    burden2 = ecotox_records_to_deb_burden_stateful!(state, concentrations, [record]; retention=0.9)
+    burden2 = ecotox_records_to_deb_burden_stateful!(state, concentrations, [record]; retention=0.9, bioaccumulation_factor=1.0)
     @test get_internal_burden(state, "7440-43-9") ≈ 1.9
     @test burden2.maintenance == 0.0
 
     # Month 3
-    burden3 = ecotox_records_to_deb_burden_stateful!(state, concentrations, [record]; retention=0.9)
+    burden3 = ecotox_records_to_deb_burden_stateful!(state, concentrations, [record]; retention=0.9, bioaccumulation_factor=1.0)
     @test get_internal_burden(state, "7440-43-9") ≈ 2.71
     @test burden3.maintenance ≈ (2.71 - 2.0) / (4.0 - 2.0)
 
     # Decay test
     concentrations_zero = Dict("7440-43-9" => 0.0)
     B_before = get_internal_burden(state, "7440-43-9")
-    burden_decay = ecotox_records_to_deb_burden_stateful!(state, concentrations_zero, [record]; retention=0.9)
+    burden_decay = ecotox_records_to_deb_burden_stateful!(state, concentrations_zero, [record]; retention=0.9, bioaccumulation_factor=1.0)
     B_after = get_internal_burden(state, "7440-43-9")
     @test B_after < B_before
     @test B_after > 0.0
@@ -419,7 +502,8 @@ end
         state_salt,
         Dict("7647-14-5" => 10.0),
         [record_salt];
-        retention=0.0
+        retention=0.0,
+        bioaccumulation_factor=1.0
     )
 
     burden_stateless = ecotox_records_to_deb_burden(
@@ -438,5 +522,82 @@ end
         [record];
         memory_library=memory
     )
-    @test get_internal_burden(state_data, "7440-43-9") ≈ 1.0
+    # With new data-driven memory, Cd has K=10.0
+    @test get_internal_burden(state_data, "7440-43-9") ≈ 10.0
+end
+
+@testset "ECOTOX Memory Library: Tranche 5.5 (New Stateful Aggregation tests)" begin
+    record = Dict(
+        "cas" => "7440439",
+        "cas_norm" => "7440439",
+        "cas_hyphenated" => "7440-43-9",
+        "taxon_class" => "Actinopterygii",
+        "effect_code" => "MOR",
+        "NOEC_median" => 2.0,
+        "EC50_median" => 4.0,
+        "n_NOEC" => 1,
+        "n_EC50" => 1
+    )
+
+    state = EcotoxExposureState()
+    burden1 = ecotox_records_to_deb_burden_stateful!(
+        state,
+        Dict("7440-43-9" => 10.0),
+        [record];
+        retention=0.9,
+        bioaccumulation_factor=1.0
+    )
+    @test burden1.maintenance == 0.0
+
+    state = EcotoxExposureState()
+    burden1 = ecotox_records_to_deb_burden_stateful!(
+        state,
+        Dict("7440-43-9" => 10.0),
+        [record];
+        retention=0.9,
+        bioaccumulation_factor=10.0
+    )
+    @test burden1.maintenance ≈ 4.0
+
+    memory = load_compound_memory_library()
+    state = EcotoxExposureState()
+    burden = ecotox_records_to_deb_burden_stateful!(
+        state,
+        Dict("7440-43-9" => 10.0),
+        [record];
+        memory_library=memory
+    )
+    @test burden.maintenance ≈ 4.0
+
+    state = EcotoxExposureState()
+    burden = ecotox_records_to_deb_burden_stateful!(
+        state,
+        Dict("7440-43-9" => 10.0),
+        [record];
+        retention=Dict("7440-43-9" => 0.9),
+        bioaccumulation_factor=Dict("7440-43-9" => 5.0)
+    )
+    @test burden.maintenance ≈ 1.5
+
+    record_salt = deepcopy(record)
+    record_salt["cas"] = "7647145"
+    record_salt["cas_norm"] = "7647145"
+    record_salt["cas_hyphenated"] = "7647-14-5"
+
+    state = EcotoxExposureState()
+
+    memory = load_compound_memory_library()
+    burden_stateful = ecotox_records_to_deb_burden_stateful!(
+        state,
+        Dict("7647-14-5" => 10.0),
+        [record_salt];
+        memory_library=memory
+    )
+
+    burden_stateless = ecotox_records_to_deb_burden(
+        Dict("7647-14-5" => 10.0),
+        [record_salt]
+    )
+
+    @test burden_stateful.maintenance ≈ burden_stateless.maintenance
 end
