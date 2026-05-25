@@ -1,30 +1,30 @@
-cas_norm,cas_hyphenated,chemical_name,memory_class,retention_rho_monthly,basis,confidence,notes
-7647145,7647-14-5,Sodium chloride,non_accumulative,0.0,class_default,high,rapidly equilibrating salt / salinity proxy
-10043524,10043-52-4,Calcium chloride,non_accumulative,0.0,class_default,high,rapidly equilibrating salt
-7786303,7786-30-3,Magnesium chloride,non_accumulative,0.0,class_default,high,rapidly equilibrating salt
-7757826,7757-82-6,Sodium sulfate,non_accumulative,0.0,class_default,high,rapidly equilibrating salt
-7778189,7778-18-9,Calcium sulfate,non_accumulative,0.0,class_default,high,rapidly equilibrating salt
-7664417,7664-41-7,Ammonia,non_accumulative,0.0,class_default,medium,short-lived nutrient/toxicant proxy
-14798039,14798-03-9,Ammonium ion,non_accumulative,0.0,class_default,medium,nutrient proxy
-14797558,14797-55-8,Nitrate ion,non_accumulative,0.0,class_default,medium,nutrient proxy
-14797650,14797-65-0,Nitrite ion,non_accumulative,0.0,class_default,medium,nutrient proxy
-14265442,14265-44-2,Orthophosphate / phosphate ion,non_accumulative,0.0,class_default,medium,nutrient proxy
-7723140,7723-14-0,Phosphorus,non_accumulative,0.0,class_default,medium,nutrient proxy
-50000,50-00-0,Formaldehyde,short_lived,0.1,class_default,low,organic/BOD proxy
-67561,67-56-1,Methanol,short_lived,0.1,class_default,low,organic/BOD proxy
-64175,64-17-5,Ethanol,short_lived,0.1,class_default,low,organic/BOD proxy
-64197,64-19-7,Acetic acid,short_lived,0.1,class_default,low,organic/BOD proxy
-108952,108-95-2,Phenol,moderate_retention,0.4,class_default,low,organic toxicant proxy
-7440439,7440-43-9,Cadmium,metal_bioaccumulative,0.90,class_default,medium,heavy metal tissue retention proxy
-7440508,7440-50-8,Copper,metal_retention,0.70,class_default,medium,essential metal with regulated but persistent burden
-7440666,7440-66-6,Zinc,metal_retention,0.60,class_default,medium,essential metal with regulated burden
-7439921,7439-92-1,Lead,metal_bioaccumulative,0.90,class_default,medium,heavy metal retention proxy
-7439976,7439-97-6,Mercury,metal_bioaccumulative,0.95,class_default,medium,strong retention proxy
-7440382,7440-38-2,Arsenic,metal_retention,0.80,class_default,medium,metalloid retention proxy
-7440020,7440-02-0,Nickel,metal_retention,0.75,class_default,medium,metal retention proxy
-7440473,7440-47-3,Chromium,metal_retention,0.75,class_default,medium,metal retention proxy
-9002884,9002-88-4,Polyethylene,plastic_particle,0.95,class_default,low,particle retention proxy
-9003070,9003-07-0,Polypropylene,plastic_particle,0.95,class_default,low,particle retention proxy
-9003536,9003-53-6,Polystyrene,plastic_particle,0.95,class_default,low,particle retention proxy
-9002862,9002-86-2,Polyvinyl chloride,plastic_particle,0.95,class_default,low,particle retention proxy
-25038599,25038-59-9,Polyethylene terephthalate,plastic_particle,0.95,class_default,low,particle retention proxy
+cas_norm,cas_hyphenated,chemical_name,memory_class,retention_rho_monthly,bioaccumulation_factor,basis,confidence,notes
+7647145,7647-14-5,Sodium chloride,non_accumulative,0.0,1.0,class_default,high,rapidly equilibrating salt / salinity proxy
+10043524,10043-52-4,Calcium chloride,non_accumulative,0.0,1.0,class_default,high,rapidly equilibrating salt
+7786303,7786-30-3,Magnesium chloride,non_accumulative,0.0,1.0,class_default,high,rapidly equilibrating salt
+7757826,7757-82-6,Sodium sulfate,non_accumulative,0.0,1.0,class_default,high,rapidly equilibrating salt
+7778189,7778-18-9,Calcium sulfate,non_accumulative,0.0,1.0,class_default,high,rapidly equilibrating salt
+7664417,7664-41-7,Ammonia,non_accumulative,0.0,1.0,class_default,medium,short-lived nutrient/toxicant proxy
+14798039,14798-03-9,Ammonium ion,non_accumulative,0.0,1.0,class_default,medium,nutrient proxy
+14797558,14797-55-8,Nitrate ion,non_accumulative,0.0,1.0,class_default,medium,nutrient proxy
+14797650,14797-65-0,Nitrite ion,non_accumulative,0.0,1.0,class_default,medium,nutrient proxy
+14265442,14265-44-2,Orthophosphate / phosphate ion,non_accumulative,0.0,1.0,class_default,medium,nutrient proxy
+7723140,7723-14-0,Phosphorus,non_accumulative,0.0,1.0,class_default,medium,nutrient proxy
+50000,50-00-0,Formaldehyde,short_lived,0.1,1.0,class_default,low,organic/BOD proxy
+67561,67-56-1,Methanol,short_lived,0.1,1.0,class_default,low,organic/BOD proxy
+64175,64-17-5,Ethanol,short_lived,0.1,1.0,class_default,low,organic/BOD proxy
+64197,64-19-7,Acetic acid,short_lived,0.1,1.0,class_default,low,organic/BOD proxy
+108952,108-95-2,Phenol,moderate_retention,0.4,2.0,class_default,low,organic toxicant proxy
+7440439,7440-43-9,Cadmium,metal_bioaccumulative,0.90,10.0,class_default,medium,heavy metal tissue retention and bioaccumulation proxy
+7440508,7440-50-8,Copper,metal_retention,0.70,3.0,class_default,medium,essential metal with regulated but persistent burden
+7440666,7440-66-6,Zinc,metal_retention,0.60,2.0,class_default,medium,essential metal with regulated burden
+7439921,7439-92-1,Lead,metal_bioaccumulative,0.90,10.0,class_default,medium,heavy metal retention and bioaccumulation proxy
+7439976,7439-97-6,Mercury,metal_bioaccumulative,0.95,20.0,class_default,medium,strong retention and bioaccumulation proxy
+7440382,7440-38-2,Arsenic,metal_retention,0.80,5.0,class_default,medium,metalloid retention and bioaccumulation proxy
+7440020,7440-02-0,Nickel,metal_retention,0.75,3.0,class_default,medium,metal retention and bioaccumulation proxy
+7440473,7440-47-3,Chromium,metal_retention,0.75,3.0,class_default,medium,metal retention and bioaccumulation proxy
+9002884,9002-88-4,Polyethylene,plastic_particle,0.95,5.0,class_default,low,particle retention and bioaccumulation proxy
+9003070,9003-07-0,Polypropylene,plastic_particle,0.95,5.0,class_default,low,particle retention and bioaccumulation proxy
+9003536,9003-53-6,Polystyrene,plastic_particle,0.95,5.0,class_default,low,particle retention and bioaccumulation proxy
+9002862,9002-86-2,Polyvinyl chloride,plastic_particle,0.95,5.0,class_default,low,particle retention and bioaccumulation proxy
+25038599,25038-59-9,Polyethylene terephthalate,plastic_particle,0.95,5.0,class_default,low,particle retention and bioaccumulation proxy

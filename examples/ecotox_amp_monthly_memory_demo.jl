@@ -4,12 +4,20 @@ using Printf
 function main()
     println("Running Monthly Memory Demo...")
 
+
     amp = load_amp_species_library()
     params = amp_species_deb_params(amp, "Abatus cordatus")
     ecotox = load_ecotox_library()
     memory = load_compound_memory_library()
 
     cadmium_cas = "7440-43-9"
+    rho_cd = compound_retention(cadmium_cas; memory_library=memory)
+    K_cd = compound_bioaccumulation_factor(cadmium_cas; memory_library=memory)
+
+    println("Cadmium Memory Parameters:")
+    println("  retention rho: ", rho_cd)
+    println("  bioaccumulation factor K: ", K_cd)
+    println()
 
     # Try finding MOR, then GRO, then REP, then fallback
     records = ecotox_filter_records(ecotox; cas=cadmium_cas, effect_code="MOR")
@@ -38,7 +46,8 @@ function main()
 
     EC50 = record["EC50_median"]
     low = 0.0
-    pulse = 3.0 * EC50
+    # The pulse is deliberately high to demonstrate the memory mechanism and the interaction between retention and bioaccumulation factor. This is a pedagogical stress scenario, not a realistic environmental concentration claim.
+    pulse = 10.0 * EC50
 
     C_t = [
         low, low,
@@ -51,9 +60,9 @@ function main()
     state = EcotoxExposureState()
 
     # Output formatting
-    @printf("%-6s | %-8s | %-12s | %-15s | %-14s | %-12s | %-15s\n",
-            "month", "C", "B_stateful", "F_stateless", "F_stateful", "A_stateful", "lambda_stateful")
-    println("-"^97)
+    @printf("%-6s | %-8s | %-12s | %-15s | %-15s | %-15s | %-14s | %-12s | %-15s\n",
+            "month", "C", "B_stateful", "x_stateless", "x_stateful", "F_stateless", "F_stateful", "A_stateful", "lambda_stateful")
+    println("-"^130)
 
     for (m, C) in enumerate(C_t)
         # Stateless scenario
@@ -70,12 +79,14 @@ function main()
         stateful_response = ecotox_burden_to_response(stateful_burden, params)
 
         B_stateful = get_internal_burden(state, cadmium_cas)
+        x_stateless = stateless_burden.maintenance
+        x_stateful = stateful_burden.maintenance
         F_stateful = stateful_response.amplification
         A_stateful = stateful_response.A
         lambda_stateful = stateful_response.lambda
 
-        @printf("%-6d | %-8.3f | %-12.3f | %-15.3f | %-14.3f | %-12.3f | %-15.3f\n",
-                m, C, B_stateful, F_stateless, F_stateful, A_stateful, lambda_stateful)
+        @printf("%-6d | %-8.3f | %-12.3f | %-15.3f | %-15.3f | %-15.3f | %-14.3f | %-12.3f | %-15.3f\n",
+                m, C, B_stateful, x_stateless, x_stateful, F_stateless, F_stateful, A_stateful, lambda_stateful)
     end
 end
 
