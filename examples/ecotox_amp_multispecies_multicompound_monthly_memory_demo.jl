@@ -307,6 +307,6 @@ function main()
     println("Tranche 6 complete. Wrote PNGs to ", output_dir)
 end
 
-if abspath(PROGRAM_FILE) == @__FILE__
-    main()
-end
+
+main()
+
