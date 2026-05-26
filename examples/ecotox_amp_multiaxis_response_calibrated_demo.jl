@@ -529,6 +529,5 @@ function main()
     generate_plots(df_spec, df_comp)
 end
 
-if abspath(PROGRAM_FILE) == @__FILE__
-    main()
-end
+main()
+

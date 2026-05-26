@@ -46,3 +46,13 @@ data/ecotox/results.txt
 data/ECOTOX_Toxicity_Library_50000.json
 .gitignore
 data/ECOTOX_Toxicity_Library_7440_43_9.json
+docs/tex/twotimescales_philosophy_refs.bib
+.gitignore
+docs/tex/twotimescales_rewritten_full.aux
+docs/tex/twotimescales_rewritten_full.bbl
+.gitignore
+docs/tex/twotimescales_rewritten_full.blg
+docs/tex/twotimescales_rewritten_full.log
+docs/tex/twotimescales_rewritten_full.out
+docs/tex/twotimescales_rewritten_full.pdf
+docs/tex/twotimescales_rewritten_full.synctex.gz
