@@ -175,8 +175,8 @@ end
     df_comp = CSV.read(compound_csv, DataFrame)
     df_spec = CSV.read(species_csv, DataFrame)
 
-    @test nrow(df_comp) == 108 # 3 species * 3 compounds * 12 months
-    @test nrow(df_spec) == 36  # 3 species * 12 months
+    @test nrow(df_comp) == 216 # 3 species * 3 compounds * 12 months * 2 scenarios
+    @test nrow(df_spec) == 72  # 3 species * 12 months * 2 scenarios
 
     # Check compound columns
     expected_comp_cols = ["species_name", "month", "cas_norm", "chemical_name", "C_t", "B_t", "x_t", "burden_assimilation", "burden_maintenance", "burden_growth", "burden_reproduction"]

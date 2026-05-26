@@ -7,6 +7,10 @@ using CairoMakie
 """
 3 species × 3 compounds × 12 months monthly memory diagnostic.
 
+This example incorporates an analytical warm-start initialisation for chemical memory (B_t)
+to represent embodied prior environmental exposure before reported month 1. This is an analytical
+calculation only and does not involve physiological condition memory (Z_t) or formal mixture toxicity.
+
 Species:
 - Abatus cordatus
 - Podarcis muralis
@@ -26,6 +30,62 @@ This diagnostic is meant to show how ambient concentration C_t (pressure proxy),
 active stress x_t, DEB-axis burdens, adaptive margin A_t (physiological capacity proxy),
 restoring force lambda_t, and amplification F_t evolve through time.
 """
+
+function analytical_initial_burden(rho::Float64, K::Float64, C_bg::Float64, spinup_months::Int; B0::Float64 = 0.0)
+    if !(0.0 <= rho < 1.0)
+        throw(ArgumentError("retention_rho_monthly must be finite and satisfy 0.0 <= rho < 1.0. Got $rho"))
+    end
+    if K <= 0.0 || !isfinite(K)
+        throw(ArgumentError("bioaccumulation factor K must be positive and finite. Got $K"))
+    end
+    if C_bg < 0.0 || !isfinite(C_bg)
+        throw(ArgumentError("background concentration C_bg must be >= 0 and finite. Got $C_bg"))
+    end
+    if spinup_months < 0
+        throw(ArgumentError("spinup_months must be >= 0. Got $spinup_months"))
+    end
+    if B0 < 0.0 || !isfinite(B0)
+        throw(ArgumentError("initial B0 must be >= 0 and finite. Got $B0"))
+    end
+
+    if spinup_months == 0
+        return B0
+    end
+
+    # Explicit calculation: B_n = rho^n * B_0 + K * C_bg * (1 - rho^n)
+    return (rho^spinup_months) * B0 + K * C_bg * (1.0 - (rho^spinup_months))
+end
+
+function background_for_target_burden(target_B::Float64, rho::Float64, K::Float64, spinup_months::Int; B0::Float64 = 0.0)
+    if !(0.0 <= rho < 1.0)
+        throw(ArgumentError("retention_rho_monthly must be finite and satisfy 0.0 <= rho < 1.0. Got $rho"))
+    end
+    if K <= 0.0 || !isfinite(K)
+        throw(ArgumentError("bioaccumulation factor K must be positive and finite. Got $K"))
+    end
+    if target_B < 0.0 || !isfinite(target_B)
+        throw(ArgumentError("target_B must be >= 0 and finite. Got $target_B"))
+    end
+    if spinup_months < 0
+        throw(ArgumentError("spinup_months must be >= 0. Got $spinup_months"))
+    end
+    if B0 < 0.0 || !isfinite(B0)
+        throw(ArgumentError("initial B0 must be >= 0 and finite. Got $B0"))
+    end
+
+    denom = K * (1.0 - (rho^spinup_months))
+    if denom <= 0.0 || !isfinite(denom)
+        throw(ArgumentError("Denominator K*(1-rho^spinup_months) must be strictly positive and finite. Got $denom"))
+    end
+
+    C_bg = (target_B - (rho^spinup_months) * B0) / denom
+
+    if C_bg < 0.0
+        throw(ArgumentError("Computed C_bg is negative ($C_bg) for target $target_B with B0 $B0. This is invalid."))
+    end
+
+    return C_bg
+end
 
 function generate_scenario_concentrations(EC50::Float64)
     low = 0.0
@@ -96,98 +156,189 @@ function main()
         records_map[c.cas] = r2
     end
 
-    # Tranche 3: Compute stateful monthly burden
-    # Create empty states for each species
-    species_states = Dict(sp => EcotoxExposureState() for sp in species_list)
-
-    # Store compound-level results
+    # Tranche 3: Compute stateful monthly burden with Scenarios
     compound_results = []
+    species_results = []
 
-    # Iterate over scenario
+    scenarios = ["zero_start", "analytical_warm_start"]
+
     ec50_ref = records_map["7440-43-9"]["EC50_median"] # pedogogical scalar based on Cd EC50
     C_t = generate_scenario_concentrations(ec50_ref)
 
-    for month in 1:12
+    for scenario in scenarios
+        # Initialize an independent state for each species
+        species_states = Dict(sp => EcotoxExposureState() for sp in species_list)
+
+        spinup_used = (scenario == "analytical_warm_start")
+        spinup_months = spinup_used ? 24 : 0
+        spinup_method = spinup_used ? "analytical_closed_form" : "none"
+
+        # Pre-compute the initial analytical burden values mapping cas_norm -> value
+        # Note: B_t applies to the internal chemical state, independent of species DEB params.
+        # But we do keep one EcotoxExposureState per species just conceptually for the pipeline.
+        analytical_initial_map = Dict{String, Float64}()
+        analytical_C_bg_map = Dict{String, Float64}()
+
+        for c in compounds
+            record = records_map[c.cas]
+            cas_norm = record["cas_norm"]
+
+            if !spinup_used
+                analytical_initial_map[cas_norm] = 0.0
+                analytical_C_bg_map[cas_norm] = 0.0
+                continue
+            end
+
+            # Analytical Warm Start logic
+            if c.name == "Sodium chloride"
+                analytical_initial_map[cas_norm] = 0.0
+                analytical_C_bg_map[cas_norm] = 0.0
+                continue
+            end
+
+            rho = TwoTimescaleResilience.compound_retention(cas_norm; memory_library=memory)
+            K = TwoTimescaleResilience.compound_bioaccumulation_factor(cas_norm; memory_library=memory)
+
+            has_noec = haskey(record, "NOEC_median") && record["NOEC_median"] !== nothing
+            has_ec50 = haskey(record, "EC50_median") && record["EC50_median"] !== nothing
+
+            target_B_initial = 0.0
+            if has_noec && Float64(record["NOEC_median"]) > 0.0
+                target_B_initial = 0.5 * Float64(record["NOEC_median"])
+            elseif has_ec50 && Float64(record["EC50_median"]) > 0.0
+                target_B_initial = 0.05 * Float64(record["EC50_median"])
+            else
+                # No usable NOEC or EC50 - skip warm-start for this compound
+                analytical_initial_map[cas_norm] = 0.0
+                analytical_C_bg_map[cas_norm] = 0.0
+                continue
+            end
+
+            # Use inverse helper to find background
+            # If compound has rho=0 or K=1 or typical values, catch ArgumentErrors or safe behavior.
+            try
+                C_bg = background_for_target_burden(target_B_initial, rho, K, spinup_months; B0=0.0)
+                B_init = analytical_initial_burden(rho, K, C_bg, spinup_months; B0=0.0)
+                analytical_initial_map[cas_norm] = B_init
+                analytical_C_bg_map[cas_norm] = C_bg
+            catch e
+                if e isa ArgumentError
+                    # if the memory variables trigger an error (e.g. K <= 0), fallback to zero
+                    analytical_initial_map[cas_norm] = 0.0
+                    analytical_C_bg_map[cas_norm] = 0.0
+                else
+                    rethrow(e)
+                end
+            end
+        end
+
+        # Pre-apply analytical burden to states before starting Month 1
         for sp in species_list
             state = species_states[sp]
-            params = params_map[sp]
+            for (cas_norm, B_init) in analytical_initial_map
+                TwoTimescaleResilience.set_internal_burden!(state, cas_norm, B_init)
+            end
+        end
 
-            for c in compounds
-                record = records_map[c.cas]
-                conc = C_t[month] # same concentration scenario for all compounds to compare memory
+        # Iterate over reported months
+        for month in 1:12
+            for sp in species_list
+                state = species_states[sp]
+                params = params_map[sp]
 
-                # The stateful burden expects concs mapped by cas_norm, not cas hyphenated
-                concs = Dict(record["cas_norm"] => conc)
+                for c in compounds
+                    record = records_map[c.cas]
+                    cas_norm = record["cas_norm"]
+                    conc = C_t[month] # same concentration scenario for all compounds to compare memory
 
-                # update state and compute burden for this compound
-                stateful_burden = ecotox_records_to_deb_burden_stateful!(
-                    state, concs, [record]; memory_library=memory
+                    # Capture initial burden strictly AT the start of reported month 1 (before applying C_t[month])
+                    initial_B_t_at_month_1 = analytical_initial_map[cas_norm]
+
+                    # The stateful burden expects concs mapped by cas_norm, not cas hyphenated
+                    concs = Dict(cas_norm => conc)
+
+                    # update state and compute burden for this compound
+                    stateful_burden = TwoTimescaleResilience.ecotox_records_to_deb_burden_stateful!(
+                        state, concs, [record]; memory_library=memory
+                    )
+
+                    B_t = TwoTimescaleResilience.get_internal_burden(state, c.cas)
+                    x_t = stateful_burden.maintenance # active stress is predominantly maintenance
+
+                    push!(compound_results, (
+                        scenario = scenario,
+                        spinup_used = spinup_used,
+                        spinup_months = spinup_months,
+                        spinup_method = spinup_method,
+                        species_key = replace(sp, " " => "_"),
+                        species_name = sp,
+                        month = month,
+                        cas_norm = cas_norm,
+                        cas_hyphenated = record["cas_hyphenated"],
+                        chemical_name = c.name,
+                        C_t = conc,
+                        B_t = B_t,
+                        x_t = x_t,
+                        burden_assimilation = stateful_burden.assimilation,
+                        burden_maintenance = stateful_burden.maintenance,
+                        burden_growth = stateful_burden.growth,
+                        burden_reproduction = stateful_burden.reproduction,
+                        spinup_background_C_t = analytical_C_bg_map[cas_norm],
+                        initial_B_t_at_reported_month_1 = initial_B_t_at_month_1
+                    ))
+                end
+            end
+        end
+
+        # Compute aggregated species response calculation for this scenario
+        for month in 1:12
+            for sp in species_list
+                params = params_map[sp]
+
+                # Aggregate burdens across all compounds for this scenario, species and month
+                compounds_in_month = filter(r -> r.scenario == scenario && r.species_name == sp && r.month == month, compound_results)
+
+                agg_assimilation = sum(r.burden_assimilation for r in compounds_in_month)
+                agg_maintenance = sum(r.burden_maintenance for r in compounds_in_month)
+                agg_growth = sum(r.burden_growth for r in compounds_in_month)
+                agg_reproduction = sum(r.burden_reproduction for r in compounds_in_month)
+
+                agg_burden = (
+                    assimilation = agg_assimilation,
+                    maintenance = agg_maintenance,
+                    growth = agg_growth,
+                    reproduction = agg_reproduction
                 )
 
-                B_t = get_internal_burden(state, c.cas)
-                x_t = stateful_burden.maintenance # active stress is predominantly maintenance
+                # Compute physiological response
+                resp = TwoTimescaleResilience.ecotox_burden_to_response(agg_burden, params)
 
-                push!(compound_results, (
+                # For baseline restoring force
+                zero_burden = (assimilation=0.0, maintenance=0.0, growth=0.0, reproduction=0.0)
+                zero_resp = TwoTimescaleResilience.ecotox_burden_to_response(zero_burden, params)
+
+                push!(species_results, (
+                    scenario = scenario,
+                    spinup_used = spinup_used,
+                    spinup_months = spinup_months,
+                    spinup_method = spinup_method,
+                    species_key = replace(sp, " " => "_"),
                     species_name = sp,
                     month = month,
-                    cas_norm = record["cas_norm"],
-                    chemical_name = c.name,
-                    C_t = conc,
-                    B_t = B_t,
-                    x_t = x_t,
-                    burden_assimilation = stateful_burden.assimilation,
-                    burden_maintenance = stateful_burden.maintenance,
-                    burden_growth = stateful_burden.growth,
-                    burden_reproduction = stateful_burden.reproduction
+                    total_burden_assimilation = agg_assimilation,
+                    total_burden_maintenance = agg_maintenance,
+                    total_burden_growth = agg_growth,
+                    total_burden_reproduction = agg_reproduction,
+                    A_t = resp.A,
+                    lambda_t = resp.lambda,
+                    lambda0 = zero_resp.lambda,
+                    F_t = resp.amplification
                 ))
             end
         end
     end
 
-    println("Tranche 3 complete. Rows: ", length(compound_results))
-
-    # Tranche 4: Compute aggregated species response calculation
-    species_results = []
-
-    for month in 1:12
-        for sp in species_list
-            params = params_map[sp]
-
-            # Aggregate burdens across all compounds for this species and month
-            compounds_in_month = filter(r -> r.species_name == sp && r.month == month, compound_results)
-
-            agg_assimilation = sum(r.burden_assimilation for r in compounds_in_month)
-            agg_maintenance = sum(r.burden_maintenance for r in compounds_in_month)
-            agg_growth = sum(r.burden_growth for r in compounds_in_month)
-            agg_reproduction = sum(r.burden_reproduction for r in compounds_in_month)
-
-            agg_burden = (
-                assimilation = agg_assimilation,
-                maintenance = agg_maintenance,
-                growth = agg_growth,
-                reproduction = agg_reproduction
-            )
-
-            # Compute physiological response
-            resp = ecotox_burden_to_response(agg_burden, params)
-
-            # For baseline restoring force
-            zero_burden = (assimilation=0.0, maintenance=0.0, growth=0.0, reproduction=0.0)
-            zero_resp = ecotox_burden_to_response(zero_burden, params)
-
-            push!(species_results, (
-                species_key = replace(sp, " " => "_"),
-                species_name = sp,
-                month = month,
-                A_t = resp.A,
-                lambda_t = resp.lambda,
-                lambda0 = zero_resp.lambda,
-                F_t = resp.amplification
-            ))
-        end
-    end
-
-    println("Tranche 4 complete. Species-month Rows: ", length(species_results))
+    println("Tranche 3 & 4 complete. Compound Rows: ", length(compound_results), " | Species Rows: ", length(species_results))
 
     # Tranche 5: CSV output
     output_dir = normpath(joinpath(@__DIR__, "..", "output", "ecotox_amp_multispecies_multicompound_monthly_memory_demo"))
@@ -225,7 +376,7 @@ function main()
     fig_C = CairoMakie.Figure(size=(800, 600))
     ax_C = CairoMakie.Axis(fig_C[1,1], title="Ambient Concentrations (C_t)", xlabel="Month", ylabel="Concentration")
     for (i, cas) in enumerate(unique(df_comp.cas_norm))
-        sub_df = filter(r -> r.cas_norm == cas && r.species_name == species_list[1], df_comp) # C_t is same for all species
+        sub_df = filter(r -> r.cas_norm == cas && r.species_name == species_list[1] && r.scenario == "zero_start", df_comp) # C_t is same for all scenarios/species
         CairoMakie.lines!(ax_C, sub_df.month, sub_df.C_t, label=sub_df.chemical_name[1], color=colors[i], linewidth=2)
     end
     CairoMakie.axislegend(ax_C)
@@ -236,8 +387,10 @@ function main()
     for (s, sp) in enumerate(species_list)
         ax_B = CairoMakie.Axis(fig_B[1,s], title="Internal Burden - $sp", xlabel="Month", ylabel="Burden (B_t)")
         for (i, cas) in enumerate(unique(df_comp.cas_norm))
-            sub_df = filter(r -> r.cas_norm == cas && r.species_name == sp, df_comp)
-            CairoMakie.lines!(ax_B, sub_df.month, sub_df.B_t, label=sub_df.chemical_name[1], color=colors[i], linewidth=2)
+            sub_df_zero = filter(r -> r.cas_norm == cas && r.species_name == sp && r.scenario == "zero_start", df_comp)
+            sub_df_warm = filter(r -> r.cas_norm == cas && r.species_name == sp && r.scenario == "analytical_warm_start", df_comp)
+            CairoMakie.lines!(ax_B, sub_df_zero.month, sub_df_zero.B_t, label=sub_df_zero.chemical_name[1] * " (Zero)", color=colors[i], linewidth=2, linestyle=:solid)
+            CairoMakie.lines!(ax_B, sub_df_warm.month, sub_df_warm.B_t, label=sub_df_warm.chemical_name[1] * " (Warm)", color=colors[i], linewidth=2, linestyle=:dash)
         end
         if s == 1
             CairoMakie.axislegend(ax_B)
@@ -250,8 +403,10 @@ function main()
     for (s, sp) in enumerate(species_list)
         ax_x = CairoMakie.Axis(fig_x[1,s], title="Active Stress - $sp", xlabel="Month", ylabel="Stress (x_t)")
         for (i, cas) in enumerate(unique(df_comp.cas_norm))
-            sub_df = filter(r -> r.cas_norm == cas && r.species_name == sp, df_comp)
-            CairoMakie.lines!(ax_x, sub_df.month, sub_df.x_t, label=sub_df.chemical_name[1], color=colors[i], linewidth=2)
+            sub_df_zero = filter(r -> r.cas_norm == cas && r.species_name == sp && r.scenario == "zero_start", df_comp)
+            sub_df_warm = filter(r -> r.cas_norm == cas && r.species_name == sp && r.scenario == "analytical_warm_start", df_comp)
+            CairoMakie.lines!(ax_x, sub_df_zero.month, sub_df_zero.x_t, label=sub_df_zero.chemical_name[1] * " (Zero)", color=colors[i], linewidth=2, linestyle=:solid)
+            CairoMakie.lines!(ax_x, sub_df_warm.month, sub_df_warm.x_t, label=sub_df_warm.chemical_name[1] * " (Warm)", color=colors[i], linewidth=2, linestyle=:dash)
         end
         if s == 1
             CairoMakie.axislegend(ax_x)
@@ -263,11 +418,12 @@ function main()
     fig_axis = CairoMakie.Figure(size=(1200, 400))
     for (s, sp) in enumerate(species_list)
         ax_axis = CairoMakie.Axis(fig_axis[1,s], title="Axis Burdens - $sp", xlabel="Month", ylabel="Aggregated Burden")
-        sub_df = filter(r -> r.species_name == sp, df_spec)
-        # Note: we need to pull the axis burdens from compound_results by summing them, but wait, those were aggregated internally. Let's just re-aggregate them here for plotting, or just plot the primary stress driver.
-        # Actually, let's just re-sum them here since they aren't in df_spec
-        agg_maint = [sum(r.burden_maintenance for r in compound_results if r.species_name == sp && r.month == m) for m in 1:12]
-        CairoMakie.lines!(ax_axis, 1:12, agg_maint, label="Maintenance", color=:red, linewidth=2)
+
+        agg_maint_zero = [sum(r.burden_maintenance for r in compound_results if r.species_name == sp && r.month == m && r.scenario == "zero_start") for m in 1:12]
+        agg_maint_warm = [sum(r.burden_maintenance for r in compound_results if r.species_name == sp && r.month == m && r.scenario == "analytical_warm_start") for m in 1:12]
+
+        CairoMakie.lines!(ax_axis, 1:12, agg_maint_zero, label="Maintenance (Zero)", color=:red, linewidth=2, linestyle=:solid)
+        CairoMakie.lines!(ax_axis, 1:12, agg_maint_warm, label="Maintenance (Warm)", color=:red, linewidth=2, linestyle=:dash)
         if s == 1
             CairoMakie.axislegend(ax_axis)
         end
@@ -278,8 +434,10 @@ function main()
     fig_A = CairoMakie.Figure(size=(800, 600))
     ax_A = CairoMakie.Axis(fig_A[1,1], title="Adaptive Margin (A_t)", xlabel="Month", ylabel="Adaptive Margin")
     for (s, sp) in enumerate(species_list)
-        sub_df = filter(r -> r.species_name == sp, df_spec)
-        CairoMakie.lines!(ax_A, sub_df.month, sub_df.A_t, label=sp, color=colors[s], linewidth=2, linestyle=linestyles[s])
+        sub_df_zero = filter(r -> r.species_name == sp && r.scenario == "zero_start", df_spec)
+        sub_df_warm = filter(r -> r.species_name == sp && r.scenario == "analytical_warm_start", df_spec)
+        CairoMakie.lines!(ax_A, sub_df_zero.month, sub_df_zero.A_t, label=sp * " (Zero)", color=colors[s], linewidth=2, linestyle=:solid)
+        CairoMakie.lines!(ax_A, sub_df_warm.month, sub_df_warm.A_t, label=sp * " (Warm)", color=colors[s], linewidth=2, linestyle=:dash)
     end
     CairoMakie.axislegend(ax_A)
     CairoMakie.save(joinpath(output_dir, "monthly_adaptive_margin.png"), fig_A)
@@ -288,8 +446,10 @@ function main()
     fig_lam = CairoMakie.Figure(size=(800, 600))
     ax_lam = CairoMakie.Axis(fig_lam[1,1], title="Restoring Force (lambda_t)", xlabel="Month", ylabel="Restoring Force")
     for (s, sp) in enumerate(species_list)
-        sub_df = filter(r -> r.species_name == sp, df_spec)
-        CairoMakie.lines!(ax_lam, sub_df.month, sub_df.lambda_t, label=sp, color=colors[s], linewidth=2, linestyle=linestyles[s])
+        sub_df_zero = filter(r -> r.species_name == sp && r.scenario == "zero_start", df_spec)
+        sub_df_warm = filter(r -> r.species_name == sp && r.scenario == "analytical_warm_start", df_spec)
+        CairoMakie.lines!(ax_lam, sub_df_zero.month, sub_df_zero.lambda_t, label=sp * " (Zero)", color=colors[s], linewidth=2, linestyle=:solid)
+        CairoMakie.lines!(ax_lam, sub_df_warm.month, sub_df_warm.lambda_t, label=sp * " (Warm)", color=colors[s], linewidth=2, linestyle=:dash)
     end
     CairoMakie.axislegend(ax_lam)
     CairoMakie.save(joinpath(output_dir, "monthly_restoring_force.png"), fig_lam)
@@ -298,8 +458,10 @@ function main()
     fig_F = CairoMakie.Figure(size=(800, 600))
     ax_F = CairoMakie.Axis(fig_F[1,1], title="Amplification (F_t)", xlabel="Month", ylabel="Amplification (Baseline=1.0)")
     for (s, sp) in enumerate(species_list)
-        sub_df = filter(r -> r.species_name == sp, df_spec)
-        CairoMakie.lines!(ax_F, sub_df.month, sub_df.F_t, label=sp, color=colors[s], linewidth=2, linestyle=linestyles[s])
+        sub_df_zero = filter(r -> r.species_name == sp && r.scenario == "zero_start", df_spec)
+        sub_df_warm = filter(r -> r.species_name == sp && r.scenario == "analytical_warm_start", df_spec)
+        CairoMakie.lines!(ax_F, sub_df_zero.month, sub_df_zero.F_t, label=sp * " (Zero)", color=colors[s], linewidth=2, linestyle=:solid)
+        CairoMakie.lines!(ax_F, sub_df_warm.month, sub_df_warm.F_t, label=sp * " (Warm)", color=colors[s], linewidth=2, linestyle=:dash)
     end
     CairoMakie.axislegend(ax_F)
     CairoMakie.save(joinpath(output_dir, "monthly_amplification.png"), fig_F)
