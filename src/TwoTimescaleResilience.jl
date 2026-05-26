@@ -1,6 +1,6 @@
 module TwoTimescaleResilience
 
-export aggregate_deb_axis_burdens
+export aggregate_deb_axis_burdens, mixture_contribution_diagnostics, axis_weights_for_species, compute_adaptive_margin_response
 export load_nc_layer, normalise_layer, write_ascii_grid, read_ascii_grid, plot_scenario_comparison, plot_grid, plot_background_layers, plot_amplification_grid,
        trapezoid_auc, recovery_time_after_last_pulse, compute_metrics, TwoTimescaleSimulationResult, simulate_two_timescale, PulseStressor, rectangular_pulse, pulse_exposure_matrix, burden_matrix_exact_update, acute_mixture_burden,
        synthetic_background_layers, run_synthetic_raster_demo, compute_background_index_grid, adaptive_margin_grid, restoring_force_grid, amplification_factor_grid,

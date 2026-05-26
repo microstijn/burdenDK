@@ -1,4 +1,4 @@
-export DEBAxisParams, DEBAxisMapping, deb_axes, deb_adaptive_margin, restoring_force_from_margin, amplification_from_margin, restoring_force_from_margin_and_axes
+export DEBAxisParams, DEBAxisMapping, deb_axes, deb_adaptive_margin, ec50_anchored_fractional_impairment, axis_weights_for_species, compute_adaptive_margin_response, restoring_force_from_margin, amplification_from_margin, restoring_force_from_margin_and_axes
 export deb_axes_grid, deb_adaptive_margin_grid, restoring_force_from_margin_grid, amplification_from_margin_grid, restoring_force_from_margin_and_axes_grid
 export default_pathogen_organic_deb_mapping
 export deb_amplification_pipeline
@@ -460,4 +460,189 @@ function simulate_deb_axis_response(t::Vector{Float64}, pulse_axes, A_background
     end
     
     return y
+end
+
+function ec50_anchored_fractional_impairment(axis_pressures)
+    s = _deb_axes_to_vector(axis_pressures)
+    
+    for x in s
+        if !isfinite(x) || x < 0.0
+            throw(ArgumentError("Axis pressure must be finite and >= 0"))
+        end
+    end
+    
+    return (
+        assimilation = s[1] / (1.0 + s[1]),
+        maintenance = s[2] / (1.0 + s[2]),
+        growth = s[3] / (1.0 + s[3]),
+        reproduction = s[4] / (1.0 + s[4])
+    )
+end
+
+function axis_weights_for_species(params::DEBAxisParams; method::String = "auto", axis_weight_scope::String = "all_axes")
+    if method == "auto" || method == "normalized_alpha_axes"
+        alphas = params.alpha_axes
+        sum_alphas = sum(alphas)
+        
+        # Validation
+        for a in alphas
+            if !isfinite(a) || a < 0.0
+                if method == "normalized_alpha_axes"
+                    throw(ArgumentError("Alpha axes values must be finite and non-negative"))
+                else
+                    return (
+                        w_assimilation = 0.25,
+                        w_maintenance = 0.25,
+                        w_growth = 0.25,
+                        w_reproduction = 0.25,
+                        axis_weight_method = "equal_weight_diagnostic_fallback",
+                        axis_weight_scope = axis_weight_scope
+                    )
+                end
+            end
+        end
+        
+        if sum_alphas <= 0.0
+            if method == "normalized_alpha_axes"
+                throw(ArgumentError("Sum of alpha axes must be > 0"))
+            else
+                return (
+                    w_assimilation = 0.25,
+                    w_maintenance = 0.25,
+                    w_growth = 0.25,
+                    w_reproduction = 0.25,
+                    axis_weight_method = "equal_weight_diagnostic_fallback",
+                    axis_weight_scope = axis_weight_scope
+                )
+            end
+        end
+        
+        return (
+            w_assimilation = alphas[1] / sum_alphas,
+            w_maintenance = alphas[2] / sum_alphas,
+            w_growth = alphas[3] / sum_alphas,
+            w_reproduction = alphas[4] / sum_alphas,
+            axis_weight_method = "normalized_alpha_axes",
+            axis_weight_scope = axis_weight_scope
+        )
+    elseif method == "equal_weight_diagnostic_fallback"
+        return (
+            w_assimilation = 0.25,
+            w_maintenance = 0.25,
+            w_growth = 0.25,
+            w_reproduction = 0.25,
+            axis_weight_method = "equal_weight_diagnostic_fallback",
+            axis_weight_scope = axis_weight_scope
+        )
+    else
+        throw(ArgumentError("Unsupported axis weight method: $method"))
+    end
+end
+
+function compute_adaptive_margin_response(axis_pressures, params::DEBAxisParams; 
+    response_mode::String = "raw_margin_subtraction", 
+    A_floor_fraction::Float64 = 1e-6)
+    
+    if !isfinite(A_floor_fraction) || A_floor_fraction <= 0.0 || A_floor_fraction > 1.0
+        throw(ArgumentError("A_floor_fraction must be finite and satisfy 0 < A_floor_fraction <= 1"))
+    end
+    
+    s = _deb_axes_to_vector(axis_pressures)
+    
+    if response_mode == "raw_margin_subtraction"
+        A_t = deb_adaptive_margin(axis_pressures, params)
+        lambda_t = restoring_force_from_margin(A_t, params)
+        lambda0 = restoring_force_from_margin(params.A0, params)
+        F_t = lambda0 / lambda_t
+        
+        # Calculate derived metrics for audit consistency
+        E_res = ec50_anchored_fractional_impairment(axis_pressures)
+        w_res = axis_weights_for_species(params)
+        
+        Q_t = w_res.w_assimilation * E_res.assimilation +
+              w_res.w_maintenance * E_res.maintenance +
+              w_res.w_growth * E_res.growth +
+              w_res.w_reproduction * E_res.reproduction
+              
+        return (
+            response_mode = response_mode,
+            axis_weight_method = w_res.axis_weight_method,
+            axis_weight_scope = w_res.axis_weight_scope,
+            
+            X_assimilation = s[1],
+            X_maintenance = s[2],
+            X_growth = s[3],
+            X_reproduction = s[4],
+            
+            E_assimilation = E_res.assimilation,
+            E_maintenance = E_res.maintenance,
+            E_growth = E_res.growth,
+            E_reproduction = E_res.reproduction,
+            
+            w_assimilation = w_res.w_assimilation,
+            w_maintenance = w_res.w_maintenance,
+            w_growth = w_res.w_growth,
+            w_reproduction = w_res.w_reproduction,
+            
+            Q_t = Q_t,
+            A0 = params.A0,
+            A_t = A_t,
+            lambda0 = lambda0,
+            lambda_t = lambda_t,
+            F_t = F_t,
+            
+            # Aliases for backwards compatibility
+            A = A_t,
+            lambda = lambda_t,
+            amplification = F_t
+        )
+    elseif response_mode == "ec50_anchored_fractional_impairment"
+        E_res = ec50_anchored_fractional_impairment(axis_pressures)
+        w_res = axis_weights_for_species(params)
+        
+        Q_t = w_res.w_assimilation * E_res.assimilation +
+              w_res.w_maintenance * E_res.maintenance +
+              w_res.w_growth * E_res.growth +
+              w_res.w_reproduction * E_res.reproduction
+              
+        A_t = params.A0 * max(A_floor_fraction, 1.0 - Q_t)
+        lambda_t = restoring_force_from_margin(A_t, params)
+        lambda0 = restoring_force_from_margin(params.A0, params)
+        F_t = lambda0 / lambda_t
+        
+        return (
+            response_mode = response_mode,
+            axis_weight_method = w_res.axis_weight_method,
+            axis_weight_scope = w_res.axis_weight_scope,
+            
+            X_assimilation = s[1],
+            X_maintenance = s[2],
+            X_growth = s[3],
+            X_reproduction = s[4],
+            
+            E_assimilation = E_res.assimilation,
+            E_maintenance = E_res.maintenance,
+            E_growth = E_res.growth,
+            E_reproduction = E_res.reproduction,
+            
+            w_assimilation = w_res.w_assimilation,
+            w_maintenance = w_res.w_maintenance,
+            w_growth = w_res.w_growth,
+            w_reproduction = w_res.w_reproduction,
+            
+            Q_t = Q_t,
+            A0 = params.A0,
+            A_t = A_t,
+            lambda0 = lambda0,
+            lambda_t = lambda_t,
+            F_t = F_t,
+            
+            # Aliases for backwards compatibility
+            A = A_t,
+            lambda = lambda_t,
+            amplification = F_t
+        )
+    else
+        throw(ArgumentError("Unknown response mode: $response_mode"))
+    end
 end

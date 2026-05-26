@@ -215,12 +215,14 @@ function run_diagnostic_scenario(selected_species, selected_records, scenario_mo
 
     # We will track results for both mixture methods, though they should be identical
     mixture_methods = ["additive_axis_burden", "axis_toxic_unit_sum"]
+    response_modes = ["raw_margin_subtraction", "ec50_anchored_fractional_impairment"]
 
     compound_results = []
     species_results = []
 
     for method in mixture_methods
-        for sp in selected_species
+        for r_mode in response_modes
+            for sp in selected_species
             sp_key = sp.key
             sp_params = sp.params
 
@@ -262,6 +264,7 @@ function run_diagnostic_scenario(selected_species, selected_records, scenario_mo
                     push!(compound_results, (
                         scenario = "response_calibrated_multiaxis",
                         mixture_method = method,
+                        response_mode = r_mode,
                         species_key = sp_key,
                         species_name = replace(sp_key, "_" => " "),
                         month = month_idx,
@@ -293,11 +296,12 @@ function run_diagnostic_scenario(selected_species, selected_records, scenario_mo
                     growth = agg.total_burden_growth,
                     reproduction = agg.total_burden_reproduction
                 )
-                response = TwoTimescaleResilience.ecotox_burden_to_response(mapped_agg, sp_params)
+                response = TwoTimescaleResilience.compute_adaptive_margin_response(mapped_agg, sp_params, response_mode=r_mode)
 
                 push!(species_results, (
                     scenario = "response_calibrated_multiaxis",
                     mixture_method = method,
+                    response_mode = r_mode,
                     species_key = sp_key,
                     species_name = replace(sp_key, "_" => " "),
                     month = month_idx,
@@ -322,13 +326,34 @@ function run_diagnostic_scenario(selected_species, selected_records, scenario_mo
                     max_single_compound_fraction_growth = diag.max_single_compound_fraction_growth,
                     max_single_compound_fraction_reproduction = diag.max_single_compound_fraction_reproduction,
 
+                    axis_weight_method = response.axis_weight_method,
+                    axis_weight_scope = response.axis_weight_scope,
+
+                    X_assimilation = response.X_assimilation,
+                    X_maintenance = response.X_maintenance,
+                    X_growth = response.X_growth,
+                    X_reproduction = response.X_reproduction,
+                    
+                    E_assimilation = response.E_assimilation,
+                    E_maintenance = response.E_maintenance,
+                    E_growth = response.E_growth,
+                    E_reproduction = response.E_reproduction,
+                    
+                    w_assimilation = response.w_assimilation,
+                    w_maintenance = response.w_maintenance,
+                    w_growth = response.w_growth,
+                    w_reproduction = response.w_reproduction,
+                    
+                    Q_t = response.Q_t,
+                    A0 = response.A0,
                     A_t = response.A,
+                    lambda0 = response.lambda0,
                     lambda_t = response.lambda,
-                    lambda0 = TwoTimescaleResilience.restoring_force_from_margin(sp_params.A0, sp_params),
                     F_t = response.amplification
                 ))
             end
         end
+    end
     end
 
     out_dir = normpath(joinpath(@__DIR__, "..", "output", "ecotox_amp_multiaxis_response_calibrated_demo"))
@@ -346,17 +371,19 @@ end
 function perform_calibration_checks(df_spec)
     out_dir = normpath(joinpath(@__DIR__, "..", "output", "ecotox_amp_multiaxis_response_calibrated_demo"))
 
-    # We only need to check one mixture method since they are identical
+    # We only need to check one baseline mixture method
     df = filter(row -> row.mixture_method == "additive_axis_burden", df_spec)
+    
+    # Keeping old calibration summary logic for backwards compatibility tests, but scoping to raw mode if possible
+    df_raw = filter(row -> row.response_mode == "raw_margin_subtraction", df)
 
-    species_keys = unique(df.species_key)
+    species_keys = unique(df_raw.species_key)
 
     calibration_summary = []
-
     target_hit = false
 
     for sp in species_keys
-        sp_df = filter(row -> row.species_key == sp, df)
+        sp_df = filter(row -> row.species_key == sp, df_raw)
 
         max_F_t_idx = argmax(sp_df.F_t)
         max_F_t = sp_df.F_t[max_F_t_idx]
@@ -370,7 +397,6 @@ function perform_calibration_checks(df_spec)
         min_lambda_t = sp_df.lambda_t[min_lambda_t_idx]
         month_min_lambda_t = sp_df.month[min_lambda_t_idx]
 
-        # Count active axes across all months for this species
         active_axes = Set{String}()
         for row in eachrow(sp_df)
             if row.total_burden_assimilation > 0; push!(active_axes, "assimilation"); end
@@ -408,15 +434,78 @@ function perform_calibration_checks(df_spec)
 
     cal_df = DataFrame(calibration_summary)
     CSV.write(joinpath(out_dir, "multiaxis_response_calibration_summary.csv"), cal_df)
+    
+    # -------------------------------------------------------------
+    # Tranche 5 logic: New Comparison Summary
+    # -------------------------------------------------------------
+    comparison_summary = []
+    
+    response_modes = unique(df.response_mode)
+    
+    for sp in species_keys
+        sp_df_all = filter(row -> row.species_key == sp, df)
+        
+        # Raw results to compare against
+        raw_df = filter(row -> row.response_mode == "raw_margin_subtraction", sp_df_all)
+        max_F_t_raw = maximum(raw_df.F_t)
+        min_A_t_raw = minimum(raw_df.A_t)
+        
+        for r_mode in response_modes
+            sp_mode_df = filter(row -> row.response_mode == r_mode, sp_df_all)
+            
+            max_F_t_idx = argmax(sp_mode_df.F_t)
+            max_F_t = sp_mode_df.F_t[max_F_t_idx]
+            month_max_F_t = sp_mode_df.month[max_F_t_idx]
+            
+            min_A_t_idx = argmin(sp_mode_df.A_t)
+            min_A_t = sp_mode_df.A_t[min_A_t_idx]
+            month_min_A_t = sp_mode_df.month[min_A_t_idx]
+            
+            max_Q_t_idx = argmax(sp_mode_df.Q_t)
+            max_Q_t = sp_mode_df.Q_t[max_Q_t_idx]
+            month_max_Q_t = sp_mode_df.month[max_Q_t_idx]
+            
+            active_axes = Set{String}()
+            for row in eachrow(sp_mode_df)
+                if row.total_burden_assimilation > 0; push!(active_axes, "assimilation"); end
+                if row.total_burden_maintenance > 0; push!(active_axes, "maintenance"); end
+                if row.total_burden_growth > 0; push!(active_axes, "growth"); end
+                if row.total_burden_reproduction > 0; push!(active_axes, "reproduction"); end
+            end
+            
+            # Compare to raw mode
+            if r_mode == "ec50_anchored_fractional_impairment"
+                delta_F = max_F_t - max_F_t_raw
+                delta_A = min_A_t - min_A_t_raw
+            else
+                delta_F = 0.0
+                delta_A = 0.0
+            end
+            
+            push!(comparison_summary, (
+                species_key = sp,
+                response_mode = r_mode,
+                max_F_t = max_F_t,
+                month_max_F_t = month_max_F_t,
+                min_A_t = min_A_t,
+                month_min_A_t = month_min_A_t,
+                max_Q_t = max_Q_t,
+                month_max_Q_t = month_max_Q_t,
+                activated_axes = join(sort(collect(active_axes)), ", "),
+                axis_weight_method = sp_mode_df.axis_weight_method[1],
+                axis_weight_scope = sp_mode_df.axis_weight_scope[1],
+                delta_max_F_t_ec50_minus_raw = delta_F,
+                delta_min_A_t_ec50_minus_raw = delta_A
+            ))
+        end
+    end
+    
+    comp_sum_df = DataFrame(comparison_summary)
+    CSV.write(joinpath(out_dir, "multiaxis_response_mode_comparison_summary.csv"), comp_sum_df)
 
-    println("\nCalibration Checks:")
+    println("\nCalibration Checks (Raw Mode):")
     for row in eachrow(cal_df)
         println("  $(row.species_key): Peak F_t = $(round(row.peak_F_t, digits=3)) (Month $(row.month_peak_F_t)), Min A_t = $(round(row.min_A_t, digits=1)), Notes: $(row.notes)")
-    end
-
-    if !target_hit
-        println("\nNOTE: The diagnostic scenario did not reach the target peak F_t >= 1.05 for any species with the selected deterministic calibration bounds.")
-        println("This is an acceptable scientific outcome. Equations and ECOTOX records remain unaltered.")
     end
 
     return cal_df, target_hit
@@ -529,5 +618,6 @@ function main()
     generate_plots(df_spec, df_comp)
 end
 
-main()
-
+if abspath(PROGRAM_FILE) == @__FILE__
+    main()
+end
