@@ -38,4 +38,5 @@ using TwoTimescaleResilience
     include("test_amp_library.jl")
     include("test_amp_species_profile.jl")
     include("test_amp_pipeline_integration.jl")
+    include("test_monthly_memory_demo.jl")
 end
