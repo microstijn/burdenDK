@@ -95,8 +95,8 @@ include(joinpath(@__DIR__, "..", "examples", "ecotox_amp_multispecies_multicompo
         df_spec = CSV.read(species_csv, DataFrame)
 
         # Tranche 4 Row count checks (which proves scenario loop ran correctly)
-        @test nrow(df_comp) == 216
-        @test nrow(df_spec) == 72
+        @test nrow(df_comp) == 432
+        @test nrow(df_spec) == 144
 
         # Verify exact scenarios exist
         scenarios = unique(df_comp.scenario)
@@ -108,10 +108,10 @@ include(joinpath(@__DIR__, "..", "examples", "ecotox_amp_multispecies_multicompo
         df_spec_zero = filter(r -> r.scenario == "zero_start", df_spec)
         df_spec_warm = filter(r -> r.scenario == "analytical_warm_start", df_spec)
 
-        @test nrow(df_comp_zero) == 108
-        @test nrow(df_comp_warm) == 108
-        @test nrow(df_spec_zero) == 36
-        @test nrow(df_spec_warm) == 36
+        @test nrow(df_comp_zero) == 216
+        @test nrow(df_comp_warm) == 216
+        @test nrow(df_spec_zero) == 72
+        @test nrow(df_spec_warm) == 72
 
         # Check months are strictly 1:12
         @test sort(unique(df_comp_zero.month)) == collect(1:12)

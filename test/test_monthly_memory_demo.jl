@@ -175,17 +175,17 @@ end
     df_comp = CSV.read(compound_csv, DataFrame)
     df_spec = CSV.read(species_csv, DataFrame)
 
-    @test nrow(df_comp) == 216 # 3 species * 3 compounds * 12 months * 2 scenarios
-    @test nrow(df_spec) == 72  # 3 species * 12 months * 2 scenarios
+    @test nrow(df_comp) == 432 # 3 species * 3 compounds * 12 months * 2 scenarios * 2 mixture methods
+    @test nrow(df_spec) == 144  # 3 species * 12 months * 2 scenarios * 2 mixture methods
 
     # Check compound columns
-    expected_comp_cols = ["species_name", "month", "cas_norm", "chemical_name", "C_t", "B_t", "x_t", "burden_assimilation", "burden_maintenance", "burden_growth", "burden_reproduction"]
+    expected_comp_cols = ["scenario", "mixture_method", "species_name", "month", "cas_norm", "chemical_name", "C_t", "B_t", "x_t", "burden_assimilation", "burden_maintenance", "burden_growth", "burden_reproduction"]
     for col in expected_comp_cols
         @test col in names(df_comp)
     end
 
     # Check species columns
-    expected_spec_cols = ["species_key", "species_name", "month", "A_t", "lambda_t", "lambda0", "F_t"]
+    expected_spec_cols = ["scenario", "mixture_method", "species_key", "species_name", "month", "A_t", "lambda_t", "lambda0", "F_t", "n_compounds_contributing_assimilation", "dominant_compound_assimilation", "max_single_compound_fraction_assimilation"]
     for col in expected_spec_cols
         @test col in names(df_spec)
     end
@@ -193,6 +193,16 @@ end
     # Test months 1-12
     @test sort(unique(df_comp.month)) == collect(1:12)
     @test sort(unique(df_spec.month)) == collect(1:12)
+
+    # Test exact equality of methods
+    for sp in unique(df_spec.species_key), m in 1:12, sc in ["zero_start", "analytical_warm_start"]
+        r_add = filter(r -> r.scenario == sc && r.species_key == sp && r.month == m && r.mixture_method == "additive_axis_burden", df_spec)
+        r_tox = filter(r -> r.scenario == sc && r.species_key == sp && r.month == m && r.mixture_method == "axis_toxic_unit_sum", df_spec)
+        @test r_add.total_burden_assimilation[1] ≈ r_tox.total_burden_assimilation[1]
+        @test r_add.total_burden_maintenance[1] ≈ r_tox.total_burden_maintenance[1]
+        @test r_add.total_burden_growth[1] ≈ r_tox.total_burden_growth[1]
+        @test r_add.total_burden_reproduction[1] ≈ r_tox.total_burden_reproduction[1]
+    end
 end
 
 @testset "Monthly Memory Demo Tranche 6" begin
