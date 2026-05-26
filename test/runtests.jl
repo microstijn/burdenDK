@@ -40,3 +40,4 @@ using TwoTimescaleResilience
     include("test_amp_pipeline_integration.jl")
     include("test_monthly_memory_demo.jl")
 end
+include("test_analytical_warm_start.jl")

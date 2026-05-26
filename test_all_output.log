@@ -1,0 +1,176 @@
+┌ Warning: No valid ECOTOX records found for CAS '1336363'. Skipping.
+└ @ Main.ECOTOXParser /app/src/ECOTOXParser.jl:235
+┌ Warning: No valid ECOTOX records found for CAS '1336363'. Skipping.
+└ @ Main.ECOTOXParser /app/src/ECOTOXParser.jl:235
+ERROR: LoadError: Some tests did not pass: 1341 passed, 2 failed, 0 errored, 0 broken.
+in expression starting at /app/test/runtests.jl:4
+--- ISIMIP MoA DEB 3x3 Demo ---
+
+Fish Profile Amplification Factor (Fgrid):
+3×3 Matrix{Float64}:
+ 19.4615  19.4615  19.4615
+ 19.4615  19.4615  19.4615
+ 19.4615  19.4615  19.4615
+
+Thermal Mode:
+3×3 Matrix{Float64}:
+ 25.1505  29.8525  34.605
+ 26.711   33.423   37.2075
+ 23.5903  25.1805  26.801
+
+Oxygen Mode:
+3×3 Matrix{Float64}:
+ 22.1505  54.3025   91.805
+ 32.481   71.113   118.157
+ 13.0203  22.2405   32.751
+
+Assimilation Axis:
+3×3 Matrix{Float64}:
+ 46.522    96.1165  167.446
+ 58.7627  118.784   252.602
+ 37.1407   47.122    60.6302
+
+Maintenance Axis:
+3×3 Matrix{Float64}:
+ 346.254  632.241  1017.15
+ 412.69   765.437  1386.95
+ 291.323  347.289   415.916
+
+Adaptive Margin (Agrid):
+3×3 Matrix{Float64}:
+ -161.162  -298.393  -484.573
+ -193.326  -362.158  -669.049
+ -134.818  -161.865  -195.518
+
+Restoring Force (lambda):
+3×3 Matrix{Float64}:
+ 0.04  0.04  0.04
+ 0.04  0.04  0.04
+ 0.04  0.04  0.04
+--- Species Profile Comparison 3x3 Demo ---
+
+Running profile: aquatic_invertebrate
+Mean Amplification: 19.461538461538456
+Max Amplification:  19.46153846153846
+Fgrid raster:
+3×3 Matrix{Float64}:
+ 19.4615  19.4615  19.4615
+ 19.4615  19.4615  19.4615
+ 19.4615  19.4615  19.4615
+
+Running profile: fish
+Mean Amplification: 19.461538461538456
+Max Amplification:  19.46153846153846
+Fgrid raster:
+3×3 Matrix{Float64}:
+ 19.4615  19.4615  19.4615
+ 19.4615  19.4615  19.4615
+ 19.4615  19.4615  19.4615
+
+Running profile: bivalve
+Mean Amplification: 19.461538461538456
+Max Amplification:  19.46153846153846
+Fgrid raster:
+3×3 Matrix{Float64}:
+ 19.4615  19.4615  19.4615
+ 19.4615  19.4615  19.4615
+ 19.4615  19.4615  19.4615
+
+Running profile: human
+Mean Amplification: 19.461538461538456
+Max Amplification:  19.46153846153846
+Fgrid raster:
+3×3 Matrix{Float64}:
+ 19.4615  19.4615  19.4615
+ 19.4615  19.4615  19.4615
+ 19.4615  19.4615  19.4615
+Sample data empty for selected CAS, testing with manual mock DataFrame.
+Loading libraries...
+Tranche 3 & 4 complete. Compound Rows: 216 | Species Rows: 72
+Tranche 5 complete. Wrote CSVs to /app/output/ecotox_amp_multispecies_multicompound_monthly_memory_demo
+Tranche 6 complete. Wrote PNGs to /app/output/ecotox_amp_multispecies_multicompound_monthly_memory_demo
+Monthly Memory Demo Tranche 5: Test Failed at /app/test/test_monthly_memory_demo.jl:178
+  Expression: nrow(df_comp) == 108
+   Evaluated: 216 == 108
+
+Stacktrace:
+ [1] macro expansion
+   @ ~/.julia/juliaup/julia-1.12.6+0.x64.linux.gnu/share/julia/stdlib/v1.12/Test/src/Test.jl:680 [inlined]
+ [2] macro expansion
+   @ /app/test/test_monthly_memory_demo.jl:178 [inlined]
+ [3] macro expansion
+   @ ~/.julia/juliaup/julia-1.12.6+0.x64.linux.gnu/share/julia/stdlib/v1.12/Test/src/Test.jl:1777 [inlined]
+ [4] top-level scope
+   @ /app/test/test_monthly_memory_demo.jl:162
+Monthly Memory Demo Tranche 5: Test Failed at /app/test/test_monthly_memory_demo.jl:179
+  Expression: nrow(df_spec) == 36
+   Evaluated: 72 == 36
+
+Stacktrace:
+ [1] macro expansion
+   @ ~/.julia/juliaup/julia-1.12.6+0.x64.linux.gnu/share/julia/stdlib/v1.12/Test/src/Test.jl:680 [inlined]
+ [2] macro expansion
+   @ /app/test/test_monthly_memory_demo.jl:179 [inlined]
+ [3] macro expansion
+   @ ~/.julia/juliaup/julia-1.12.6+0.x64.linux.gnu/share/julia/stdlib/v1.12/Test/src/Test.jl:1777 [inlined]
+ [4] top-level scope
+   @ /app/test/test_monthly_memory_demo.jl:162
+Loading libraries...
+Tranche 3 & 4 complete. Compound Rows: 216 | Species Rows: 72
+Tranche 5 complete. Wrote CSVs to /app/output/ecotox_amp_multispecies_multicompound_monthly_memory_demo
+Tranche 6 complete. Wrote PNGs to /app/output/ecotox_amp_multispecies_multicompound_monthly_memory_demo
+Test Summary:                                                         | Pass  Fail  Total     Time
+TwoTimescaleResilience Tests                                          | 1341     2   1343  2m10.9s
+  DEB Axes Scalar Mapping                                             |  119          119     2.8s
+  DEB Axes Grid Mapping                                               |   16           16     0.9s
+  Default DEB Mapping                                                 |   12           12     0.1s
+  DEB Amplification Pipeline                                          |   24           24     0.4s
+  DEB-Like Pulse Mapping                                              |   15           15     0.4s
+  DEB-Like Response Simulation                                        |    4            4     0.2s
+  Examples Verification                                               |    1            1     0.0s
+  Tranche 1: Background Scalar Functions                              |  503          503     0.1s
+  Tranche 2: Multi-Stressor Background Burden                         |    4            4     0.4s
+  Tranche 3: Raster/Matrix Background Operations                      |    9            9     0.9s
+  Tranche 4: Acute Pulse Stressors and TKTD Burdens                   |    9            9     0.5s
+  Tranche 5: Response Dynamics                                        |    6            6     0.2s
+  Tranche 6: Metrics Extraction                                       |    7            7     0.3s
+  Tranche 7: CairoMakie Visualization                                 |    5            5    26.5s
+  Tranche 8: ASCII Grid Output                                        |    6            6     0.2s
+  Tranche 9: Synthetic Raster Demo                                    |   22           22     0.8s
+  Tranche 10: NetCDF Loading Stub and Interface Design                |   16           16     5.7s
+  Recovery Penalty and Extended DEBAxisParams                         |   12           12     0.2s
+  Condition Buffer Z                                                  |   10           10     0.4s
+  Reduced DEB Response Simulation                                     |    9            9     0.5s
+  ModeOfAction                                                        |   20           20     0.9s
+  Default ISIMIP MoA                                                  |   28           28     0.1s
+  ExposureFilters                                                     |   16           16     0.6s
+  MoAToDEBMapping                                                     |   18           18     0.8s
+  ISIMIP DEB Pipeline                                                 |   23           23     0.8s
+  SpeciesProfiles                                                     |   33           33     0.6s
+  ISIMIP Event Response                                               |   11           11     0.3s
+  Examples Verification - ISIMIP MoA                                  |    2            2     1.8s
+  DEB Amplification Pipeline Recovery Math                            |   12           12     0.2s
+  CAS Normalization and Hyphenation                                   |   14           14     0.1s
+  Normalized CAS Matching in Parser                                   |    6            6    16.5s
+  ECOTOXParser End-to-End                                             |   26           26    12.2s
+  Empty DataFrame Behavior                                            |    2            2     0.0s
+  Multi-Compound ECOTOX Library Builder                               |    6            6     3.9s
+  ECOTOX Runtime Adapter: Tranche 1                                   |   88           88     1.4s
+  ECOTOX Memory Library: Tranche 1                                    |   22           22     2.0s
+  ECOTOX Memory Library: Tranche 2                                    |   13           13     1.4s
+  ECOTOX Memory Library: Tranche 3                                    |   17           17     0.1s
+  ECOTOX Memory Library: Tranche 4                                    |    6            6     0.0s
+  ECOTOX Memory Library: Tranche 5                                    |   19           19     0.2s
+  ECOTOX Memory Library: Tranche 6                                    |   10           10     0.1s
+  ECOTOX Memory Library: Tranche 5.5 (New Stateful Aggregation tests) |    5            5     0.2s
+  AmP Library Translation - Tranche 1                                 |   27           27     2.0s
+  AmP SpeciesProfile Construction - Tranche 2                         |   15           15     0.1s
+  AmP-derived SpeciesProfile Pipeline Integration - Tranche 3         |   28           28     0.1s
+  Monthly Memory Demo Tranche 1                                       |    3            3     0.0s
+  Monthly Memory Demo Tranche 2                                       |   11           11     0.3s
+  Monthly Memory Demo Tranche 3                                       |    4            4     0.1s
+  Monthly Memory Demo Tranche 4                                       |    9            9     0.2s
+  Monthly Memory Demo Tranche 5                                       |   23     2     25    34.3s
+  Monthly Memory Demo Tranche 6                                       |   14           14     0.0s
+  Monthly Memory Demo Tranche 7                                       |    1            1     2.0s
+RNG of the outermost testset: Random.Xoshiro(0x9638f7d379ed32ff, 0xc0205595e8ee7993, 0x74056f2d63e8aa72, 0x51079442483e83d2, 0x51ea324821f98eb0)
