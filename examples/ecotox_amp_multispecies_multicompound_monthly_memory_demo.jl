@@ -161,11 +161,13 @@ function main()
     species_results = []
 
     scenarios = ["zero_start", "analytical_warm_start"]
+    mixture_methods = ["additive_axis_burden", "axis_toxic_unit_sum"]
 
     ec50_ref = records_map["7440-43-9"]["EC50_median"] # pedogogical scalar based on Cd EC50
     C_t = generate_scenario_concentrations(ec50_ref)
 
     for scenario in scenarios
+        for mixture_method in mixture_methods
         # Initialize an independent state for each species
         species_states = Dict(sp => EcotoxExposureState() for sp in species_list)
 
@@ -267,6 +269,7 @@ function main()
 
                     push!(compound_results, (
                         scenario = scenario,
+                        mixture_method = mixture_method,
                         spinup_used = spinup_used,
                         spinup_months = spinup_months,
                         spinup_method = spinup_method,
@@ -290,28 +293,29 @@ function main()
             end
         end
 
-        # Compute aggregated species response calculation for this scenario
+        # Compute aggregated species response calculation for this scenario and mixture method
         for month in 1:12
             for sp in species_list
                 params = params_map[sp]
 
-                # Aggregate burdens across all compounds for this scenario, species and month
-                compounds_in_month = filter(r -> r.scenario == scenario && r.species_name == sp && r.month == month, compound_results)
+                # Aggregate burdens across all compounds for this scenario, mixture method, species and month
+                compounds_in_month = filter(r -> r.scenario == scenario && r.mixture_method == mixture_method && r.species_name == sp && r.month == month, compound_results)
 
-                agg_assimilation = sum(r.burden_assimilation for r in compounds_in_month)
-                agg_maintenance = sum(r.burden_maintenance for r in compounds_in_month)
-                agg_growth = sum(r.burden_growth for r in compounds_in_month)
-                agg_reproduction = sum(r.burden_reproduction for r in compounds_in_month)
+                # Runtime analytical exact aggregation
+                agg_burden = TwoTimescaleResilience.aggregate_deb_axis_burdens(compounds_in_month; mixture_method = mixture_method)
 
-                agg_burden = (
-                    assimilation = agg_assimilation,
-                    maintenance = agg_maintenance,
-                    growth = agg_growth,
-                    reproduction = agg_reproduction
+                diag = TwoTimescaleResilience.mixture_contribution_diagnostics(compounds_in_month)
+
+                # For physiological response, map to standard NamedTuple expected by response functions
+                mapped_burden = (
+                    assimilation = agg_burden.total_burden_assimilation,
+                    maintenance = agg_burden.total_burden_maintenance,
+                    growth = agg_burden.total_burden_growth,
+                    reproduction = agg_burden.total_burden_reproduction
                 )
 
                 # Compute physiological response
-                resp = TwoTimescaleResilience.ecotox_burden_to_response(agg_burden, params)
+                resp = TwoTimescaleResilience.ecotox_burden_to_response(mapped_burden, params)
 
                 # For baseline restoring force
                 zero_burden = (assimilation=0.0, maintenance=0.0, growth=0.0, reproduction=0.0)
@@ -319,22 +323,41 @@ function main()
 
                 push!(species_results, (
                     scenario = scenario,
+                    mixture_method = mixture_method,
                     spinup_used = spinup_used,
                     spinup_months = spinup_months,
                     spinup_method = spinup_method,
                     species_key = replace(sp, " " => "_"),
                     species_name = sp,
                     month = month,
-                    total_burden_assimilation = agg_assimilation,
-                    total_burden_maintenance = agg_maintenance,
-                    total_burden_growth = agg_growth,
-                    total_burden_reproduction = agg_reproduction,
+
+                    total_burden_assimilation = agg_burden.total_burden_assimilation,
+                    total_burden_maintenance = agg_burden.total_burden_maintenance,
+                    total_burden_growth = agg_burden.total_burden_growth,
+                    total_burden_reproduction = agg_burden.total_burden_reproduction,
+
+                    n_compounds_contributing_assimilation = diag.n_compounds_contributing_assimilation,
+                    n_compounds_contributing_maintenance = diag.n_compounds_contributing_maintenance,
+                    n_compounds_contributing_growth = diag.n_compounds_contributing_growth,
+                    n_compounds_contributing_reproduction = diag.n_compounds_contributing_reproduction,
+
+                    dominant_compound_assimilation = diag.dominant_compound_assimilation,
+                    dominant_compound_maintenance = diag.dominant_compound_maintenance,
+                    dominant_compound_growth = diag.dominant_compound_growth,
+                    dominant_compound_reproduction = diag.dominant_compound_reproduction,
+
+                    max_single_compound_fraction_assimilation = diag.max_single_compound_fraction_assimilation,
+                    max_single_compound_fraction_maintenance = diag.max_single_compound_fraction_maintenance,
+                    max_single_compound_fraction_growth = diag.max_single_compound_fraction_growth,
+                    max_single_compound_fraction_reproduction = diag.max_single_compound_fraction_reproduction,
+
                     A_t = resp.A,
                     lambda_t = resp.lambda,
                     lambda0 = zero_resp.lambda,
                     F_t = resp.amplification
                 ))
             end
+        end
         end
     end
 
@@ -373,10 +396,14 @@ function main()
     linestyles = [:solid, :dash, :dot]
 
     # Plot 1: Concentrations
+    # Because methods perfectly overlap, we use additive_axis_burden as the baseline for visualization
+    df_comp_base = filter(r -> r.mixture_method == "additive_axis_burden", df_comp)
+    df_spec_base = filter(r -> r.mixture_method == "additive_axis_burden", df_spec)
+
     fig_C = CairoMakie.Figure(size=(800, 600))
     ax_C = CairoMakie.Axis(fig_C[1,1], title="Ambient Concentrations (C_t)", xlabel="Month", ylabel="Concentration")
-    for (i, cas) in enumerate(unique(df_comp.cas_norm))
-        sub_df = filter(r -> r.cas_norm == cas && r.species_name == species_list[1] && r.scenario == "zero_start", df_comp) # C_t is same for all scenarios/species
+    for (i, cas) in enumerate(unique(df_comp_base.cas_norm))
+        sub_df = filter(r -> r.cas_norm == cas && r.species_name == species_list[1] && r.scenario == "zero_start", df_comp_base) # C_t is same for all scenarios/species
         CairoMakie.lines!(ax_C, sub_df.month, sub_df.C_t, label=sub_df.chemical_name[1], color=colors[i], linewidth=2)
     end
     CairoMakie.axislegend(ax_C)
@@ -386,9 +413,9 @@ function main()
     fig_B = CairoMakie.Figure(size=(1200, 400))
     for (s, sp) in enumerate(species_list)
         ax_B = CairoMakie.Axis(fig_B[1,s], title="Internal Burden - $sp", xlabel="Month", ylabel="Burden (B_t)")
-        for (i, cas) in enumerate(unique(df_comp.cas_norm))
-            sub_df_zero = filter(r -> r.cas_norm == cas && r.species_name == sp && r.scenario == "zero_start", df_comp)
-            sub_df_warm = filter(r -> r.cas_norm == cas && r.species_name == sp && r.scenario == "analytical_warm_start", df_comp)
+        for (i, cas) in enumerate(unique(df_comp_base.cas_norm))
+            sub_df_zero = filter(r -> r.cas_norm == cas && r.species_name == sp && r.scenario == "zero_start", df_comp_base)
+            sub_df_warm = filter(r -> r.cas_norm == cas && r.species_name == sp && r.scenario == "analytical_warm_start", df_comp_base)
             CairoMakie.lines!(ax_B, sub_df_zero.month, sub_df_zero.B_t, label=sub_df_zero.chemical_name[1] * " (Zero)", color=colors[i], linewidth=2, linestyle=:solid)
             CairoMakie.lines!(ax_B, sub_df_warm.month, sub_df_warm.B_t, label=sub_df_warm.chemical_name[1] * " (Warm)", color=colors[i], linewidth=2, linestyle=:dash)
         end
@@ -402,9 +429,9 @@ function main()
     fig_x = CairoMakie.Figure(size=(1200, 400))
     for (s, sp) in enumerate(species_list)
         ax_x = CairoMakie.Axis(fig_x[1,s], title="Active Stress - $sp", xlabel="Month", ylabel="Stress (x_t)")
-        for (i, cas) in enumerate(unique(df_comp.cas_norm))
-            sub_df_zero = filter(r -> r.cas_norm == cas && r.species_name == sp && r.scenario == "zero_start", df_comp)
-            sub_df_warm = filter(r -> r.cas_norm == cas && r.species_name == sp && r.scenario == "analytical_warm_start", df_comp)
+        for (i, cas) in enumerate(unique(df_comp_base.cas_norm))
+            sub_df_zero = filter(r -> r.cas_norm == cas && r.species_name == sp && r.scenario == "zero_start", df_comp_base)
+            sub_df_warm = filter(r -> r.cas_norm == cas && r.species_name == sp && r.scenario == "analytical_warm_start", df_comp_base)
             CairoMakie.lines!(ax_x, sub_df_zero.month, sub_df_zero.x_t, label=sub_df_zero.chemical_name[1] * " (Zero)", color=colors[i], linewidth=2, linestyle=:solid)
             CairoMakie.lines!(ax_x, sub_df_warm.month, sub_df_warm.x_t, label=sub_df_warm.chemical_name[1] * " (Warm)", color=colors[i], linewidth=2, linestyle=:dash)
         end
@@ -419,8 +446,8 @@ function main()
     for (s, sp) in enumerate(species_list)
         ax_axis = CairoMakie.Axis(fig_axis[1,s], title="Axis Burdens - $sp", xlabel="Month", ylabel="Aggregated Burden")
 
-        agg_maint_zero = [sum(r.burden_maintenance for r in compound_results if r.species_name == sp && r.month == m && r.scenario == "zero_start") for m in 1:12]
-        agg_maint_warm = [sum(r.burden_maintenance for r in compound_results if r.species_name == sp && r.month == m && r.scenario == "analytical_warm_start") for m in 1:12]
+        agg_maint_zero = [sum(r.burden_maintenance for r in compound_results if r.mixture_method == "additive_axis_burden" && r.species_name == sp && r.month == m && r.scenario == "zero_start") for m in 1:12]
+        agg_maint_warm = [sum(r.burden_maintenance for r in compound_results if r.mixture_method == "additive_axis_burden" && r.species_name == sp && r.month == m && r.scenario == "analytical_warm_start") for m in 1:12]
 
         CairoMakie.lines!(ax_axis, 1:12, agg_maint_zero, label="Maintenance (Zero)", color=:red, linewidth=2, linestyle=:solid)
         CairoMakie.lines!(ax_axis, 1:12, agg_maint_warm, label="Maintenance (Warm)", color=:red, linewidth=2, linestyle=:dash)
@@ -434,8 +461,8 @@ function main()
     fig_A = CairoMakie.Figure(size=(800, 600))
     ax_A = CairoMakie.Axis(fig_A[1,1], title="Adaptive Margin (A_t)", xlabel="Month", ylabel="Adaptive Margin")
     for (s, sp) in enumerate(species_list)
-        sub_df_zero = filter(r -> r.species_name == sp && r.scenario == "zero_start", df_spec)
-        sub_df_warm = filter(r -> r.species_name == sp && r.scenario == "analytical_warm_start", df_spec)
+        sub_df_zero = filter(r -> r.species_name == sp && r.scenario == "zero_start", df_spec_base)
+        sub_df_warm = filter(r -> r.species_name == sp && r.scenario == "analytical_warm_start", df_spec_base)
         CairoMakie.lines!(ax_A, sub_df_zero.month, sub_df_zero.A_t, label=sp * " (Zero)", color=colors[s], linewidth=2, linestyle=:solid)
         CairoMakie.lines!(ax_A, sub_df_warm.month, sub_df_warm.A_t, label=sp * " (Warm)", color=colors[s], linewidth=2, linestyle=:dash)
     end
@@ -446,8 +473,8 @@ function main()
     fig_lam = CairoMakie.Figure(size=(800, 600))
     ax_lam = CairoMakie.Axis(fig_lam[1,1], title="Restoring Force (lambda_t)", xlabel="Month", ylabel="Restoring Force")
     for (s, sp) in enumerate(species_list)
-        sub_df_zero = filter(r -> r.species_name == sp && r.scenario == "zero_start", df_spec)
-        sub_df_warm = filter(r -> r.species_name == sp && r.scenario == "analytical_warm_start", df_spec)
+        sub_df_zero = filter(r -> r.species_name == sp && r.scenario == "zero_start", df_spec_base)
+        sub_df_warm = filter(r -> r.species_name == sp && r.scenario == "analytical_warm_start", df_spec_base)
         CairoMakie.lines!(ax_lam, sub_df_zero.month, sub_df_zero.lambda_t, label=sp * " (Zero)", color=colors[s], linewidth=2, linestyle=:solid)
         CairoMakie.lines!(ax_lam, sub_df_warm.month, sub_df_warm.lambda_t, label=sp * " (Warm)", color=colors[s], linewidth=2, linestyle=:dash)
     end
@@ -458,8 +485,8 @@ function main()
     fig_F = CairoMakie.Figure(size=(800, 600))
     ax_F = CairoMakie.Axis(fig_F[1,1], title="Amplification (F_t)", xlabel="Month", ylabel="Amplification (Baseline=1.0)")
     for (s, sp) in enumerate(species_list)
-        sub_df_zero = filter(r -> r.species_name == sp && r.scenario == "zero_start", df_spec)
-        sub_df_warm = filter(r -> r.species_name == sp && r.scenario == "analytical_warm_start", df_spec)
+        sub_df_zero = filter(r -> r.species_name == sp && r.scenario == "zero_start", df_spec_base)
+        sub_df_warm = filter(r -> r.species_name == sp && r.scenario == "analytical_warm_start", df_spec_base)
         CairoMakie.lines!(ax_F, sub_df_zero.month, sub_df_zero.F_t, label=sp * " (Zero)", color=colors[s], linewidth=2, linestyle=:solid)
         CairoMakie.lines!(ax_F, sub_df_warm.month, sub_df_warm.F_t, label=sp * " (Warm)", color=colors[s], linewidth=2, linestyle=:dash)
     end
