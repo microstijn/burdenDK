@@ -104,3 +104,73 @@ using Test
         @test isapprox(amp, 1.0; atol=1e-8)
     end
 end
+
+@testset "Response from Precomputed Axis Impairments: Tranche 2" begin
+    params = TwoTimescaleResilience.DEBAxisParams(
+        A0 = 1000.0,
+        alpha_axes = (1.0, 1.0, 1.0, 1.0),
+        lambda_max = 0.05
+    )
+
+    # 1. Zero impairments -> Q_t=0, A_t=A0, F_t=1
+    zeros_imp = (assimilation=0.0, maintenance=0.0, growth=0.0, reproduction=0.0)
+    res_zero = compute_adaptive_margin_response_from_impairment(zeros_imp, params)
+    @test res_zero.Q_t == 0.0
+    @test res_zero.A_t == params.A0
+    @test res_zero.F_t == 1.0
+    @test isnan(res_zero.X_assimilation) # default X_axis=nothing
+
+    # 2. Maintenance = 0.5
+    half_m_imp = (assimilation=0.0, maintenance=0.5, growth=0.0, reproduction=0.0)
+    res_half = compute_adaptive_margin_response_from_impairment(half_m_imp, params)
+    @test res_half.Q_t > 0.0
+    @test res_half.A_t < params.A0
+    @test res_half.F_t >= 1.0
+
+    # 3. Check Q_t = sum(w * E)
+    @test res_half.Q_t ≈ (res_half.w_maintenance * 0.5)
+
+    # 4. A_t = A0 * max(...)
+    @test res_half.A_t ≈ params.A0 * max(1e-6, 1.0 - res_half.Q_t)
+
+    # 5. lambda_t & 6. F_t
+    lam_t = TwoTimescaleResilience.restoring_force_from_margin(res_half.A_t, params)
+    @test res_half.lambda_t ≈ lam_t
+    @test res_half.F_t ≈ (TwoTimescaleResilience.restoring_force_from_margin(params.A0, params) / lam_t)
+
+    # 7. Invalid E < 0
+    @test_throws ArgumentError compute_adaptive_margin_response_from_impairment((assimilation=-0.1, maintenance=0.0, growth=0.0, reproduction=0.0), params)
+
+    # 8. Invalid E > 1
+    @test_throws ArgumentError compute_adaptive_margin_response_from_impairment((assimilation=1.1, maintenance=0.0, growth=0.0, reproduction=0.0), params)
+
+    # 9. NaN E
+    @test_throws ArgumentError compute_adaptive_margin_response_from_impairment((assimilation=NaN, maintenance=0.0, growth=0.0, reproduction=0.0), params)
+
+    # 10. Inf E
+    @test_throws ArgumentError compute_adaptive_margin_response_from_impairment((assimilation=Inf, maintenance=0.0, growth=0.0, reproduction=0.0), params)
+
+    # 11. Invalid A_floor_fraction
+    @test_throws ArgumentError compute_adaptive_margin_response_from_impairment(zeros_imp, params, A_floor_fraction=-0.1)
+    @test_throws ArgumentError compute_adaptive_margin_response_from_impairment(zeros_imp, params, A_floor_fraction=1.5)
+
+    # 12. Matches EC50 response path exactly
+    X_vals = (assimilation=1.0, maintenance=2.0, growth=0.5, reproduction=0.0)
+    # Get standard response
+    res_std = compute_adaptive_margin_response(X_vals, params; response_mode="ec50_anchored_fractional_impairment")
+    
+    # Calculate E manually 
+    E_vals = (
+        assimilation = X_vals.assimilation / (1 + X_vals.assimilation),
+        maintenance = X_vals.maintenance / (1 + X_vals.maintenance),
+        growth = X_vals.growth / (1 + X_vals.growth),
+        reproduction = X_vals.reproduction / (1 + X_vals.reproduction)
+    )
+    
+    res_pre = compute_adaptive_margin_response_from_impairment(E_vals, params; X_axis=X_vals)
+    @test res_pre.Q_t ≈ res_std.Q_t
+    @test res_pre.A_t ≈ res_std.A_t
+    @test res_pre.F_t ≈ res_std.F_t
+    @test res_pre.X_maintenance == res_std.X_maintenance
+
+end

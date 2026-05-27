@@ -83,3 +83,80 @@ end
     @test isfinite(res_diag.max_single_compound_fraction_growth)
     @test isfinite(res_diag.max_single_compound_fraction_reproduction)
 end
+
+@testset "Mixture Effects: Tranche 1" begin
+    # Test 1: Zero burdens
+    zeros_b = [
+        (burden_assimilation = 0.0, burden_maintenance = 0.0, burden_growth = 0.0, burden_reproduction = 0.0),
+        (burden_assimilation = 0.0, burden_maintenance = 0.0, burden_growth = 0.0, burden_reproduction = 0.0)
+    ]
+    res1_tu = aggregate_axis_mixture_effects(zeros_b; mixture_effect_model="axis_toxic_unit_sum")
+    @test res1_tu.X_assimilation == 0.0
+    @test res1_tu.E_assimilation == 0.0
+    @test res1_tu.E_maintenance == 0.0
+
+    res1_ia = aggregate_axis_mixture_effects(zeros_b; mixture_effect_model="independent_action_axis_effects")
+    @test res1_ia.X_assimilation == 0.0
+    @test res1_ia.E_assimilation == 0.0
+
+    # Test 2: Single compound x = 1 gives E = 0.5
+    ones_b = [
+        (burden_assimilation = 1.0, burden_maintenance = 0.0, burden_growth = 0.0, burden_reproduction = 0.0)
+    ]
+    res2_tu = aggregate_axis_mixture_effects(ones_b; mixture_effect_model="axis_toxic_unit_sum")
+    @test res2_tu.X_assimilation == 1.0
+    @test res2_tu.E_assimilation == 0.5
+
+    res2_ia = aggregate_axis_mixture_effects(ones_b; mixture_effect_model="independent_action_axis_effects")
+    @test res2_ia.X_assimilation == 1.0
+    @test res2_ia.E_assimilation == 0.5
+
+    # Test 3: Two compounds x1 = 1, x2 = 1
+    two_ones_b = [
+        (burden_assimilation = 1.0, burden_maintenance = 0.0, burden_growth = 0.0, burden_reproduction = 0.0),
+        (burden_assimilation = 1.0, burden_maintenance = 0.0, burden_growth = 0.0, burden_reproduction = 0.0)
+    ]
+    res3_tu = aggregate_axis_mixture_effects(two_ones_b; mixture_effect_model="axis_toxic_unit_sum")
+    @test res3_tu.X_assimilation == 2.0
+    @test res3_tu.E_assimilation ≈ (2.0 / 3.0)
+
+    res3_ia = aggregate_axis_mixture_effects(two_ones_b; mixture_effect_model="independent_action_axis_effects")
+    @test res3_ia.E_assimilation ≈ 1.0 - (1.0 - 0.5) * (1.0 - 0.5) # 0.75
+
+    # Test 4: Two compounds x1 = 1, x2 = 4
+    mixed_b = [
+        (burden_assimilation = 1.0, burden_maintenance = 0.0, burden_growth = 0.0, burden_reproduction = 0.0),
+        (burden_assimilation = 4.0, burden_maintenance = 0.0, burden_growth = 0.0, burden_reproduction = 0.0)
+    ]
+    res4_tu = aggregate_axis_mixture_effects(mixed_b; mixture_effect_model="axis_toxic_unit_sum")
+    @test res4_tu.X_assimilation == 5.0
+    @test res4_tu.E_assimilation ≈ (5.0 / 6.0)
+
+    res4_ia = aggregate_axis_mixture_effects(mixed_b; mixture_effect_model="independent_action_axis_effects")
+    @test res4_ia.E_assimilation ≈ 1.0 - (0.5) * (0.2) # 0.9
+
+    # Test 5: Multiple axes are handled independently
+    multi_b = [
+        (burden_assimilation = 1.0, burden_maintenance = 2.0, burden_growth = 3.0, burden_reproduction = 4.0)
+    ]
+    res5_tu = aggregate_axis_mixture_effects(multi_b; mixture_effect_model="axis_toxic_unit_sum")
+    @test res5_tu.E_assimilation ≈ 1/2
+    @test res5_tu.E_maintenance ≈ 2/3
+    @test res5_tu.E_growth ≈ 3/4
+    @test res5_tu.E_reproduction ≈ 4/5
+
+    # Negative burden throws
+    neg_b = [(burden_assimilation = -1.0, burden_maintenance = 0.0, burden_growth = 0.0, burden_reproduction = 0.0)]
+    @test_throws ArgumentError aggregate_axis_mixture_effects(neg_b; mixture_effect_model="axis_toxic_unit_sum")
+
+    # NaN burden throws
+    nan_b = [(burden_assimilation = NaN, burden_maintenance = 0.0, burden_growth = 0.0, burden_reproduction = 0.0)]
+    @test_throws ArgumentError aggregate_axis_mixture_effects(nan_b; mixture_effect_model="axis_toxic_unit_sum")
+
+    # Inf burden throws
+    inf_b = [(burden_assimilation = Inf, burden_maintenance = 0.0, burden_growth = 0.0, burden_reproduction = 0.0)]
+    @test_throws ArgumentError aggregate_axis_mixture_effects(inf_b; mixture_effect_model="axis_toxic_unit_sum")
+
+    # Unknown model throws
+    @test_throws ArgumentError aggregate_axis_mixture_effects(ones_b; mixture_effect_model="unknown_model")
+end

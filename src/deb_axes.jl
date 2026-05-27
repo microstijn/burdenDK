@@ -646,3 +646,76 @@ function compute_adaptive_margin_response(axis_pressures, params::DEBAxisParams;
         throw(ArgumentError("Unknown response mode: $response_mode"))
     end
 end
+function compute_adaptive_margin_response_from_impairment(axis_impairments, params::DEBAxisParams; 
+    X_axis = nothing, 
+    mixture_effect_model::String = "precomputed_axis_impairment", 
+    A_floor_fraction::Float64 = 1e-6)
+    
+    if !isfinite(A_floor_fraction) || A_floor_fraction <= 0.0 || A_floor_fraction > 1.0
+        throw(ArgumentError("A_floor_fraction must be finite and satisfy 0 < A_floor_fraction <= 1"))
+    end
+    
+    E = _deb_axes_to_vector(axis_impairments)
+    for e in E
+        if !isfinite(e) || e < 0.0 || e > 1.0
+            throw(ArgumentError("Precomputed E_axis must be finite and bounded [0, 1]. Got: $e"))
+        end
+    end
+    
+    if X_axis !== nothing
+        X = _deb_axes_to_vector(X_axis)
+        for x in X
+            if !isfinite(x) || x < 0.0
+                throw(ArgumentError("If provided, X_axis must be finite and >= 0. Got: $x"))
+            end
+        end
+        X_A, X_M, X_G, X_R = X[1], X[2], X[3], X[4]
+    else
+        X_A, X_M, X_G, X_R = NaN, NaN, NaN, NaN
+    end
+    
+    w_res = axis_weights_for_species(params)
+    
+    Q_t = w_res.w_assimilation * E[1] +
+          w_res.w_maintenance * E[2] +
+          w_res.w_growth * E[3] +
+          w_res.w_reproduction * E[4]
+          
+    A_t = params.A0 * max(A_floor_fraction, 1.0 - Q_t)
+    lambda_t = restoring_force_from_margin(A_t, params)
+    lambda0 = restoring_force_from_margin(params.A0, params)
+    F_t = lambda0 / lambda_t
+    
+    return (
+        response_mode = "ec50_anchored_fractional_impairment",
+        mixture_effect_model = mixture_effect_model,
+        axis_weight_method = w_res.axis_weight_method,
+        axis_weight_scope = w_res.axis_weight_scope,
+        
+        X_assimilation = X_A,
+        X_maintenance = X_M,
+        X_growth = X_G,
+        X_reproduction = X_R,
+        
+        E_assimilation = E[1],
+        E_maintenance = E[2],
+        E_growth = E[3],
+        E_reproduction = E[4],
+        
+        w_assimilation = w_res.w_assimilation,
+        w_maintenance = w_res.w_maintenance,
+        w_growth = w_res.w_growth,
+        w_reproduction = w_res.w_reproduction,
+        
+        Q_t = Q_t,
+        A0 = params.A0,
+        A_t = A_t,
+        lambda0 = lambda0,
+        lambda_t = lambda_t,
+        F_t = F_t,
+        
+        A = A_t,
+        lambda = lambda_t,
+        amplification = F_t
+    )
+end

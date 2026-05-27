@@ -1,6 +1,14 @@
 # src/mixture_aggregation.jl
 
-export aggregate_deb_axis_burdens, mixture_contribution_diagnostics
+export aggregate_deb_axis_burdens, mixture_contribution_diagnostics, aggregate_axis_mixture_effects
+
+"""
+    aggregate_axis_mixture_effects(compound_axis_burdens; mixture_effect_model = "axis_toxic_unit_sum")
+
+Aggregates compound-specific DEB-axis burdens into axis-level mixture effects using the specified effect model.
+Outputs bounded fractional axis impairments E_a.
+"""
+function aggregate_axis_mixture_effects end
 
 """
     aggregate_deb_axis_burdens(compound_axis_burdens; mixture_method = "additive_axis_burden")
@@ -147,5 +155,80 @@ function mixture_contribution_diagnostics(compound_axis_burdens)
         max_single_compound_fraction_maintenance = frac_M,
         max_single_compound_fraction_growth = frac_G,
         max_single_compound_fraction_reproduction = frac_R
+    )
+end
+function aggregate_axis_mixture_effects(compound_axis_burdens; mixture_effect_model::String = "axis_toxic_unit_sum")
+    X_A, X_M, X_G, X_R = 0.0, 0.0, 0.0, 0.0
+    E_A, E_M, E_G, E_R = 0.0, 0.0, 0.0, 0.0
+
+    if mixture_effect_model == "axis_toxic_unit_sum"
+        for r in compound_axis_burdens
+            x_A = Float64(r.burden_assimilation)
+            x_M = Float64(r.burden_maintenance)
+            x_G = Float64(r.burden_growth)
+            x_R = Float64(r.burden_reproduction)
+            
+            for x in (x_A, x_M, x_G, x_R)
+                if !isfinite(x) || x < 0.0
+                    throw(ArgumentError("Burden values must be finite and >= 0. Got: $x"))
+                end
+            end
+            
+            X_A += x_A
+            X_M += x_M
+            X_G += x_G
+            X_R += x_R
+        end
+        
+        E_A = X_A / (1.0 + X_A)
+        E_M = X_M / (1.0 + X_M)
+        E_G = X_G / (1.0 + X_G)
+        E_R = X_R / (1.0 + X_R)
+        
+    elseif mixture_effect_model == "independent_action_axis_effects"
+        prod_A, prod_M, prod_G, prod_R = 1.0, 1.0, 1.0, 1.0
+        
+        for r in compound_axis_burdens
+            x_A = Float64(r.burden_assimilation)
+            x_M = Float64(r.burden_maintenance)
+            x_G = Float64(r.burden_growth)
+            x_R = Float64(r.burden_reproduction)
+            
+            for x in (x_A, x_M, x_G, x_R)
+                if !isfinite(x) || x < 0.0
+                    throw(ArgumentError("Burden values must be finite and >= 0. Got: $x"))
+                end
+            end
+            
+            X_A += x_A
+            X_M += x_M
+            X_G += x_G
+            X_R += x_R
+            
+            prod_A *= (1.0 - (x_A / (1.0 + x_A)))
+            prod_M *= (1.0 - (x_M / (1.0 + x_M)))
+            prod_G *= (1.0 - (x_G / (1.0 + x_G)))
+            prod_R *= (1.0 - (x_R / (1.0 + x_R)))
+        end
+        
+        E_A = 1.0 - prod_A
+        E_M = 1.0 - prod_M
+        E_G = 1.0 - prod_G
+        E_R = 1.0 - prod_R
+        
+    else
+        throw(ArgumentError("Unknown mixture_effect_model: $mixture_effect_model"))
+    end
+    
+    return (
+        mixture_effect_model = mixture_effect_model,
+        X_assimilation = X_A,
+        X_maintenance = X_M,
+        X_growth = X_G,
+        X_reproduction = X_R,
+        E_assimilation = E_A,
+        E_maintenance = E_M,
+        E_growth = E_G,
+        E_reproduction = E_R
     )
 end

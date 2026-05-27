@@ -215,6 +215,7 @@ function run_diagnostic_scenario(selected_species, selected_records, scenario_mo
 
     # We will track results for both mixture methods, though they should be identical
     mixture_methods = ["additive_axis_burden", "axis_toxic_unit_sum"]
+    mixture_effect_models = ["axis_toxic_unit_sum", "independent_action_axis_effects"]
     response_modes = ["raw_margin_subtraction", "ec50_anchored_fractional_impairment"]
 
     compound_results = []
@@ -222,7 +223,8 @@ function run_diagnostic_scenario(selected_species, selected_records, scenario_mo
 
     for method in mixture_methods
         for r_mode in response_modes
-            for sp in selected_species
+            for effect_model in mixture_effect_models
+                for sp in selected_species
             sp_key = sp.key
             sp_params = sp.params
 
@@ -265,6 +267,7 @@ function run_diagnostic_scenario(selected_species, selected_records, scenario_mo
                         scenario = "response_calibrated_multiaxis",
                         mixture_method = method,
                         response_mode = r_mode,
+                        mixture_effect_model = effect_model,
                         species_key = sp_key,
                         species_name = replace(sp_key, "_" => " "),
                         month = month_idx,
@@ -296,12 +299,39 @@ function run_diagnostic_scenario(selected_species, selected_records, scenario_mo
                     growth = agg.total_burden_growth,
                     reproduction = agg.total_burden_reproduction
                 )
-                response = TwoTimescaleResilience.compute_adaptive_margin_response(mapped_agg, sp_params, response_mode=r_mode)
+                
+                # Apply mixture effect model
+                mix_effects = TwoTimescaleResilience.aggregate_axis_mixture_effects(monthly_compound_burdens; mixture_effect_model=effect_model)
+                
+                if r_mode == "ec50_anchored_fractional_impairment"
+                    axis_impairments = (
+                        assimilation = mix_effects.E_assimilation,
+                        maintenance = mix_effects.E_maintenance,
+                        growth = mix_effects.E_growth,
+                        reproduction = mix_effects.E_reproduction
+                    )
+                    X_axis = (
+                        assimilation = mix_effects.X_assimilation,
+                        maintenance = mix_effects.X_maintenance,
+                        growth = mix_effects.X_growth,
+                        reproduction = mix_effects.X_reproduction
+                    )
+                    response = TwoTimescaleResilience.compute_adaptive_margin_response_from_impairment(
+                        axis_impairments, 
+                        sp_params; 
+                        X_axis = X_axis,
+                        mixture_effect_model = effect_model
+                    )
+                else
+                    # raw mode continues to use X_axis directly and preserves old behaviour
+                    response = TwoTimescaleResilience.compute_adaptive_margin_response(mapped_agg, sp_params, response_mode=r_mode)
+                end
 
                 push!(species_results, (
                     scenario = "response_calibrated_multiaxis",
                     mixture_method = method,
                     response_mode = r_mode,
+                    mixture_effect_model = effect_model,
                     species_key = sp_key,
                     species_name = replace(sp_key, "_" => " "),
                     month = month_idx,
@@ -351,6 +381,7 @@ function run_diagnostic_scenario(selected_species, selected_records, scenario_mo
                     lambda_t = response.lambda,
                     F_t = response.amplification
                 ))
+            end
             end
         end
     end
@@ -502,6 +533,94 @@ function perform_calibration_checks(df_spec)
     
     comp_sum_df = DataFrame(comparison_summary)
     CSV.write(joinpath(out_dir, "multiaxis_response_mode_comparison_summary.csv"), comp_sum_df)
+    
+    # TRANCHE 4: Mixture Effect Model Comparison Summary
+    mixture_effect_comparison_summary = []
+    
+    for sp in species_keys
+        sp_df_all = filter(row -> row.species_key == sp && row.mixture_method == "additive_axis_burden", df_spec)
+        
+        for r_mode in response_modes
+            sp_r_df = filter(row -> row.response_mode == r_mode, sp_df_all)
+            
+            for mix_model in ["axis_toxic_unit_sum", "independent_action_axis_effects"]
+                sp_mix_df = filter(row -> row.mixture_effect_model == mix_model, sp_r_df)
+                
+                if nrow(sp_mix_df) > 0
+                    max_F_t_idx = argmax(sp_mix_df.F_t)
+                    max_F_t = sp_mix_df.F_t[max_F_t_idx]
+                    month_max_F_t = sp_mix_df.month[max_F_t_idx]
+                    
+                    min_A_t_idx = argmin(sp_mix_df.A_t)
+                    min_A_t = sp_mix_df.A_t[min_A_t_idx]
+                    month_min_A_t = sp_mix_df.month[min_A_t_idx]
+                    
+                    max_Q_t_idx = argmax(sp_mix_df.Q_t)
+                    max_Q_t = sp_mix_df.Q_t[max_Q_t_idx]
+                    month_max_Q_t = sp_mix_df.month[max_Q_t_idx]
+                    
+                    active_axes = Set{String}()
+                    for row in eachrow(sp_mix_df)
+                        if row.total_burden_assimilation > 0; push!(active_axes, "assimilation"); end
+                        if row.total_burden_maintenance > 0; push!(active_axes, "maintenance"); end
+                        if row.total_burden_growth > 0; push!(active_axes, "growth"); end
+                        if row.total_burden_reproduction > 0; push!(active_axes, "reproduction"); end
+                    end
+                    
+                    # Calculate deltas for EC50 mode
+                    delta_F = 0.0
+                    delta_A = 0.0
+                    delta_Q = 0.0
+                    
+                    if r_mode == "ec50_anchored_fractional_impairment"
+                        tu_df = filter(row -> row.mixture_effect_model == "axis_toxic_unit_sum", sp_r_df)
+                        ia_df = filter(row -> row.mixture_effect_model == "independent_action_axis_effects", sp_r_df)
+                        
+                        if nrow(tu_df) > 0 && nrow(ia_df) > 0
+                            tu_max_F = maximum(tu_df.F_t)
+                            ia_max_F = maximum(ia_df.F_t)
+                            delta_F = ia_max_F - tu_max_F
+                            
+                            tu_min_A = minimum(tu_df.A_t)
+                            ia_min_A = minimum(ia_df.A_t)
+                            delta_A = ia_min_A - tu_min_A
+                            
+                            tu_max_Q = maximum(tu_df.Q_t)
+                            ia_max_Q = maximum(ia_df.Q_t)
+                            delta_Q = ia_max_Q - tu_max_Q
+                        end
+                    end
+                    
+                    push!(mixture_effect_comparison_summary, (
+                        species_key = sp,
+                        species_name = sp_mix_df.species_name[1],
+                        response_mode = r_mode,
+                        mixture_effect_model = mix_model,
+                        axis_weight_method = sp_mix_df.axis_weight_method[1],
+                        axis_weight_scope = sp_mix_df.axis_weight_scope[1],
+                        
+                        max_F_t = max_F_t,
+                        month_max_F_t = month_max_F_t,
+                        
+                        min_A_t = min_A_t,
+                        month_min_A_t = month_min_A_t,
+                        
+                        max_Q_t = max_Q_t,
+                        month_max_Q_t = month_max_Q_t,
+                        
+                        activated_axes = join(sort(collect(active_axes)), ", "),
+                        
+                        delta_max_F_t_IA_minus_TU = delta_F,
+                        delta_min_A_t_IA_minus_TU = delta_A,
+                        delta_max_Q_t_IA_minus_TU = delta_Q
+                    ))
+                end
+            end
+        end
+    end
+    
+    mix_eff_comp_df = DataFrame(mixture_effect_comparison_summary)
+    CSV.write(joinpath(out_dir, "multiaxis_mixture_effect_model_comparison_summary.csv"), mix_eff_comp_df)
 
     println("\nCalibration Checks (Raw Mode):")
     for row in eachrow(cal_df)
@@ -544,15 +663,73 @@ function generate_plots(df_spec, df_comp)
     axislegend(ax_B, position=:lt)
     save(joinpath(out_dir, "multiaxis_axis_burdens.png"), fig_B)
 
+    # TRANCHE 5 PLOTS: Mixture Effect Model Comparison
+    
+    # 1. multiaxis_mixture_axis_impairments.png
+    fig_mix_I = Figure(size=(800, 400))
+    ax_mix_I = Axis(fig_mix_I[1, 1], xlabel="Month", ylabel="Fractional Impairment (E_a)", title="Axis Impairments by Effect Model (Species: $(replace(sp_show, "_" => " ")))")
+    
+    sp_df_ec50_tu = filter(row -> row.species_key == sp_show && row.mixture_effect_model == "axis_toxic_unit_sum", df_ec50)
+    sp_df_ec50_ia = filter(row -> row.species_key == sp_show && row.mixture_effect_model == "independent_action_axis_effects", df_ec50)
+    
+    # Plot TU (Solid)
+    lines!(ax_mix_I, sp_df_ec50_tu.month, sp_df_ec50_tu.E_assimilation, label="Assimilation (TU)", linewidth=2, color=:blue, linestyle=nothing)
+    lines!(ax_mix_I, sp_df_ec50_tu.month, sp_df_ec50_tu.E_maintenance, label="Maintenance (TU)", linewidth=2, color=:orange, linestyle=nothing)
+    lines!(ax_mix_I, sp_df_ec50_tu.month, sp_df_ec50_tu.E_growth, label="Growth (TU)", linewidth=2, color=:green, linestyle=nothing)
+    lines!(ax_mix_I, sp_df_ec50_tu.month, sp_df_ec50_tu.E_reproduction, label="Reproduction (TU)", linewidth=2, color=:red, linestyle=nothing)
+    
+    # Plot IA (Dashed)
+    lines!(ax_mix_I, sp_df_ec50_ia.month, sp_df_ec50_ia.E_assimilation, label="Assimilation (IA)", linewidth=2, color=:blue, linestyle=:dash)
+    lines!(ax_mix_I, sp_df_ec50_ia.month, sp_df_ec50_ia.E_maintenance, label="Maintenance (IA)", linewidth=2, color=:orange, linestyle=:dash)
+    lines!(ax_mix_I, sp_df_ec50_ia.month, sp_df_ec50_ia.E_growth, label="Growth (IA)", linewidth=2, color=:green, linestyle=:dash)
+    lines!(ax_mix_I, sp_df_ec50_ia.month, sp_df_ec50_ia.E_reproduction, label="Reproduction (IA)", linewidth=2, color=:red, linestyle=:dash)
+    
+    axislegend(ax_mix_I, position=:lt, nbanks=2)
+    save(joinpath(out_dir, "multiaxis_mixture_axis_impairments.png"), fig_mix_I)
+
+    # 2. multiaxis_mixture_weighted_impairment_Q.png
+    fig_mix_Q = Figure(size=(800, 400))
+    ax_mix_Q = Axis(fig_mix_Q[1, 1], xlabel="Month", ylabel="Weighted Impairment (Q_t)", title="Weighted Impairment by Species & Effect Model")
+    
+    for (i, sp) in enumerate(species_keys)
+        name = replace(sp, "_" => " ")
+        sp_df_ec50_tu = filter(row -> row.species_key == sp && row.mixture_effect_model == "axis_toxic_unit_sum", df_ec50)
+        sp_df_ec50_ia = filter(row -> row.species_key == sp && row.mixture_effect_model == "independent_action_axis_effects", df_ec50)
+        
+        lines!(ax_mix_Q, sp_df_ec50_tu.month, sp_df_ec50_tu.Q_t, label="$name (TU)", color=colors[i], linestyle=nothing, linewidth=2)
+        lines!(ax_mix_Q, sp_df_ec50_ia.month, sp_df_ec50_ia.Q_t, label="$name (IA)", color=colors[i], linestyle=:dash, linewidth=2)
+    end
+    axislegend(ax_mix_Q, position=:lt, nbanks=2)
+    save(joinpath(out_dir, "multiaxis_mixture_weighted_impairment_Q.png"), fig_mix_Q)
+
+    # 3. multiaxis_mixture_amplification.png
+    fig_mix_F = Figure(size=(800, 400))
+    ax_mix_F = Axis(fig_mix_F[1, 1], xlabel="Month", ylabel="Amplification (F_t)", title="Amplification by Species & Effect Model")
+    
+    for (i, sp) in enumerate(species_keys)
+        name = replace(sp, "_" => " ")
+        sp_df_ec50_tu = filter(row -> row.species_key == sp && row.mixture_effect_model == "axis_toxic_unit_sum", df_ec50)
+        sp_df_ec50_ia = filter(row -> row.species_key == sp && row.mixture_effect_model == "independent_action_axis_effects", df_ec50)
+        
+        lines!(ax_mix_F, sp_df_ec50_tu.month, sp_df_ec50_tu.F_t, label="$name (TU)", color=colors[i], linestyle=nothing, linewidth=2)
+        lines!(ax_mix_F, sp_df_ec50_ia.month, sp_df_ec50_ia.F_t, label="$name (IA)", color=colors[i], linestyle=:dash, linewidth=2)
+    end
+    axislegend(ax_mix_F, position=:lt, nbanks=2)
+    save(joinpath(out_dir, "multiaxis_mixture_amplification.png"), fig_mix_F)
+
+    # Keep original general response mode comparison plots, but use just TU for the basic comparison
+    df_ec50_base = filter(row -> row.mixture_effect_model == "axis_toxic_unit_sum", df_ec50)
+    sp_df_ec50_base = filter(row -> row.species_key == sp_show, df_ec50_base)
+
     # Plot B: Multi-axis Axis Impairments
     # Only meaningful for EC50 mode
     fig_I = Figure(size=(800, 400))
     ax_I = Axis(fig_I[1, 1], xlabel="Month", ylabel="Fractional Impairment (E_a)", title="Axis Impairments (EC50 Mode, Species: $(replace(sp_show, "_" => " ")))")
     
-    lines!(ax_I, sp_df_ec50.month, sp_df_ec50.E_assimilation, label="E_assimilation", linewidth=2)
-    lines!(ax_I, sp_df_ec50.month, sp_df_ec50.E_maintenance, label="E_maintenance", linewidth=2)
-    lines!(ax_I, sp_df_ec50.month, sp_df_ec50.E_growth, label="E_growth", linewidth=2)
-    lines!(ax_I, sp_df_ec50.month, sp_df_ec50.E_reproduction, label="E_reproduction", linewidth=2)
+    lines!(ax_I, sp_df_ec50_base.month, sp_df_ec50_base.E_assimilation, label="Assimilation", linewidth=2)
+    lines!(ax_I, sp_df_ec50_base.month, sp_df_ec50_base.E_maintenance, label="Maintenance", linewidth=2)
+    lines!(ax_I, sp_df_ec50_base.month, sp_df_ec50_base.E_growth, label="Growth", linewidth=2)
+    lines!(ax_I, sp_df_ec50_base.month, sp_df_ec50_base.E_reproduction, label="Reproduction", linewidth=2)
 
     axislegend(ax_I, position=:lt)
     save(joinpath(out_dir, "multiaxis_axis_impairments.png"), fig_I)
@@ -562,7 +739,7 @@ function generate_plots(df_spec, df_comp)
     fig_Q = Figure(size=(800, 400))
     ax_Q = Axis(fig_Q[1, 1], xlabel="Month", ylabel="Weighted Impairment (Q_t)", title="Weighted Impairment (Q_t) by Species (EC50 Mode)")
     for (i, sp) in enumerate(species_keys)
-        sp_df = filter(row -> row.species_key == sp, df_ec50)
+        sp_df = filter(row -> row.species_key == sp && row.mixture_effect_model == "axis_toxic_unit_sum", df_ec50)
         lines!(ax_Q, sp_df.month, sp_df.Q_t, label=replace(sp, "_" => " "), color=colors[i], linewidth=2)
     end
     axislegend(ax_Q, position=:lt)
@@ -572,12 +749,12 @@ function generate_plots(df_spec, df_comp)
     fig_A = Figure(size=(800, 400))
     ax_A = Axis(fig_A[1, 1], xlabel="Month", ylabel="Adaptive Margin (A_t)", title="Adaptive Margin Response by Species")
     for (i, sp) in enumerate(species_keys)
-        sp_df_ec50 = filter(row -> row.species_key == sp && row.response_mode == "ec50_anchored_fractional_impairment", df)
-        sp_df_raw = filter(row -> row.species_key == sp && row.response_mode == "raw_margin_subtraction", df)
+        sp_df_ec50_base = filter(row -> row.species_key == sp && row.response_mode == "ec50_anchored_fractional_impairment" && row.mixture_effect_model == "axis_toxic_unit_sum", df)
+        sp_df_raw_base = filter(row -> row.species_key == sp && row.response_mode == "raw_margin_subtraction" && row.mixture_effect_model == "axis_toxic_unit_sum", df)
         
         name = replace(sp, "_" => " ")
-        lines!(ax_A, sp_df_ec50.month, sp_df_ec50.A_t, label="$name — EC50", color=colors[i], linestyle=ec50_linestyle, linewidth=2)
-        lines!(ax_A, sp_df_raw.month, sp_df_raw.A_t, label="$name — Raw", color=colors[i], linestyle=raw_linestyle, linewidth=2)
+        lines!(ax_A, sp_df_ec50_base.month, sp_df_ec50_base.A_t, label="$name — EC50", color=colors[i], linestyle=ec50_linestyle, linewidth=2)
+        lines!(ax_A, sp_df_raw_base.month, sp_df_raw_base.A_t, label="$name — Raw", color=colors[i], linestyle=raw_linestyle, linewidth=2)
     end
     axislegend(ax_A, position=:lt)
     save(joinpath(out_dir, "multiaxis_adaptive_margin.png"), fig_A)
@@ -586,12 +763,12 @@ function generate_plots(df_spec, df_comp)
     fig_L = Figure(size=(800, 400))
     ax_L = Axis(fig_L[1, 1], xlabel="Month", ylabel="Restoring Force (lambda_t)", title="Restoring Force Response by Species")
     for (i, sp) in enumerate(species_keys)
-        sp_df_ec50 = filter(row -> row.species_key == sp && row.response_mode == "ec50_anchored_fractional_impairment", df)
-        sp_df_raw = filter(row -> row.species_key == sp && row.response_mode == "raw_margin_subtraction", df)
+        sp_df_ec50_base = filter(row -> row.species_key == sp && row.response_mode == "ec50_anchored_fractional_impairment" && row.mixture_effect_model == "axis_toxic_unit_sum", df)
+        sp_df_raw_base = filter(row -> row.species_key == sp && row.response_mode == "raw_margin_subtraction" && row.mixture_effect_model == "axis_toxic_unit_sum", df)
         
         name = replace(sp, "_" => " ")
-        lines!(ax_L, sp_df_ec50.month, sp_df_ec50.lambda_t, label="$name — EC50", color=colors[i], linestyle=ec50_linestyle, linewidth=2)
-        lines!(ax_L, sp_df_raw.month, sp_df_raw.lambda_t, label="$name — Raw", color=colors[i], linestyle=raw_linestyle, linewidth=2)
+        lines!(ax_L, sp_df_ec50_base.month, sp_df_ec50_base.lambda_t, label="$name — EC50", color=colors[i], linestyle=ec50_linestyle, linewidth=2)
+        lines!(ax_L, sp_df_raw_base.month, sp_df_raw_base.lambda_t, label="$name — Raw", color=colors[i], linestyle=raw_linestyle, linewidth=2)
     end
     axislegend(ax_L, position=:lt)
     save(joinpath(out_dir, "multiaxis_restoring_force.png"), fig_L)
@@ -600,12 +777,12 @@ function generate_plots(df_spec, df_comp)
     fig_F = Figure(size=(800, 400))
     ax_F = Axis(fig_F[1, 1], xlabel="Month", ylabel="Amplification (F_t)", title="Amplification Response by Species")
     for (i, sp) in enumerate(species_keys)
-        sp_df_ec50 = filter(row -> row.species_key == sp && row.response_mode == "ec50_anchored_fractional_impairment", df)
-        sp_df_raw = filter(row -> row.species_key == sp && row.response_mode == "raw_margin_subtraction", df)
+        sp_df_ec50_base = filter(row -> row.species_key == sp && row.response_mode == "ec50_anchored_fractional_impairment" && row.mixture_effect_model == "axis_toxic_unit_sum", df)
+        sp_df_raw_base = filter(row -> row.species_key == sp && row.response_mode == "raw_margin_subtraction" && row.mixture_effect_model == "axis_toxic_unit_sum", df)
         
         name = replace(sp, "_" => " ")
-        lines!(ax_F, sp_df_ec50.month, sp_df_ec50.F_t, label="$name — EC50", color=colors[i], linestyle=ec50_linestyle, linewidth=2)
-        lines!(ax_F, sp_df_raw.month, sp_df_raw.F_t, label="$name — Raw", color=colors[i], linestyle=raw_linestyle, linewidth=2)
+        lines!(ax_F, sp_df_ec50_base.month, sp_df_ec50_base.F_t, label="$name — EC50", color=colors[i], linestyle=ec50_linestyle, linewidth=2)
+        lines!(ax_F, sp_df_raw_base.month, sp_df_raw_base.F_t, label="$name — Raw", color=colors[i], linestyle=raw_linestyle, linewidth=2)
     end
     axislegend(ax_F, position=:lt)
     save(joinpath(out_dir, "multiaxis_amplification.png"), fig_F)
