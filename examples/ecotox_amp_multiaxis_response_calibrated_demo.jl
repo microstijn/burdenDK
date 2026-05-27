@@ -514,63 +514,109 @@ end
 function generate_plots(df_spec, df_comp)
     out_dir = normpath(joinpath(@__DIR__, "..", "output", "ecotox_amp_multiaxis_response_calibrated_demo"))
 
-    # We plot the baseline mixture method since they are identical
+    # We plot the baseline mixture method since they are expected to overlap
     df = filter(row -> row.mixture_method == "additive_axis_burden", df_spec)
 
     species_keys = unique(df.species_key)
     colors = cgrad(:tab10, length(species_keys), categorical=true)
 
-    # 1. Multi-axis Adaptive Margin
-    fig_A = Figure(size=(800, 400))
-    ax_A = Axis(fig_A[1, 1], xlabel="Month", ylabel="Adaptive Margin (A_t)", title="Adaptive Margin Response by Species")
-    for (i, sp) in enumerate(species_keys)
-        sp_df = filter(row -> row.species_key == sp, df)
-        lines!(ax_A, sp_df.month, sp_df.A_t, label=replace(sp, "_" => " "), color=colors[i], linewidth=2)
-    end
-    axislegend(ax_A, position=:lt)
-    save(joinpath(out_dir, "multiaxis_adaptive_margin.png"), fig_A)
+    # Styling configuration
+    ec50_linestyle = nothing      # solid
+    raw_linestyle = :dash         # dashed
+    marker_ec50 = :rect           # square
+    marker_raw = :circle          # circle
 
-    # 2. Multi-axis Restoring Force
-    fig_L = Figure(size=(800, 400))
-    ax_L = Axis(fig_L[1, 1], xlabel="Month", ylabel="Restoring Force (lambda_t)", title="Restoring Force Response by Species")
-    for (i, sp) in enumerate(species_keys)
-        sp_df = filter(row -> row.species_key == sp, df)
-        lines!(ax_L, sp_df.month, sp_df.lambda_t, label=replace(sp, "_" => " "), color=colors[i], linewidth=2)
-    end
-    axislegend(ax_L, position=:lt)
-    save(joinpath(out_dir, "multiaxis_restoring_force.png"), fig_L)
-
-    # 3. Multi-axis Amplification
-    fig_F = Figure(size=(800, 400))
-    ax_F = Axis(fig_F[1, 1], xlabel="Month", ylabel="Amplification (F_t)", title="Amplification Response by Species")
-    for (i, sp) in enumerate(species_keys)
-        sp_df = filter(row -> row.species_key == sp, df)
-        lines!(ax_F, sp_df.month, sp_df.F_t, label=replace(sp, "_" => " "), color=colors[i], linewidth=2)
-    end
-    axislegend(ax_F, position=:lt)
-    save(joinpath(out_dir, "multiaxis_amplification.png"), fig_F)
-
-    # 4. Multi-axis Axis Burdens
-    # We will pick the first species to show the axis breakdown, as stress is the same
+    # Plot A: Multi-axis Axis Burdens
+    # Filter to one response mode because burdens are independent of response mode
+    df_ec50 = filter(row -> row.response_mode == "ec50_anchored_fractional_impairment", df)
+    # We pick the first species to show the axis breakdown, as stress/burden is identical across species
     sp_show = species_keys[1]
-    sp_df = filter(row -> row.species_key == sp_show, df)
+    sp_df_ec50 = filter(row -> row.species_key == sp_show, df_ec50)
 
     fig_B = Figure(size=(800, 400))
     ax_B = Axis(fig_B[1, 1], xlabel="Month", ylabel="Total Axis Burden (s_a)", title="DEB Axis Burdens (Species: $(replace(sp_show, "_" => " ")))")
 
-    lines!(ax_B, sp_df.month, sp_df.total_burden_assimilation, label="Assimilation", linewidth=2)
-    lines!(ax_B, sp_df.month, sp_df.total_burden_maintenance, label="Maintenance", linewidth=2)
-    lines!(ax_B, sp_df.month, sp_df.total_burden_growth, label="Growth", linewidth=2)
-    lines!(ax_B, sp_df.month, sp_df.total_burden_reproduction, label="Reproduction", linewidth=2)
+    lines!(ax_B, sp_df_ec50.month, sp_df_ec50.total_burden_assimilation, label="Assimilation", linewidth=2)
+    lines!(ax_B, sp_df_ec50.month, sp_df_ec50.total_burden_maintenance, label="Maintenance", linewidth=2)
+    lines!(ax_B, sp_df_ec50.month, sp_df_ec50.total_burden_growth, label="Growth", linewidth=2)
+    lines!(ax_B, sp_df_ec50.month, sp_df_ec50.total_burden_reproduction, label="Reproduction", linewidth=2)
 
     axislegend(ax_B, position=:lt)
     save(joinpath(out_dir, "multiaxis_axis_burdens.png"), fig_B)
 
-    # 5. Dominant Compounds Scatter
+    # Plot B: Multi-axis Axis Impairments
+    # Only meaningful for EC50 mode
+    fig_I = Figure(size=(800, 400))
+    ax_I = Axis(fig_I[1, 1], xlabel="Month", ylabel="Fractional Impairment (E_a)", title="Axis Impairments (EC50 Mode, Species: $(replace(sp_show, "_" => " ")))")
+    
+    lines!(ax_I, sp_df_ec50.month, sp_df_ec50.E_assimilation, label="E_assimilation", linewidth=2)
+    lines!(ax_I, sp_df_ec50.month, sp_df_ec50.E_maintenance, label="E_maintenance", linewidth=2)
+    lines!(ax_I, sp_df_ec50.month, sp_df_ec50.E_growth, label="E_growth", linewidth=2)
+    lines!(ax_I, sp_df_ec50.month, sp_df_ec50.E_reproduction, label="E_reproduction", linewidth=2)
+
+    axislegend(ax_I, position=:lt)
+    save(joinpath(out_dir, "multiaxis_axis_impairments.png"), fig_I)
+
+    # Plot C: Multi-axis Weighted Impairment Q_t
+    # Only meaningful for EC50 mode
+    fig_Q = Figure(size=(800, 400))
+    ax_Q = Axis(fig_Q[1, 1], xlabel="Month", ylabel="Weighted Impairment (Q_t)", title="Weighted Impairment (Q_t) by Species (EC50 Mode)")
+    for (i, sp) in enumerate(species_keys)
+        sp_df = filter(row -> row.species_key == sp, df_ec50)
+        lines!(ax_Q, sp_df.month, sp_df.Q_t, label=replace(sp, "_" => " "), color=colors[i], linewidth=2)
+    end
+    axislegend(ax_Q, position=:lt)
+    save(joinpath(out_dir, "multiaxis_weighted_impairment_Q.png"), fig_Q)
+
+    # Plot D: Multi-axis Adaptive Margin
+    fig_A = Figure(size=(800, 400))
+    ax_A = Axis(fig_A[1, 1], xlabel="Month", ylabel="Adaptive Margin (A_t)", title="Adaptive Margin Response by Species")
+    for (i, sp) in enumerate(species_keys)
+        sp_df_ec50 = filter(row -> row.species_key == sp && row.response_mode == "ec50_anchored_fractional_impairment", df)
+        sp_df_raw = filter(row -> row.species_key == sp && row.response_mode == "raw_margin_subtraction", df)
+        
+        name = replace(sp, "_" => " ")
+        lines!(ax_A, sp_df_ec50.month, sp_df_ec50.A_t, label="$name — EC50", color=colors[i], linestyle=ec50_linestyle, linewidth=2)
+        lines!(ax_A, sp_df_raw.month, sp_df_raw.A_t, label="$name — Raw", color=colors[i], linestyle=raw_linestyle, linewidth=2)
+    end
+    axislegend(ax_A, position=:lt)
+    save(joinpath(out_dir, "multiaxis_adaptive_margin.png"), fig_A)
+
+    # Plot E: Multi-axis Restoring Force
+    fig_L = Figure(size=(800, 400))
+    ax_L = Axis(fig_L[1, 1], xlabel="Month", ylabel="Restoring Force (lambda_t)", title="Restoring Force Response by Species")
+    for (i, sp) in enumerate(species_keys)
+        sp_df_ec50 = filter(row -> row.species_key == sp && row.response_mode == "ec50_anchored_fractional_impairment", df)
+        sp_df_raw = filter(row -> row.species_key == sp && row.response_mode == "raw_margin_subtraction", df)
+        
+        name = replace(sp, "_" => " ")
+        lines!(ax_L, sp_df_ec50.month, sp_df_ec50.lambda_t, label="$name — EC50", color=colors[i], linestyle=ec50_linestyle, linewidth=2)
+        lines!(ax_L, sp_df_raw.month, sp_df_raw.lambda_t, label="$name — Raw", color=colors[i], linestyle=raw_linestyle, linewidth=2)
+    end
+    axislegend(ax_L, position=:lt)
+    save(joinpath(out_dir, "multiaxis_restoring_force.png"), fig_L)
+
+    # Plot F: Multi-axis Amplification
+    fig_F = Figure(size=(800, 400))
+    ax_F = Axis(fig_F[1, 1], xlabel="Month", ylabel="Amplification (F_t)", title="Amplification Response by Species")
+    for (i, sp) in enumerate(species_keys)
+        sp_df_ec50 = filter(row -> row.species_key == sp && row.response_mode == "ec50_anchored_fractional_impairment", df)
+        sp_df_raw = filter(row -> row.species_key == sp && row.response_mode == "raw_margin_subtraction", df)
+        
+        name = replace(sp, "_" => " ")
+        lines!(ax_F, sp_df_ec50.month, sp_df_ec50.F_t, label="$name — EC50", color=colors[i], linestyle=ec50_linestyle, linewidth=2)
+        lines!(ax_F, sp_df_raw.month, sp_df_raw.F_t, label="$name — Raw", color=colors[i], linestyle=raw_linestyle, linewidth=2)
+    end
+    axislegend(ax_F, position=:lt)
+    save(joinpath(out_dir, "multiaxis_amplification.png"), fig_F)
+
+    # Existing Dominant Compounds Scatter
     fig_D = Figure(size=(800, 600))
     ax_D = Axis(fig_D[1, 1], xlabel="Month", ylabel="Dominant Compound Fraction", title="Dominant Compound by Axis")
 
-    # We plot the fraction for each axis
+    # We plot the fraction for each axis using the ec50 df for the first species, as dominant fractions are independent of response mode
+    sp_df_ec50_first = filter(row -> row.species_key == species_keys[1], df_ec50)
+    
     axes_list = [
         (:maintenance, :max_single_compound_fraction_maintenance),
         (:growth, :max_single_compound_fraction_growth),
@@ -578,7 +624,7 @@ function generate_plots(df_spec, df_comp)
     ]
 
     for (ax_name, frac_col) in axes_list
-        scatter!(ax_D, sp_df.month, sp_df[!, frac_col], label=string(ax_name), markersize=10)
+        scatter!(ax_D, sp_df_ec50_first.month, sp_df_ec50_first[!, frac_col], label=string(ax_name), markersize=10)
     end
     axislegend(ax_D, position=:lt)
     save(joinpath(out_dir, "multiaxis_dominant_compounds.png"), fig_D)
@@ -618,6 +664,6 @@ function main()
     generate_plots(df_spec, df_comp)
 end
 
-if abspath(PROGRAM_FILE) == @__FILE__
-    main()
-end
+
+main()
+
