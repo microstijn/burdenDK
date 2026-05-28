@@ -165,6 +165,7 @@ fig = plot_amplification_grid(Fgrid)
 ## Examples Directory
 
 * `examples/nc_real_raster_deb_axes_demo.jl`: Processes true pathogen and organic NetCDF variables to calculate DEB-like adaptive margin and amplification factor rasters.
+* `data/AmP_Species_Archetypes.csv` & `.json`: Reusable database of species archetypes based on response-capacity diagnostics. See [docs/species_archetypes.md](docs/species_archetypes.md) for details.
 * Synthetic 3x3 examples (`isimip_moa_deb_3x3_demo.jl`, `species_comparison_3x3_demo.jl`) are smoke-tested during automated testing as they do not require local files.
 * Long-term NetCDF inspection scripts (e.g. `nc_monthly_longterm_isimip_moa_deb_inspection.jl`) are manual examples and are explicitly not included in automated tests because they require local NetCDF files.
 
