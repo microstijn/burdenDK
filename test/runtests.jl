@@ -42,6 +42,9 @@ using TwoTimescaleResilience
     include("test_monthly_memory_demo.jl")
     include("test_response_modes.jl")
     
+    # AmP species archetype database
+    include("test_amp_species_archetypes.jl")
+
     # Mixture-effect overlap demonstration example
     include("test_mixture_effect_overlap_demo.jl")
 
