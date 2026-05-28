@@ -6,13 +6,6 @@
 # dominant sensitive axes) to support downstream simulations and examples.
 # ===========================================================================
 
-using Pkg
-try
-    Pkg.activate(joinpath(@__DIR__, ".."))
-catch err
-    @warn "Could not activate project" exception=(err, catch_backtrace())
-end
-
 using TwoTimescaleResilience
 using JSON
 using CSV
@@ -23,14 +16,13 @@ using Statistics
 # ===========================================================================
 # Configuration
 # ===========================================================================
-const DATA_DIR = joinpath(@__DIR__, "..", "data")
-const AMP_LIBRARY_PATH = joinpath(DATA_DIR, "AmP_Species_Library.json")
-const DIAGNOSTIC_CSV_PATH = joinpath(@__DIR__, "..", "output", "amp_species_response_capacity_diagnostics", "amp_species_response_capacity.csv")
-
-const OUTPUT_DIR_SUMMARY = joinpath(@__DIR__, "..", "output", "amp_species_archetype_database")
-const OUTPUT_CSV_PATH = joinpath(DATA_DIR, "AmP_Species_Archetypes.csv")
-const OUTPUT_JSON_PATH = joinpath(DATA_DIR, "AmP_Species_Archetypes.json")
-const OUTPUT_SUMMARY_PATH = joinpath(OUTPUT_DIR_SUMMARY, "amp_species_archetype_database_build_summary.csv")
+DATA_DIR = joinpath(@__DIR__, "..", "data")
+AMP_LIBRARY_PATH = joinpath(DATA_DIR, "AmP_Species_Library.json")
+DIAGNOSTIC_CSV_PATH = joinpath(@__DIR__, "..", "output", "amp_species_response_capacity_diagnostics", "amp_species_response_capacity.csv")
+OUTPUT_DIR_SUMMARY = joinpath(@__DIR__, "..", "output", "amp_species_archetype_database")
+OUTPUT_CSV_PATH = joinpath(DATA_DIR, "AmP_Species_Archetypes.csv")
+OUTPUT_JSON_PATH = joinpath(DATA_DIR, "AmP_Species_Archetypes.json")
+OUTPUT_SUMMARY_PATH = joinpath(OUTPUT_DIR_SUMMARY, "amp_species_archetype_database_build_summary.csv")
 
 mkpath(DATA_DIR)
 mkpath(OUTPUT_DIR_SUMMARY)

@@ -8,6 +8,7 @@ using TwoTimescaleResilience
     include("test_deb_pipeline.jl")
     include("test_pulse_deb_axes.jl")
     include("test_deb_axis_response.jl")
+    include("test_vulnerability_feature_vectors.jl")
     include("test_examples.jl")
     include("test_background.jl")
     include("test_multistressor.jl")

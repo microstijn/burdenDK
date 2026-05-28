@@ -6,6 +6,9 @@ export load_nc_layer, normalise_layer, write_ascii_grid, read_ascii_grid, plot_s
        synthetic_background_layers, run_synthetic_raster_demo, compute_background_index_grid, adaptive_margin_grid, restoring_force_grid, amplification_factor_grid,
        positive_part, phi_background, adaptive_margin, restoring_force, amplification_factor, BackgroundParams, BackgroundStressor, background_index
 
+# build threshold-free vulnerability features
+export build_threshold_free_vulnerability_features    
+
 export amp_species_key, load_amp_species_library, validate_amp_record, amp_record_to_deb_params, amp_species_deb_params, amp_species_profile
 
 export load_ecotox_library, validate_ecotox_record, ecotox_active_stress
@@ -43,4 +46,5 @@ include("plotting.jl")
 include("ascii.jl")
 include("netcdf.jl")
 
+include("vulnerability_feature_vectors.jl")
 end # module
