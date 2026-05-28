@@ -606,7 +606,7 @@ for i in 1:min(4, n_c)
     col = (i - 1) % 2 + 1
     ax = Axis(fig1[row, col], title = "Compound $(i): $(selected_compounds[i].chemical_name) (Month $m_plot)")
     hm = heatmap!(ax, C_t_loaded[:, :, m_plot, i], colormap=:viridis)
-    Colorbar(fig1[row, col+1], hm)
+    #Colorbar(fig1[row, col+1], hm)
 end
 save(joinpath(out_dir, "synthetic_grid_compound_patterns.png"), fig1)
 
@@ -616,7 +616,7 @@ fig2 = Figure(size = (1200, 400))
 for im in 1:n_models
     ax = Axis(fig2[1, im], title = "E_maintenance ($(models[im]))")
     hm = heatmap!(ax, E_M_out[:, :, m_plot, im], colormap=:inferno, colorrange=(0, 1))
-    Colorbar(fig2[1, im+1], hm)
+    #Colorbar(fig2[1, im+1], hm)
 end
 save(joinpath(out_dir, "synthetic_grid_axis_impairment_maps.png"), fig2)
 
@@ -627,7 +627,7 @@ sp_plot = 1
 for im in 1:n_models
     ax = Axis(fig3[1, im], title = "F_t: $(selected_species[sp_plot].species_name) ($(models[im]))")
     hm = heatmap!(ax, F_out[:, :, m_plot, sp_plot, im], colormap=:magma)
-    Colorbar(fig3[1, im+1], hm)
+    #Colorbar(fig3[1, im+1], hm)
 end
 save(joinpath(out_dir, "synthetic_grid_max_F_maps.png"), fig3)
 
@@ -636,15 +636,15 @@ save(joinpath(out_dir, "synthetic_grid_max_F_maps.png"), fig3)
 fig4 = Figure(size = (1200, 400))
 ax1 = Axis(fig4[1, 1], title = "F_t_IA - F_t_TU")
 hm1 = heatmap!(ax1, F_out[:, :, m_plot, sp_plot, 2] .- F_out[:, :, m_plot, sp_plot, 1], colormap=:bwr, colorrange=(-0.1, 0.1))
-Colorbar(fig4[1, 2], hm1)
+#Colorbar(fig4[1, 2], hm1)
 
 ax2 = Axis(fig4[1, 3], title = "F_t_grouped - F_t_TU")
 hm2 = heatmap!(ax2, F_out[:, :, m_plot, sp_plot, 3] .- F_out[:, :, m_plot, sp_plot, 1], colormap=:bwr, colorrange=(-0.1, 0.1))
-Colorbar(fig4[1, 4], hm2)
+#Colorbar(fig4[1, 4], hm2)
 
 ax3 = Axis(fig4[1, 5], title = "F_t_grouped - F_t_IA")
 hm3 = heatmap!(ax3, F_out[:, :, m_plot, sp_plot, 3] .- F_out[:, :, m_plot, sp_plot, 2], colormap=:bwr, colorrange=(-0.1, 0.1))
-Colorbar(fig4[1, 6], hm3)
+#Colorbar(fig4[1, 6], hm3)
 
 save(joinpath(out_dir, "synthetic_grid_mixture_model_deltas.png"), fig4)
 
