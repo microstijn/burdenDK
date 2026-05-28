@@ -44,5 +44,9 @@ using TwoTimescaleResilience
     
     # Mixture-effect overlap demonstration example
     include("test_mixture_effect_overlap_demo.jl")
+
+    @testset "Synthetic Grid Mixture Demo" begin
+        include("test_synthetic_grid_mixture_demo.jl")
+    end
 end
 include("test_analytical_warm_start.jl")
