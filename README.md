@@ -100,6 +100,7 @@ println("Response AUC: ", metrics.auc_y)
 
 This is not a full DEB model.
 It maps environmental stressors onto DEB process perturbations.
+See [docs/mixture_effect_models.md](docs/mixture_effect_models.md) for details on the new `grouped_ca_then_ia_axis_effects` hybrid approach, how DEB process axes are treated as conceptual guidance, and the specific mixture-effect formulation $E_a$ which remains purely axis-level summation/action without arbitrary fitted interaction coefficients or synergies.
 
 ## ISIMIP Water Quality mode-of-action layer
 

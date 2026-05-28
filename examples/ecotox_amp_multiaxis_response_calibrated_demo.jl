@@ -215,7 +215,7 @@ function run_diagnostic_scenario(selected_species, selected_records, scenario_mo
 
     # We will track results for both mixture methods, though they should be identical
     mixture_methods = ["additive_axis_burden", "axis_toxic_unit_sum"]
-    mixture_effect_models = ["axis_toxic_unit_sum", "independent_action_axis_effects"]
+    mixture_effect_models = ["axis_toxic_unit_sum", "independent_action_axis_effects", "grouped_ca_then_ia_axis_effects"]
     response_modes = ["raw_margin_subtraction", "ec50_anchored_fractional_impairment"]
 
     compound_results = []
@@ -543,7 +543,7 @@ function perform_calibration_checks(df_spec)
         for r_mode in response_modes
             sp_r_df = filter(row -> row.response_mode == r_mode, sp_df_all)
             
-            for mix_model in ["axis_toxic_unit_sum", "independent_action_axis_effects"]
+            for mix_model in ["axis_toxic_unit_sum", "independent_action_axis_effects", "grouped_ca_then_ia_axis_effects"]
                 sp_mix_df = filter(row -> row.mixture_effect_model == mix_model, sp_r_df)
                 
                 if nrow(sp_mix_df) > 0
@@ -571,10 +571,17 @@ function perform_calibration_checks(df_spec)
                     delta_F = 0.0
                     delta_A = 0.0
                     delta_Q = 0.0
+                    delta_F_grp_minus_TU = 0.0
+                    delta_A_grp_minus_TU = 0.0
+                    delta_Q_grp_minus_TU = 0.0
+                    delta_F_grp_minus_IA = 0.0
+                    delta_A_grp_minus_IA = 0.0
+                    delta_Q_grp_minus_IA = 0.0
                     
                     if r_mode == "ec50_anchored_fractional_impairment"
                         tu_df = filter(row -> row.mixture_effect_model == "axis_toxic_unit_sum", sp_r_df)
                         ia_df = filter(row -> row.mixture_effect_model == "independent_action_axis_effects", sp_r_df)
+                        grp_df = filter(row -> row.mixture_effect_model == "grouped_ca_then_ia_axis_effects", sp_r_df)
                         
                         if nrow(tu_df) > 0 && nrow(ia_df) > 0
                             tu_max_F = maximum(tu_df.F_t)
@@ -588,6 +595,34 @@ function perform_calibration_checks(df_spec)
                             tu_max_Q = maximum(tu_df.Q_t)
                             ia_max_Q = maximum(ia_df.Q_t)
                             delta_Q = ia_max_Q - tu_max_Q
+                        end
+                        
+                        if nrow(tu_df) > 0 && nrow(grp_df) > 0
+                            tu_max_F = maximum(tu_df.F_t)
+                            grp_max_F = maximum(grp_df.F_t)
+                            delta_F_grp_minus_TU = grp_max_F - tu_max_F
+                            
+                            tu_min_A = minimum(tu_df.A_t)
+                            grp_min_A = minimum(grp_df.A_t)
+                            delta_A_grp_minus_TU = grp_min_A - tu_min_A
+                            
+                            tu_max_Q = maximum(tu_df.Q_t)
+                            grp_max_Q = maximum(grp_df.Q_t)
+                            delta_Q_grp_minus_TU = grp_max_Q - tu_max_Q
+                        end
+                        
+                        if nrow(ia_df) > 0 && nrow(grp_df) > 0
+                            ia_max_F = maximum(ia_df.F_t)
+                            grp_max_F = maximum(grp_df.F_t)
+                            delta_F_grp_minus_IA = grp_max_F - ia_max_F
+                            
+                            ia_min_A = minimum(ia_df.A_t)
+                            grp_min_A = minimum(grp_df.A_t)
+                            delta_A_grp_minus_IA = grp_min_A - ia_min_A
+                            
+                            ia_max_Q = maximum(ia_df.Q_t)
+                            grp_max_Q = maximum(grp_df.Q_t)
+                            delta_Q_grp_minus_IA = grp_max_Q - ia_max_Q
                         end
                     end
                     
@@ -612,7 +647,15 @@ function perform_calibration_checks(df_spec)
                         
                         delta_max_F_t_IA_minus_TU = delta_F,
                         delta_min_A_t_IA_minus_TU = delta_A,
-                        delta_max_Q_t_IA_minus_TU = delta_Q
+                        delta_max_Q_t_IA_minus_TU = delta_Q,
+                        
+                        delta_max_F_t_grouped_minus_TU = delta_F_grp_minus_TU,
+                        delta_min_A_t_grouped_minus_TU = delta_A_grp_minus_TU,
+                        delta_max_Q_t_grouped_minus_TU = delta_Q_grp_minus_TU,
+                        
+                        delta_max_F_t_grouped_minus_IA = delta_F_grp_minus_IA,
+                        delta_min_A_t_grouped_minus_IA = delta_A_grp_minus_IA,
+                        delta_max_Q_t_grouped_minus_IA = delta_Q_grp_minus_IA
                     ))
                 end
             end
@@ -671,6 +714,7 @@ function generate_plots(df_spec, df_comp)
     
     sp_df_ec50_tu = filter(row -> row.species_key == sp_show && row.mixture_effect_model == "axis_toxic_unit_sum", df_ec50)
     sp_df_ec50_ia = filter(row -> row.species_key == sp_show && row.mixture_effect_model == "independent_action_axis_effects", df_ec50)
+    sp_df_ec50_grp = filter(row -> row.species_key == sp_show && row.mixture_effect_model == "grouped_ca_then_ia_axis_effects", df_ec50)
     
     # Plot TU (Solid)
     lines!(ax_mix_I, sp_df_ec50_tu.month, sp_df_ec50_tu.E_assimilation, label="Assimilation (TU)", linewidth=2, color=:blue, linestyle=nothing)
@@ -684,6 +728,12 @@ function generate_plots(df_spec, df_comp)
     lines!(ax_mix_I, sp_df_ec50_ia.month, sp_df_ec50_ia.E_growth, label="Growth (IA)", linewidth=2, color=:green, linestyle=:dash)
     lines!(ax_mix_I, sp_df_ec50_ia.month, sp_df_ec50_ia.E_reproduction, label="Reproduction (IA)", linewidth=2, color=:red, linestyle=:dash)
     
+    # Plot Grouped CA-then-IA (Dashdot)
+    lines!(ax_mix_I, sp_df_ec50_grp.month, sp_df_ec50_grp.E_assimilation, label="Assimilation (Grouped)", linewidth=2, color=:blue, linestyle=:dashdot)
+    lines!(ax_mix_I, sp_df_ec50_grp.month, sp_df_ec50_grp.E_maintenance, label="Maintenance (Grouped)", linewidth=2, color=:orange, linestyle=:dashdot)
+    lines!(ax_mix_I, sp_df_ec50_grp.month, sp_df_ec50_grp.E_growth, label="Growth (Grouped)", linewidth=2, color=:green, linestyle=:dashdot)
+    lines!(ax_mix_I, sp_df_ec50_grp.month, sp_df_ec50_grp.E_reproduction, label="Reproduction (Grouped)", linewidth=2, color=:red, linestyle=:dashdot)
+
     axislegend(ax_mix_I, position=:lt, nbanks=2)
     save(joinpath(out_dir, "multiaxis_mixture_axis_impairments.png"), fig_mix_I)
 
@@ -695,9 +745,11 @@ function generate_plots(df_spec, df_comp)
         name = replace(sp, "_" => " ")
         sp_df_ec50_tu = filter(row -> row.species_key == sp && row.mixture_effect_model == "axis_toxic_unit_sum", df_ec50)
         sp_df_ec50_ia = filter(row -> row.species_key == sp && row.mixture_effect_model == "independent_action_axis_effects", df_ec50)
+        sp_df_ec50_grp = filter(row -> row.species_key == sp && row.mixture_effect_model == "grouped_ca_then_ia_axis_effects", df_ec50)
         
         lines!(ax_mix_Q, sp_df_ec50_tu.month, sp_df_ec50_tu.Q_t, label="$name (TU)", color=colors[i], linestyle=nothing, linewidth=2)
         lines!(ax_mix_Q, sp_df_ec50_ia.month, sp_df_ec50_ia.Q_t, label="$name (IA)", color=colors[i], linestyle=:dash, linewidth=2)
+        lines!(ax_mix_Q, sp_df_ec50_grp.month, sp_df_ec50_grp.Q_t, label="$name (Grouped)", color=colors[i], linestyle=:dashdot, linewidth=2)
     end
     axislegend(ax_mix_Q, position=:lt, nbanks=2)
     save(joinpath(out_dir, "multiaxis_mixture_weighted_impairment_Q.png"), fig_mix_Q)
@@ -710,9 +762,11 @@ function generate_plots(df_spec, df_comp)
         name = replace(sp, "_" => " ")
         sp_df_ec50_tu = filter(row -> row.species_key == sp && row.mixture_effect_model == "axis_toxic_unit_sum", df_ec50)
         sp_df_ec50_ia = filter(row -> row.species_key == sp && row.mixture_effect_model == "independent_action_axis_effects", df_ec50)
+        sp_df_ec50_grp = filter(row -> row.species_key == sp && row.mixture_effect_model == "grouped_ca_then_ia_axis_effects", df_ec50)
         
         lines!(ax_mix_F, sp_df_ec50_tu.month, sp_df_ec50_tu.F_t, label="$name (TU)", color=colors[i], linestyle=nothing, linewidth=2)
         lines!(ax_mix_F, sp_df_ec50_ia.month, sp_df_ec50_ia.F_t, label="$name (IA)", color=colors[i], linestyle=:dash, linewidth=2)
+        lines!(ax_mix_F, sp_df_ec50_grp.month, sp_df_ec50_grp.F_t, label="$name (Grouped)", color=colors[i], linestyle=:dashdot, linewidth=2)
     end
     axislegend(ax_mix_F, position=:lt, nbanks=2)
     save(joinpath(out_dir, "multiaxis_mixture_amplification.png"), fig_mix_F)

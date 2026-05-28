@@ -216,6 +216,61 @@ function aggregate_axis_mixture_effects(compound_axis_burdens; mixture_effect_mo
         E_G = 1.0 - prod_G
         E_R = 1.0 - prod_R
         
+    elseif mixture_effect_model == "grouped_ca_then_ia_axis_effects"
+        # Group by axis and effect_code
+        group_X_A = Dict{String, Float64}()
+        group_X_M = Dict{String, Float64}()
+        group_X_G = Dict{String, Float64}()
+        group_X_R = Dict{String, Float64}()
+        
+        for r in compound_axis_burdens
+            x_A = Float64(r.burden_assimilation)
+            x_M = Float64(r.burden_maintenance)
+            x_G = Float64(r.burden_growth)
+            x_R = Float64(r.burden_reproduction)
+            
+            for x in (x_A, x_M, x_G, x_R)
+                if !isfinite(x) || x < 0.0
+                    throw(ArgumentError("Burden values must be finite and >= 0. Got: $x"))
+                end
+            end
+            
+            X_A += x_A
+            X_M += x_M
+            X_G += x_G
+            X_R += x_R
+            
+            ec = hasproperty(r, :effect_code) ? r.effect_code : "unknown_effect_code"
+            if ismissing(ec) || ec === nothing || ec == ""
+                ec = "unknown_effect_code"
+            end
+            
+            group_X_A[ec] = get(group_X_A, ec, 0.0) + x_A
+            group_X_M[ec] = get(group_X_M, ec, 0.0) + x_M
+            group_X_G[ec] = get(group_X_G, ec, 0.0) + x_G
+            group_X_R[ec] = get(group_X_R, ec, 0.0) + x_R
+        end
+        
+        prod_A, prod_M, prod_G, prod_R = 1.0, 1.0, 1.0, 1.0
+        
+        for (ec, X) in group_X_A
+            prod_A *= (1.0 - (X / (1.0 + X)))
+        end
+        for (ec, X) in group_X_M
+            prod_M *= (1.0 - (X / (1.0 + X)))
+        end
+        for (ec, X) in group_X_G
+            prod_G *= (1.0 - (X / (1.0 + X)))
+        end
+        for (ec, X) in group_X_R
+            prod_R *= (1.0 - (X / (1.0 + X)))
+        end
+        
+        E_A = 1.0 - prod_A
+        E_M = 1.0 - prod_M
+        E_G = 1.0 - prod_G
+        E_R = 1.0 - prod_R
+        
     else
         throw(ArgumentError("Unknown mixture_effect_model: $mixture_effect_model"))
     end

@@ -160,3 +160,61 @@ end
     # Unknown model throws
     @test_throws ArgumentError aggregate_axis_mixture_effects(ones_b; mixture_effect_model="unknown_model")
 end
+
+@testset "Mixture Effects: Tranche 6 Grouped CA-then-IA" begin
+    # Test 1: All compounds share one effect_code
+    shared_b = [
+        (burden_assimilation = 1.0, burden_maintenance = 0.0, burden_growth = 0.0, burden_reproduction = 0.0, effect_code = "MOR"),
+        (burden_assimilation = 1.0, burden_maintenance = 0.0, burden_growth = 0.0, burden_reproduction = 0.0, effect_code = "MOR")
+    ]
+    res_shared_group = aggregate_axis_mixture_effects(shared_b; mixture_effect_model="grouped_ca_then_ia_axis_effects")
+    res_shared_tu = aggregate_axis_mixture_effects(shared_b; mixture_effect_model="axis_toxic_unit_sum")
+    @test res_shared_group.E_assimilation ≈ res_shared_tu.E_assimilation
+    @test res_shared_group.X_assimilation == 2.0
+    
+    # Test 2: Each compound has distinct effect_code
+    distinct_b = [
+        (burden_assimilation = 1.0, burden_maintenance = 0.0, burden_growth = 0.0, burden_reproduction = 0.0, effect_code = "MOR"),
+        (burden_assimilation = 1.0, burden_maintenance = 0.0, burden_growth = 0.0, burden_reproduction = 0.0, effect_code = "REP")
+    ]
+    res_distinct_group = aggregate_axis_mixture_effects(distinct_b; mixture_effect_model="grouped_ca_then_ia_axis_effects")
+    res_distinct_ia = aggregate_axis_mixture_effects(distinct_b; mixture_effect_model="independent_action_axis_effects")
+    @test res_distinct_group.E_assimilation ≈ res_distinct_ia.E_assimilation
+    @test res_distinct_group.X_assimilation == 2.0
+    
+    # Test 3: Mixed grouping (x1=1 A, x2=1 A, x3=1 B)
+    mixed_grp_b = [
+        (burden_assimilation = 1.0, burden_maintenance = 0.0, burden_growth = 0.0, burden_reproduction = 0.0, effect_code = "A"),
+        (burden_assimilation = 1.0, burden_maintenance = 0.0, burden_growth = 0.0, burden_reproduction = 0.0, effect_code = "A"),
+        (burden_assimilation = 1.0, burden_maintenance = 0.0, burden_growth = 0.0, burden_reproduction = 0.0, effect_code = "B")
+    ]
+    res_mixed_group = aggregate_axis_mixture_effects(mixed_grp_b; mixture_effect_model="grouped_ca_then_ia_axis_effects")
+    # Group A: X_A = 2 => E_A = 2/3
+    # Group B: X_B = 1 => E_B = 1/2
+    # IA across groups: 1 - (1 - 2/3)*(1 - 1/2) = 1 - (1/3)*(1/2) = 1 - 1/6 = 5/6
+    @test res_mixed_group.E_assimilation ≈ 5/6
+    @test res_mixed_group.X_assimilation == 3.0
+    
+    # Test 4: Missing effect_code behaves as "unknown_effect_code"
+    missing_b = [
+        (burden_assimilation = 1.0, burden_maintenance = 0.0, burden_growth = 0.0, burden_reproduction = 0.0, effect_code = missing),
+        (burden_assimilation = 1.0, burden_maintenance = 0.0, burden_growth = 0.0, burden_reproduction = 0.0, effect_code = "A"),
+        (burden_assimilation = 1.0, burden_maintenance = 0.0, burden_growth = 0.0, burden_reproduction = 0.0) # no property effect_code
+    ]
+    res_missing_group = aggregate_axis_mixture_effects(missing_b; mixture_effect_model="grouped_ca_then_ia_axis_effects")
+    # "unknown_effect_code" group: X = 2 (the missing and the no-property) => E = 2/3
+    # "A" group: X = 1 => E = 1/2
+    # Result: 1 - (1/3)*(1/2) = 5/6
+    @test res_missing_group.E_assimilation ≈ 5/6
+    @test res_missing_group.X_assimilation == 3.0
+    
+    # Test 5: Multiple axes independent
+    multi_b = [
+        (burden_assimilation = 1.0, burden_maintenance = 1.0, burden_growth = 0.0, burden_reproduction = 0.0, effect_code = "A"),
+        (burden_assimilation = 1.0, burden_maintenance = 1.0, burden_growth = 0.0, burden_reproduction = 0.0, effect_code = "A"),
+        (burden_assimilation = 1.0, burden_maintenance = 1.0, burden_growth = 0.0, burden_reproduction = 0.0, effect_code = "B")
+    ]
+    res_multi_group = aggregate_axis_mixture_effects(multi_b; mixture_effect_model="grouped_ca_then_ia_axis_effects")
+    @test res_multi_group.E_assimilation ≈ 5/6
+    @test res_multi_group.E_maintenance ≈ 5/6
+end

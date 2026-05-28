@@ -97,12 +97,12 @@ using DataFrames
     # Check that the two methods produce identical totals
     for m in 1:12
         for sp in selected_species
-            # We now have 2 response_modes * 2 mixture_effect_models = 4 rows per month per species per mixture_method
+            # We now have 2 response_modes * 3 mixture_effect_models = 6 rows per month per species per mixture_method
             subset_add = filter(row -> row.month == m && row.species_key == sp.key && row.mixture_method == "additive_axis_burden", df_spec)
             subset_tox = filter(row -> row.month == m && row.species_key == sp.key && row.mixture_method == "axis_toxic_unit_sum", df_spec)
 
-            @test nrow(subset_add) == 4
-            @test nrow(subset_tox) == 4
+            @test nrow(subset_add) == 6
+            @test nrow(subset_tox) == 6
 
             row_add = subset_add[1, :]
             row_tox = subset_tox[1, :]
