@@ -42,5 +42,7 @@ using TwoTimescaleResilience
     include("test_monthly_memory_demo.jl")
     include("test_response_modes.jl")
     
+    # Mixture-effect overlap demonstration example
+    include("test_mixture_effect_overlap_demo.jl")
 end
 include("test_analytical_warm_start.jl")

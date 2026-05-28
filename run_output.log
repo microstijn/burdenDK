@@ -1,0 +1,26 @@
+Precompiling packages...
+┌ Warning: attempting to remove probably stale pidfile
+│   path = "/home/jules/.julia/compiled/v1.12/CairoMakie/9mSey_CU9TI.ji.pidfile"
+└ @ FileWatching.Pidfile ~/.julia/juliaup/julia-1.12.6+0.x64.linux.gnu/share/julia/stdlib/v1.12/FileWatching/src/pidfile.jl:250
+┌ Warning: attempting to remove probably stale pidfile
+│   path = "/home/jules/.julia/compiled/v1.12/GeoInterfaceMakieExt/NgRzN_CU9TI.ji.pidfile"
+└ @ FileWatching.Pidfile ~/.julia/juliaup/julia-1.12.6+0.x64.linux.gnu/share/julia/stdlib/v1.12/FileWatching/src/pidfile.jl:250
+┌ Warning: attempting to remove probably stale pidfile
+│   path = "/home/jules/.julia/compiled/v1.12/GeoJSONMakieExt/qc5rs_CU9TI.ji.pidfile"
+└ @ FileWatching.Pidfile ~/.julia/juliaup/julia-1.12.6+0.x64.linux.gnu/share/julia/stdlib/v1.12/FileWatching/src/pidfile.jl:250
+┌ Warning: attempting to remove probably stale pidfile
+│   path = "/home/jules/.julia/compiled/v1.12/GeometryOpsMakieExt/QyXkg_CU9TI.ji.pidfile"
+└ @ FileWatching.Pidfile ~/.julia/juliaup/julia-1.12.6+0.x64.linux.gnu/share/julia/stdlib/v1.12/FileWatching/src/pidfile.jl:250
+  11008.6 ms  ✓ GeometryOps → GeometryOpsMakieExt
+  11348.2 ms  ✓ GeoJSON → GeoJSONMakieExt
+  11401.7 ms  ✓ GeoInterface → GeoInterfaceMakieExt
+  17475.7 ms  ✓ GeoMakie
+ 121908.0 ms  ✓ CairoMakie
+  12092.8 ms  ✓ TwoTimescaleResilience
+  11303.1 ms  ✓ TwoTimescaleResilience → TwoTimescaleResilienceNCDatasetsExt
+  7 dependencies successfully precompiled in 147 seconds. 344 already precompiled.
+Starting Mixture Effect Model Overlap Demo...
+Saved summary CSV to: /app/output/mixture_effect_model_overlap_demo/mixture_effect_model_overlap_summary.csv
+Saved long CSV to: /app/output/mixture_effect_model_overlap_demo/mixture_effect_model_overlap_axis_long.csv
+Saved plot to: /app/output/mixture_effect_model_overlap_demo/mixture_effect_model_overlap_comparison.png
+Done.
