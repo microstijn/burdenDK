@@ -77,4 +77,10 @@ using TwoTimescaleResilience
     # end
 
     include("test_analytical_warm_start.jl")
+
+    RUN_EXTENDED_TESTS = get(ENV, "TTR_RUN_EXTENDED_TESTS", "false") == "true"
+    RUN_EXAMPLE_TESTS = get(ENV, "TTR_RUN_EXAMPLE_TESTS", "false") == "true"
+    if RUN_EXTENDED_TESTS || RUN_EXAMPLE_TESTS
+        include("test_archetype_compound_memory_10yr_grid_demo.jl")
+    end
 end
