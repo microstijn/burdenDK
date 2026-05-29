@@ -7,7 +7,8 @@ export load_nc_layer, normalise_layer, write_ascii_grid, read_ascii_grid, plot_s
        positive_part, phi_background, adaptive_margin, restoring_force, amplification_factor, BackgroundParams, BackgroundStressor, background_index
 
 # build threshold-free vulnerability features
-export build_threshold_free_vulnerability_features    
+export build_threshold_free_vulnerability_features
+export standardize_threshold_free_vulnerability_features
 
 export amp_species_key, load_amp_species_library, validate_amp_record, amp_record_to_deb_params, amp_species_deb_params, amp_species_profile
 
