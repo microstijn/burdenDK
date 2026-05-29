@@ -1,178 +1,155 @@
-# TwoTimescaleResilience.jl
+# TwoTimescaleResilience / burdenDK
 
-A Julia package implementing a two-timescale multi-stressor DEB-TKTD resilience framework.
+## One-sentence summary
 
-## Concept
+TwoTimescaleResilience is a Julia framework for modelling background-conditioned vulnerability: chronic environmental pressure and retained compound burden narrow species-specific adaptive margin, reduce restoring force, and amplify the burden of later acute perturbations.
 
-This package models how persistent background water-quality stressors reduce the "adaptive margin" and "restoring force" of an ecosystem or organism, thereby amplifying the response to additional short perturbation pulses.
+## What problem does this solve?
 
-The framework is divided into two layers:
-1. **Slow Background Layer:** Represents long-term or persistent stressors (e.g., monthly averages) which dictate the baseline health and resilience of the system.
-2. **Fast Perturbation Layer:** Represents acute perturbation pulses (e.g., short chemical spills, acute heatwaves) modeled via Toxicokinetic-Toxicodynamic (TKTD) equations.
+Regulatory threshold maps are useful but insufficient: chronic, cumulative, persistent, mixture-mediated pressure can erode response capacity before discrete endpoint failure. This package models adaptive-margin depletion and amplification rather than only threshold exceedance, using capacity–pressure–memory language to describe vulnerability.
 
-**Note:** The framework does *not* claim that monthly global water-quality data resolve acute contaminant pulses. The pulse layer serves as a standardized perturbation probe to evaluate the background-conditioned restoring force.
+## Conceptual architecture
 
-## Key Equations
+- **Capacity** = AmP/DEB-informed species response capacity
+- **Pressure** = ECOTOX-derived stressor evidence and concentration fields
+- **Memory** = retained internal burden $B_t$ through $\rho$ and $K$
+- **Response** = $Q_t$, $A_t$, $\lambda(A_t)$, $F_t$
+- **Optional spatial/regime workflow** = threshold-free features $\rightarrow$ standardisation $\rightarrow$ clustering $\rightarrow$ raster/NetCDF outputs
 
-The central output of the framework is the amplification factor:
-$$F(B) = \frac{\lambda(0)}{\lambda(B)}$$
+**Core chain:**
+$C_{j,t} \rightarrow B_{j,t} \rightarrow x_{j,t} \rightarrow E_{\text{axis}} \rightarrow Q_t \rightarrow A_t \rightarrow \lambda_t \rightarrow F_t$
 
-When perturbations are simulated, the area under the curve (AUC) of the response coordinate $y$ is approximately:
-$$\text{AUC}_y(B) \approx \frac{q}{\lambda(B)} \text{AUC}_{M_P}$$
-which leads to the central analytical result that for identical pulse burdens under $B = 0$ and $B > 0$:
-$$\frac{\text{AUC}_y(B)}{\text{AUC}_y(0)} \approx \frac{\lambda(0)}{\lambda(B)} = F(B)$$
+## What this package is
 
-## Installation
+The framework provides tools for multi-scale resilience and toxicokinetic modelling:
 
-```julia
-using Pkg
-Pkg.add("TwoTimescaleResilience")
-```
+- **DEB-axis response math** (`src/deb_axes.jl`, `src/reduced_deb_response.jl`)
+- **AmP species library loading and DEBAxisParams conversion** (`src/amp_library.jl`)
+- **ECOTOX parsing and toxicity-library runtime loading** (`src/ecotox_library.jl`)
+- **ECOTOX active stress and effect-code routing** (`src/ecotox_library.jl`)
+- **Compound memory and analytical warm-up** (`src/compound_memory_warmup.jl`)
+- **Mixture-effect aggregation** (`src/mixture_aggregation.jl`)
+- **Response modes** (`src/mode_of_action.jl`)
+- **Threshold-free vulnerability feature vectors** (`src/vulnerability_feature_vectors.jl`)
+- **Feature standardisation** (`src/vulnerability_feature_vectors.jl`)
+- **Vulnerability-regime clustering** (`src/vulnerability_regime_clustering.jl`)
+- **Vulnerability-regime raster/NetCDF output helpers** (`src/vulnerability_regime_outputs.jl`, `src/netcdf.jl`)
+- **Examples and diagnostics** (`examples/`)
 
-## DEB-like physiological axes
+## What this package is not
 
-A new module extension translates the multi-stressor inputs into Dynamic Energy Budget (DEB)-like physiological axes. This mechanism maps stressor rasters to assimilation, maintenance, growth, and reproduction stress:
+- **Not a full DEB implementation**
+- **Not DEBkiss**
+- **Not full DEBtox**
+- Does not currently implement DEB reserve, structure, maturity, kappa allocation, growth/reproduction ODEs, starvation, GUTS survival, or DEBtox scaled damage.
+- Does not implement synergism/antagonism/fitted interaction coefficients.
+- Does not yet ingest real external raster products natively (unless audited example code explicitly does so, e.g. ISIMIP NetCDF processing).
 
-```math
-s = W b + \text{interactions}
-```
+## Core equations
 
-These axes determine the organism's adaptive margin $A_{\text{DEB}}$, representing the systemic biological capacity available to absorb pulse perturbations:
+**Memory:**
+$$ B_t = \rho B_{t-1} + (1-\rho) K C_t $$
 
-```math
-A_{\text{DEB}} = A_0 - \alpha_A s_A - \alpha_M s_M - \alpha_G s_G - \alpha_R s_R
-```
+**Stress:**
+$$ x = \max\left(0, \frac{B \text{ or } C - \text{NOEC}}{\text{EC50} - \text{NOEC}}\right) $$
 
-Margin drives the restoring force (resilience) using a bounded function:
+**$E_{\text{axis}}$ mixture models:**
+- TU (Toxic Unit sum)
+- IA (Independent Action)
+- Grouped CA then IA
 
-```math
-\lambda(A) = \lambda_{\min} + (\lambda_{\max} - \lambda_{\min}) \frac{[A]_+}{K_A + [A]_+}
-```
+**Response capacity mapping:**
+$$ Q_t = \sum_a w_a E_a $$
 
-Ultimately, this allows computing a defensible Amplification Factor ($F$), describing how much the same perturbation response would be amplified under the DEB-like background physiological stress state:
+$$ A_t = A_0 \max(10^{-6}, 1 - Q_t) \quad \text{for EC50/precomputed impairment path} $$
 
-```math
-F = \frac{\lambda(A_0)}{\lambda(A_{\text{DEB}})}
-```
+**Restoring force and amplification:**
+$$ \lambda(A) $$
+$$ F_t = \frac{\lambda(A_0)}{\lambda(A_t)} $$
 
-### Example Default Mapping
+**Analytical warm-up:**
+- Constant background
+- Periodic cycle
 
-We include a hypothetical mapping designed specifically for available `pathogen` and `organic` background stressor rasters:
+## Main source files
 
-* **pathogen**: interpreted as a faecal/pathogen proxy
-* **organic**: interpreted as an organic pollution/BOD proxy
+- `src/TwoTimescaleResilience.jl`: Main module definition and exports.
+- `src/amp_library.jl`: Parses and loads `AmP_Species_Library.json` and creates DEBAxisParams.
+- `src/compound_memory_warmup.jl`: Calculates initial burdens and analytical warm-up models.
+- `src/deb_axes.jl`: Core structs and definitions for mapping stressors to DEB axes.
+- `src/ecotox_library.jl`: Loads, validates, and routes ECOTOX data into empirical physiological burden vectors.
+- `src/mixture_aggregation.jl`: Defines mixture effect arithmetic (`TU`, `IA`, `grouped_CA_then_IA`).
+- `src/reduced_deb_response.jl`: Calculates adaptive margin, restoring force, and amplification factor.
+- `src/vulnerability_feature_vectors.jl`: Threshold-free feature construction and standardisation for spatial model output arrays.
+- `src/vulnerability_regime_clustering.jl`: Clusters threshold-free vulnerability features into discrete regimes.
+- `src/vulnerability_regime_outputs.jl`: Provides functions to bundle spatial vulnerability features, clusters, and outputs.
 
-*Please note: The mapping is hypothetical and intended solely to serve as a hypothesis-generating vulnerability atlas. It provides a sensitivity-testable mapping rather than a fully calibrated biological state DEB model.*
+## Data files
 
-## Minimal Scalar Example
+- `data/AmP_Species_Library.json`: Source library of AmP species parameters consumed by `amp_library.jl`.
+- `data/ECOTOX_Toxicity_Library.json`: Source library of parsed ECOTOX empirical data consumed by `ecotox_library.jl`.
+- `data/Compound_Memory_Library.csv`: Source library defining retention and bioaccumulation properties for compound memory consumed by `ecotox_library.jl`.
+- `data/AmP_Species_Archetypes.csv` and `data/AmP_Species_Archetypes.json`: Derived databases mapping species onto generalized archetypes.
 
-```julia
-using TwoTimescaleResilience
+## Examples
 
-params = BackgroundParams()
-B = background_index([BackgroundStressor("TDS", 1.0, 0.5)])
+- **Quick:**
+  - `examples/synthetic_raster_demo.jl`: Fast demonstration of synthetic background generation and spatial metrics plotting.
+  - `examples/ecotox_amp_multiaxis_response_calibrated_demo.jl`: Fast demonstration of ECOTOX and AmP integration via a multi-axis response.
+- **Medium:**
+  - `examples/ecotox_amp_multispecies_multicompound_demo.jl`: Runs ECOTOX metrics across multiple AmP species simultaneously.
+  - `examples/ecotox_amp_multispecies_multicompound_monthly_memory_demo.jl`: Tests memory with time-series data for multi-species profiles.
+- **Heavy / Extended:**
+  - `examples/isimip_moa_deb_3x3_demo.jl`: Demonstrates ISIMIP spatial data manipulation and model outputs.
+  - `examples/nc_real_raster_deb_axes_demo.jl`: Parses, calculates, and exports real-world vulnerability metrics to NetCDF.
 
-A = adaptive_margin(B, params)
-lam = restoring_force(B, params)
-F = amplification_factor(B, params)
+*(Note: Do not run heavy examples in every test iteration; use environment variables or local execution for these.)*
 
-println("Background burden: $B")
-println("Restoring force: $lam")
-println("Amplification factor: $F")
-```
+## Tests
 
-## Multi-Stressor Simulation Example
+The testing framework evaluates units across fast logic and heavier empirical/output operations. Due to the high computational load and dependency precompilation, the test suite requires separating components.
 
-```julia
-using TwoTimescaleResilience
+**Current vs Proposed Strategy:**
+Currently, the `test/runtests.jl` manually enables or disables subsets of tests. The proposed future split should segregate fast core logic, extended integration testing, example outputs, and plotting/GIS tools using test suites or specific environment gating.
 
-bg_stressors = [BackgroundStressor("s1", 1.0, 0.5)]
-pulses = [PulseStressor("p1", 10.0, 5.0, 10.0, 1.0, 1.0)]
+**Environment variables used:**
+- `TTR_RUN_EXTENDED_TESTS`: Used to optionally gate heavier integration tests.
+- `TTR_RUN_EXAMPLE_TESTS`: Enables example-output tests.
+- `TTR_MAKE_EXAMPLE_PLOTS`: Ensures plotting outputs are generated when executed.
 
-params = BackgroundParams()
-sim = simulate_two_timescale("Demo", bg_stressors, pulses, params; tmax=50.0, dt=0.1)
-
-metrics = compute_metrics(sim)
-println("Response AUC: ", metrics.auc_y)
-```
-
-## Reduced DEB-informed response operator
-
-This is not a full DEB model.
-It maps environmental stressors onto DEB process perturbations.
-See [docs/mixture_effect_models.md](docs/mixture_effect_models.md) for details on the new `grouped_ca_then_ia_axis_effects` hybrid approach, how DEB process axes are treated as conceptual guidance, and the specific mixture-effect formulation $E_a$ which remains purely axis-level summation/action without arbitrary fitted interaction coefficients or synergies.
-
-## ISIMIP Water Quality mode-of-action layer
-
-The package now supports a full ISIMIP Water Quality mode-of-action pipeline:
-
-ISIMIP variable -> exposure filter -> mode of action -> DEB axes
-
-### Species exposure filters
-
-Aquatic species may be direct-contact.
-Humans require contact/use filtering.
-Human output is a vulnerability multiplier, not disease risk.
-
-### Supported ISIMIP-style variables
-
-`[WT, BOD, TDS, FC, Nutrient, Chemical, Plastic]`
-
-### Supported modes
-
-`[thermal, oxygen, osmotic, immune, eutrophication, toxic, feeding, physical]`
-
-### Equations
-
-```math
-e_j^{(q)} = H_j^{(q)}b_j
-```
-
-```math
-m_r^{(q)} = \sum_j U_{rj}^{(q)}e_j^{(q)} + \sum_{j<k} \Omega_{rjk}^{(q)}e_j^{(q)}e_k^{(q)}
-```
-
-```math
-s_a^{(q)} = \sum_r W_{ar}^{(q)}m_r^{(q)}
-```
-
-```math
-A = A_0 + \omega_Z Z - \alpha' s
-```
-
-```math
-\lambda = f(A) \exp(-\beta' s)
-```
-
-```math
-F = \frac{\lambda(A_0)}{\lambda(A,s,Z)}
-```
-
-## Raster Amplification and CairoMakie Example
+## Quick start
 
 ```julia
 using TwoTimescaleResilience
-using CairoMakie
 
-# Generate synthetic grid and export outputs
-params = BackgroundParams()
-Bgrid, Agrid, lambdagrid, Fgrid = run_synthetic_raster_demo(params; output_dir="output")
+# 1. Load data
+amp_lib = load_amp_species_library()
+ecotox_lib = load_ecotox_library()
 
-# Or plot directly
-fig = plot_amplification_grid(Fgrid)
+# 2. Extract specific AmP species parameters
+params = amp_species_deb_params(amp_lib, "Daphnia magna")
+
+# 3. Filter ECOTOX records to relevant taxa
+records = ecotox_filter_records(ecotox_lib; taxon_class="Branchiopoda")
+
+# 4. Compute stateless burden and response
+concentrations = Dict("7647-14-5" => 2.5) # NaCl diagnostic concentration
+burden = ecotox_records_to_deb_burden(concentrations, records)
+response = ecotox_burden_to_response(burden, params)
+
+println("Adaptive Margin: ", response.A)
+println("Amplification Factor: ", response.amplification)
+
+# 5. Stateful memory calculation
+state = EcotoxExposureState()
+stateful_burden = ecotox_records_to_deb_burden_stateful!(state, concentrations, records)
+stateful_response = ecotox_burden_to_response(stateful_burden, params)
 ```
 
-## Examples Directory
+## Development notes
 
-* `examples/nc_real_raster_deb_axes_demo.jl`: Processes true pathogen and organic NetCDF variables to calculate DEB-like adaptive margin and amplification factor rasters.
-* `data/AmP_Species_Archetypes.csv` & `.json`: Reusable database of species archetypes based on response-capacity diagnostics. See [docs/species_archetypes.md](docs/species_archetypes.md) for details.
-* Synthetic 3x3 examples (`isimip_moa_deb_3x3_demo.jl`, `species_comparison_3x3_demo.jl`) are smoke-tested during automated testing as they do not require local files.
-* Long-term NetCDF inspection scripts (e.g. `nc_monthly_longterm_isimip_moa_deb_inspection.jl`) are manual examples and are explicitly not included in automated tests because they require local NetCDF files.
-
-## Testing
-
-To run the package tests:
-```julia
-using Pkg
-Pkg.test("TwoTimescaleResilience")
-```
+- Prefer adding adapters, tests, and documentation rather than rewriting existing architectural core math.
+- Keep $B_t$ (chemical memory) explicitly distinct from future $Z_t$ (physiological condition) and DEBtox $D_t$ (scaled damage).
+- Use `grouped_ca_then_ia_axis_effects` as the preferred default when grouping effects.
+- Maintain strict "threshold-free" naming and behavior constraints within the clustering and standardisation models.
+- **Do not introduce** mathematical tuning parameters named or behaving like `kappa`, `κ`, `gain`, `response_scale`, or `burden_to_margin_multiplier`.
