@@ -31,62 +31,6 @@ active stress x_t, DEB-axis burdens, adaptive margin A_t (physiological capacity
 restoring force lambda_t, and amplification F_t evolve through time.
 """
 
-function analytical_initial_burden(rho::Float64, K::Float64, C_bg::Float64, spinup_months::Int; B0::Float64 = 0.0)
-    if !(0.0 <= rho < 1.0)
-        throw(ArgumentError("retention_rho_monthly must be finite and satisfy 0.0 <= rho < 1.0. Got $rho"))
-    end
-    if K <= 0.0 || !isfinite(K)
-        throw(ArgumentError("bioaccumulation factor K must be positive and finite. Got $K"))
-    end
-    if C_bg < 0.0 || !isfinite(C_bg)
-        throw(ArgumentError("background concentration C_bg must be >= 0 and finite. Got $C_bg"))
-    end
-    if spinup_months < 0
-        throw(ArgumentError("spinup_months must be >= 0. Got $spinup_months"))
-    end
-    if B0 < 0.0 || !isfinite(B0)
-        throw(ArgumentError("initial B0 must be >= 0 and finite. Got $B0"))
-    end
-
-    if spinup_months == 0
-        return B0
-    end
-
-    # Explicit calculation: B_n = rho^n * B_0 + K * C_bg * (1 - rho^n)
-    return (rho^spinup_months) * B0 + K * C_bg * (1.0 - (rho^spinup_months))
-end
-
-function background_for_target_burden(target_B::Float64, rho::Float64, K::Float64, spinup_months::Int; B0::Float64 = 0.0)
-    if !(0.0 <= rho < 1.0)
-        throw(ArgumentError("retention_rho_monthly must be finite and satisfy 0.0 <= rho < 1.0. Got $rho"))
-    end
-    if K <= 0.0 || !isfinite(K)
-        throw(ArgumentError("bioaccumulation factor K must be positive and finite. Got $K"))
-    end
-    if target_B < 0.0 || !isfinite(target_B)
-        throw(ArgumentError("target_B must be >= 0 and finite. Got $target_B"))
-    end
-    if spinup_months < 0
-        throw(ArgumentError("spinup_months must be >= 0. Got $spinup_months"))
-    end
-    if B0 < 0.0 || !isfinite(B0)
-        throw(ArgumentError("initial B0 must be >= 0 and finite. Got $B0"))
-    end
-
-    denom = K * (1.0 - (rho^spinup_months))
-    if denom <= 0.0 || !isfinite(denom)
-        throw(ArgumentError("Denominator K*(1-rho^spinup_months) must be strictly positive and finite. Got $denom"))
-    end
-
-    C_bg = (target_B - (rho^spinup_months) * B0) / denom
-
-    if C_bg < 0.0
-        throw(ArgumentError("Computed C_bg is negative ($C_bg) for target $target_B with B0 $B0. This is invalid."))
-    end
-
-    return C_bg
-end
-
 function generate_scenario_concentrations(EC50::Float64)
     low = 0.0
     pulse = 10.0 * EC50
@@ -219,7 +163,7 @@ function main()
             # Use inverse helper to find background
             # If compound has rho=0 or K=1 or typical values, catch ArgumentErrors or safe behavior.
             try
-                C_bg = background_for_target_burden(target_B_initial, rho, K, spinup_months; B0=0.0)
+                C_bg = background_for_target_burden(rho, K, target_B_initial, spinup_months; B0=0.0)
                 B_init = analytical_initial_burden(rho, K, C_bg, spinup_months; B0=0.0)
                 analytical_initial_map[cas_norm] = B_init
                 analytical_C_bg_map[cas_norm] = C_bg

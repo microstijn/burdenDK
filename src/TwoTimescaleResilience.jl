@@ -36,6 +36,8 @@ export compound_retention,
 export EcotoxExposureState, get_internal_burden, set_internal_burden!, reset_internal_burdens!
 export update_internal_burden!
 
+export analytical_initial_burden, background_for_target_burden, analytical_periodic_initial_burden
+
 include("deb_axes.jl")
 include("condition_buffer.jl")
 include("reduced_deb_response.jl")
@@ -61,4 +63,6 @@ include("netcdf.jl")
 include("vulnerability_feature_vectors.jl")
 include("vulnerability_regime_clustering.jl")
 include("vulnerability_regime_outputs.jl")
+include("compound_memory_warmup.jl")
+
 end # module

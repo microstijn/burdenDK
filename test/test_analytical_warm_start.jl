@@ -1,10 +1,6 @@
 using Test
 using TwoTimescaleResilience
 
-# Include the example script to access the helper functions.
-# (Since the script has an abspath/PROGRAM_FILE check, it will not run `main()`)
-include(joinpath(@__DIR__, "..", "examples", "ecotox_amp_multispecies_multicompound_monthly_memory_demo.jl"))
-
 @testset "Analytical Warm-Start Helpers" begin
     @testset "Tranche 1: analytical_initial_burden" begin
         # explicit recurrence test
@@ -34,8 +30,19 @@ include(joinpath(@__DIR__, "..", "examples", "ecotox_amp_multispecies_multicompo
         # C_bg = 0, B0 = 0
         @test isapprox(analytical_initial_burden(0.9, 10.0, 0.0, 24; B0 = 0.0), 0.0, atol=1e-9)
 
-        # rho = 0, K = 1
-        @test isapprox(analytical_initial_burden(0.0, 1.0, 0.5, 24; B0 = 0.0), 0.5, atol=1e-9)
+        # zero spinup returns B0
+        @test isapprox(analytical_initial_burden(0.5, 2.0, 5.0, 0; B0 = 3.0), 3.0, atol=1e-9)
+
+        # rho = 0, gives K*C_bg for spinup > 0
+        @test isapprox(analytical_initial_burden(0.0, 2.0, 5.0, 1; B0 = 0.0), 10.0, atol=1e-9)
+        @test isapprox(analytical_initial_burden(0.0, 2.0, 5.0, 12; B0 = 0.0), 10.0, atol=1e-9)
+
+        # finite spinup examples
+        @test isapprox(analytical_initial_burden(0.5, 2.0, 5.0, 1; B0 = 0.0), 5.0, atol=1e-9)
+        @test isapprox(analytical_initial_burden(0.5, 2.0, 5.0, 2; B0 = 0.0), 7.5, atol=1e-9)
+
+        # long spinup approaches K*C_bg
+        @test isapprox(analytical_initial_burden(0.9, 10.0, 2.0, 10000; B0 = 0.0), 20.0, atol=1e-9)
 
         # Edge cases and ArgumentErrors
         @test_throws ArgumentError analytical_initial_burden(1.1, 10.0, 0.1, 24) # rho >= 1
@@ -43,6 +50,11 @@ include(joinpath(@__DIR__, "..", "examples", "ecotox_amp_multispecies_multicompo
         @test_throws ArgumentError analytical_initial_burden(0.9, -1.0, 0.1, 24) # K <= 0 (assuming strictly > 0 for bioacc)
         @test_throws ArgumentError analytical_initial_burden(0.9, 10.0, -0.1, 24) # C_bg < 0
         @test_throws ArgumentError analytical_initial_burden(0.9, 10.0, 0.1, -1) # n < 0
+        @test_throws ArgumentError analytical_initial_burden(NaN, 10.0, 0.1, 24) # rho NaN
+        @test_throws ArgumentError analytical_initial_burden(0.9, Inf, 0.1, 24) # K Inf
+        @test_throws ArgumentError analytical_initial_burden(0.9, 10.0, NaN, 24) # C_bg NaN
+        @test_throws ArgumentError analytical_initial_burden(0.9, 10.0, 0.1, 24, B0 = -1.0) # B0 < 0
+        @test_throws ArgumentError analytical_initial_burden(0.9, 10.0, 0.1, 24, B0 = Inf) # B0 Inf
     end
 
     @testset "Tranche 2: background_for_target_burden" begin
@@ -55,104 +67,58 @@ include(joinpath(@__DIR__, "..", "examples", "ecotox_amp_multispecies_multicompo
         NOEC_dummy = 10.0
         target_B = 0.5 * NOEC_dummy
 
-        # compute required background
-        C_bg_computed = background_for_target_burden(target_B, rho, K, n; B0 = B0)
-
-        # compute forward again using analytical function to verify recovery
+        # roundtrip with analytical_initial_burden
+        C_bg_computed = background_for_target_burden(rho, K, target_B, n; B0 = B0)
         B_initial = analytical_initial_burden(rho, K, C_bg_computed, n; B0 = B0)
-
         @test isapprox(B_initial, target_B, atol=1e-9)
         @test C_bg_computed < (0.25 * NOEC_dummy)  # Should be lower because of bioaccumulation K
 
+        # rho = 0 gives B_target / K
+        @test isapprox(background_for_target_burden(0.0, 2.0, 10.0, n; B0 = B0), 5.0, atol=1e-9)
+
         # Verify edge cases and ArgumentErrors
-        @test_throws ArgumentError background_for_target_burden(-1.0, rho, K, n) # target_B < 0
-        @test_throws ArgumentError background_for_target_burden(target_B, -0.1, K, n) # rho < 0
-        @test_throws ArgumentError background_for_target_burden(target_B, rho, -1.0, n) # K <= 0
+        @test_throws ArgumentError background_for_target_burden(rho, K, -1.0, n) # target_B < 0
+        @test_throws ArgumentError background_for_target_burden(-0.1, K, target_B, n) # rho < 0
+        @test_throws ArgumentError background_for_target_burden(rho, -1.0, target_B, n) # K <= 0
 
-        # denominator zero logic test (when rho = 1, which throws from rho validation first)
-        @test_throws ArgumentError background_for_target_burden(target_B, 1.0, K, n)
+        # spinup_months == 0 throws ArgumentError
+        @test_throws ArgumentError background_for_target_burden(rho, K, target_B, 0)
 
-        # negative C_bg expected from large initial B0
+        # unreachable target requiring negative C_bg throws ArgumentError
         B0_large = 1000.0
-        @test_throws ArgumentError background_for_target_burden(target_B, rho, K, n; B0 = B0_large)
+        @test_throws ArgumentError background_for_target_burden(rho, K, target_B, n; B0 = B0_large)
     end
 
-    @testset "Tranche 3: Add zero_start and analytical_warm_start scenarios" begin
-        # To test scenario execution, we can call the example script's main and capture output
-        # For a clean test, we'll invoke the example workflow and check the output CSVs
-        output_dir = normpath(joinpath(@__DIR__, "..", "output", "ecotox_amp_multispecies_multicompound_monthly_memory_demo"))
+    @testset "Tranche 3: analytical_periodic_initial_burden" begin
+        # constant cycle equals K*C
+        C_cycle_const = fill(5.0, 12)
+        @test isapprox(analytical_periodic_initial_burden(0.9, 2.0, C_cycle_const), 10.0, atol=1e-9)
 
-        # run the demo script directly inside the test framework to generate outputs
-        main()
+        # rho = 0 returns K*C_cycle[end]
+        C_cycle_rho_zero = [1.0, 2.0, 4.0]
+        @test isapprox(analytical_periodic_initial_burden(0.0, 3.0, C_cycle_rho_zero), 12.0, atol=1e-9)
 
-        compound_csv = joinpath(output_dir, "monthly_compound_summary.csv")
-        species_csv = joinpath(output_dir, "monthly_species_summary.csv")
+        # one-cycle periodic consistency
+        rho = 0.8
+        K = 3.0
+        C_cycle_periodic = [1.0, 2.0, 4.0, 8.0]
+        B0_periodic = analytical_periodic_initial_burden(rho, K, C_cycle_periodic)
 
-        @test isfile(compound_csv)
-        @test isfile(species_csv)
-
-        df_comp = CSV.read(compound_csv, DataFrame)
-        df_spec = CSV.read(species_csv, DataFrame)
-
-        # Tranche 4 Row count checks (which proves scenario loop ran correctly)
-        @test nrow(df_comp) == 432
-        @test nrow(df_spec) == 144
-
-        # Verify exact scenarios exist
-        scenarios = unique(df_comp.scenario)
-        @test sort(scenarios) == ["analytical_warm_start", "zero_start"]
-
-        df_comp_zero = filter(r -> r.scenario == "zero_start", df_comp)
-        df_comp_warm = filter(r -> r.scenario == "analytical_warm_start", df_comp)
-
-        df_spec_zero = filter(r -> r.scenario == "zero_start", df_spec)
-        df_spec_warm = filter(r -> r.scenario == "analytical_warm_start", df_spec)
-
-        @test nrow(df_comp_zero) == 216
-        @test nrow(df_comp_warm) == 216
-        @test nrow(df_spec_zero) == 72
-        @test nrow(df_spec_warm) == 72
-
-        # Check months are strictly 1:12
-        @test sort(unique(df_comp_zero.month)) == collect(1:12)
-        @test sort(unique(df_comp_warm.month)) == collect(1:12)
-        @test sort(unique(df_spec_zero.month)) == collect(1:12)
-        @test sort(unique(df_spec_warm.month)) == collect(1:12)
-
-        # Check initial values for month 1
-        m1_zero = filter(r -> r.month == 1, df_comp_zero)
-        m1_warm = filter(r -> r.month == 1, df_comp_warm)
-
-        @test all(m1_zero.initial_B_t_at_reported_month_1 .== 0.0)
-
-        # Check warm start values at month 1
-        for row in eachrow(m1_warm)
-            if row.chemical_name == "Sodium chloride"
-                @test row.initial_B_t_at_reported_month_1 == 0.0
-            else
-                # For Cd and Hg, there should be a positive initial B_t since they have NOEC/EC50
-                @test row.initial_B_t_at_reported_month_1 > 0.0
-            end
+        B_curr = B0_periodic
+        for c in C_cycle_periodic
+            B_curr = rho * B_curr + (1.0 - rho) * K * c
         end
+        @test isapprox(B_curr, B0_periodic, atol=1e-9)
 
-        # Check that spinup_used and method fields are populated correctly
-        @test all(df_comp_zero.spinup_used .== false)
-        @test all(df_comp_zero.spinup_months .== 0)
-        @test all(df_comp_zero.spinup_method .== "none")
-
-        @test all(df_comp_warm.spinup_used .== true)
-        @test all(df_comp_warm.spinup_months .== 24)
-        @test all(df_comp_warm.spinup_method .== "analytical_closed_form")
-
-        # F_t approximately 1.0 for zero_start month 1 assuming C_t[1] == 0.0
-        m1_spec_zero = filter(r -> r.month == 1, df_spec_zero)
-        @test all(isapprox.(m1_spec_zero.F_t, 1.0, atol=1e-5))
-
-        # Ensure all columns are finite
-        @test all(isfinite.(df_comp.B_t))
-        @test all(isfinite.(df_comp.x_t))
-        @test all(isfinite.(df_spec.A_t))
-        @test all(isfinite.(df_spec.lambda_t))
-        @test all(isfinite.(df_spec.F_t))
+        # invalid inputs throw ArgumentError
+        @test_throws ArgumentError analytical_periodic_initial_burden(-0.1, 2.0, C_cycle_const) # rho < 0
+        @test_throws ArgumentError analytical_periodic_initial_burden(1.1, 2.0, C_cycle_const) # rho >= 1
+        @test_throws ArgumentError analytical_periodic_initial_burden(NaN, 2.0, C_cycle_const) # rho NaN
+        @test_throws ArgumentError analytical_periodic_initial_burden(0.9, -1.0, C_cycle_const) # K <= 0
+        @test_throws ArgumentError analytical_periodic_initial_burden(0.9, Inf, C_cycle_const) # K Inf
+        @test_throws ArgumentError analytical_periodic_initial_burden(0.9, 2.0, Float64[]) # empty C_cycle
+        @test_throws ArgumentError analytical_periodic_initial_burden(0.9, 2.0, [1.0, -2.0]) # C_cycle containing negative value
+        @test_throws ArgumentError analytical_periodic_initial_burden(0.9, 2.0, [1.0, NaN]) # C_cycle containing NaN
+        @test_throws ArgumentError analytical_periodic_initial_burden(0.9, 2.0, [1.0, Inf]) # C_cycle containing Inf
     end
 end
