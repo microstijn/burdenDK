@@ -15,6 +15,7 @@ using TwoTimescaleResilience
     # threshold-free vulnerability feature vectors + standardisation
     # -------------------------------------------------------------------------
     include("test_vulnerability_feature_vectors.jl")
+    include("test_vulnerability_regime_clustering.jl")
 
     # -------------------------------------------------------------------------
     # Lightweight empirical adapters / runtime basics
