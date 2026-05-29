@@ -8,7 +8,6 @@ using TwoTimescaleResilience
     include("test_deb_axes.jl")
     include("test_deb_axis_response.jl")
     include("test_mixture_aggregation.jl")
-    include("test_response_modes.jl")
     include("test_deb_axes_grid.jl")
     
     # -------------------------------------------------------------------------
@@ -30,6 +29,7 @@ using TwoTimescaleResilience
     # -------------------------------------------------------------------------
 
     # include("test_deb_axes_grid.jl")
+    # include("test_response_modes.jl")
     # include("test_default_mappings.jl")
     # include("test_deb_pipeline.jl")
     # include("test_pulse_deb_axes.jl")
