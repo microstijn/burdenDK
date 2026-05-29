@@ -1,49 +1,66 @@
 # Testing Strategy for TwoTimescaleResilience
 
-## Current Issue
+*Audited Date: 2026-05-29*
 
-The TwoTimescaleResilience package spans from fast, isolated core logic to heavy integration tests invoking massive datasets, plotting libraries (CairoMakie, GeoMakie), and NetCDF generation. Currently, running `Pkg.test()` triggers full package precompilation for heavy dependencies, which often results in excessively long test runs or CI timeouts.
+## Current Issue: Heavy Precompilation and Long Run Times
 
-Because of this, `test/runtests.jl` currently has a significant portion of its test suite temporarily commented out.
+The framework integrates deeply with GIS mapping (`GeoMakie`), plotting (`CairoMakie`), NetCDF IO (`NCDatasets`), and large JSON datasets. This results in incredibly heavy dependency loads and precompilation times. Running `Pkg.test()` on the full suite during active development takes excessively long, disrupting iterative development cycles.
 
-## Proposed Split Strategy
+Furthermore, some generated-output example tests may fail fast unit tests merely because historical output reference files are missing on fresh environments. This shouldn't happen.
 
-To ensure rapid developer feedback without sacrificing robust end-to-end integration guarantees, the test suite should eventually be formally split into distinct categories.
+## Proposed Test Split
 
-### 1. Fast Default
-- **Scope:** Core DEB axis math, basic response curves, mixture aggregation arithmetic, vulnerability vector calculations (standardization, simple clustering), and fast empirical parser logic.
-- **Goal:** Execute in under 15 seconds. This should be the default execution path for standard `Pkg.test()`.
+To solve this, the tests are conceptually split into multiple tiers. This ensures rapid feedback on core mathematical logic while preserving comprehensive integration capability.
 
-### 2. Extended
-- **Scope:** Multi-stressor pipeline pipelines, complex condition buffering math, extended array validation, and heavy ECOTOX/AmP library queries.
-- **Gated by:** `TTR_RUN_EXTENDED_TESTS=true`
+### 1. Fast Default Tests
+These evaluate the pure, dependency-light mathematical engine. They run in milliseconds and should be executed frequently.
+- **Includes:** `test_deb_axes.jl`, `test_deb_axis_response.jl`, `test_mixture_aggregation.jl`, `test_ecotox_library.jl`, `test_vulnerability_feature_vectors.jl`
 
-### 3. Examples
-- **Scope:** Ensures the demonstration scripts execute without crashing.
-- **Gated by:** `TTR_RUN_EXAMPLE_TESTS=true`
-- **Goal:** Do not fail fast unit tests if generated outputs are absent.
+### 2. Extended Integration
+Tests covering deeper adapters, full runtime execution pipelines, and time-series memory behaviors.
+- **Includes:** `test_deb_pipeline.jl`, `test_simulation.jl`, `test_multistressor.jl`
 
-### 4. Plotting / GIS
-- **Scope:** CairoMakie and GeoMakie exports, NetCDF writes (`NCDatasets`), spatial processing.
-- **Gated by:** `TTR_MAKE_EXAMPLE_PLOTS=true`
-- **Goal:** Keeps plotting dependency out of the core test precompilation path unless specifically requested.
+### 3. Examples and Plotting
+Tests that actually produce maps and complex terminal outputs.
+- **Includes:** `test_examples.jl`, `test_plotting.jl`, `test_response_modes.jl` (if evaluating output generations)
 
-### 5. Data Regeneration
-- **Scope:** Archetype generation and data serialization testing.
+### 4. Data Regeneration / Outputs
+Tests that invoke NetCDF file construction or check historical outputs. Generated-output tests should not fail the fast suite merely because expected output files are absent.
+- **Includes:** `test_netcdf.jl`, `test_synthetic_raster.jl`
 
 ## Environment Variable Gating
 
-When formalizing the split, use Julia's `ENV` object within `runtests.jl` to conditionally execute files.
+Currently, heavy tests are manually commented out in `test/runtests.jl`. Moving forward, the recommended strategy is to implement gating via environment variables so the CI server can opt-in to heavy validation, while local developers run the fast subset by default.
 
-```julia
-if get(ENV, "TTR_RUN_EXTENDED_TESTS", "false") == "true"
-    @testset "Extended Integration Tests" begin
-        include("test_isimip_deb_pipeline.jl")
-        include("test_netcdf.jl")
-    end
-end
+**Proposed environment variables (Not currently implemented):**
+- `TTR_RUN_EXTENDED_TESTS=true`
+- `TTR_RUN_EXAMPLE_TESTS=true`
+- `TTR_RUN_OUTPUT_REGRESSION_TESTS=true`
+- `TTR_MAKE_EXAMPLE_PLOTS=true`
+
+## Recommended Commands for Fast Development
+
+During active logic changes, do not run the full suite. Instead run individual files:
+
+```bash
+# Evaluate core math invariants
+julia --project=. test/test_deb_axes.jl
+
+# Evaluate vulnerability features
+julia --project=. test/test_vulnerability_feature_vectors.jl
 ```
 
-### Important Rule: Missing Outputs
+To run the full fast suite as currently structured:
 
-Generated-output regression tests (like checking if an example produced a CSV) should be skipped or generate warnings, **not** fail the suite, if the execution of the example itself was gated out. Never let absent example outputs crash the fast core tests.
+```bash
+julia --project=. -e 'using Pkg; Pkg.test()'
+```
+
+## Recommended Commands for Full Validation
+
+Before pushing significant feature branches, simulating the CI environment and running the full integration suite is required.
+
+```bash
+TTR_RUN_EXTENDED_TESTS=true TTR_RUN_EXAMPLE_TESTS=true TTR_RUN_OUTPUT_REGRESSION_TESTS=true julia --project=. -e 'using Pkg; Pkg.test()'
+```
+*(Note: These variables will need to be checked in `test/runtests.jl` before this behaves automatically.)*
