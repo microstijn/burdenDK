@@ -76,5 +76,5 @@ using TwoTimescaleResilience
     #     include("test_synthetic_grid_mixture_demo.jl")
     # end
 
-    # include("test_analytical_warm_start.jl")
+    include("test_analytical_warm_start.jl")
 end
