@@ -1,50 +1,50 @@
 # AI Context for TwoTimescaleResilience
 
+*Audited Date: 2026-05-29*
+
 ## Do first
 
-- Inspect actual code before assuming functionality (read files directly rather than relying on prompts or standard DEB assumptions).
-- Run targeted tests during development, *not* the full heavy suite, to prevent timeouts from precompilation.
-- Preserve the current architecture and invariants.
-- Do not rewrite core math unless specifically requested.
+- Inspect the actual code before assuming functionality is present. Look at files to determine API and state.
+- Run targeted tests, not the full heavy suite, during development (see `docs/TESTING_STRATEGY.md`).
+- Preserve the architecture: look closely at the data flow before editing components.
+- Do not rewrite core math unless explicitly requested by the user.
+- Consult `docs/ARCHITECTURE_GRAPH.md` for component relationships.
 
 ## Project identity
 
-TwoTimescaleResilience is a framework for mapping background chronic stress (like water quality) onto an organism's adaptive margin and restoring force to calculate its amplification of vulnerability to acute stressors.
+TwoTimescaleResilience is a framework for modelling the erosion of response capacity caused by accumulated environmental pressures, allowing researchers to evaluate vulnerability over spatial domains without relying on binary threshold-exceedance models.
 
 ## Current architecture
 
-**Capacity--pressure--memory.**
-The project evaluates multi-scale vulnerabilities: capacity provided by DEB/AmP capabilities, pressure exerted by ECOTOX empirical data arrays, and memory generated through analytical retention/bioaccumulation factors ($B_t$).
+The framework uses a **capacity–pressure–memory** architecture. Capacity limits are defined by AmP species parameters; environmental pressures are informed by ECOTOX toxicity data; and temporal accumulation is modelled via a chemical memory component ($B_t$). The system evaluates multiple overlapping pressures using specific mixture-effect assumptions.
 
 ## Core files and what they do
 
-- `src/deb_axes.jl` and `src/reduced_deb_response.jl`: Defines DEB axis structures and capacity margin logic.
-- `src/amp_library.jl`: Parses and standardises the AmP library to produce DEB axis parameters.
-- `src/ecotox_library.jl`: Filters ECOTOX data and converts it into DEB burden arrays, incorporating compound memory logic.
-- `src/compound_memory_warmup.jl`: Fast mathematical solutions for initializing internal burdens without simulating spin-up.
-- `src/mixture_aggregation.jl`: Combines specific pressures via mechanistic assumptions (IA, TU).
-- `src/vulnerability_feature_vectors.jl`: Defines threshold-free continuous outputs for raster cells.
-- `src/vulnerability_regime_clustering.jl`: Classifies those feature vectors.
+- `src/TwoTimescaleResilience.jl`: Exports public APIs and controls logic domain.
+- `src/deb_axes.jl` and `src/reduced_deb_response.jl`: Define the foundational impairment math, calculating $Q_t, A_t, \lambda_t,$ and $F_t$.
+- `src/ecotox_library.jl`: Parses ECOTOX databases, manages empirical memory state $B_t$, and scales ambient exposures to active stress ($x_t$).
+- `src/mixture_aggregation.jl`: Aggregates active stress using IA, TU, or grouped logic.
+- `src/amp_library.jl`: Interacts with AmP library parameter stores.
+- `src/vulnerability_feature_vectors.jl` and `src/vulnerability_regime_clustering.jl`: Build and cluster spatially explicit geographic vulnerability models without failure thresholds.
 
 ## What not to change
 
-- Do not add or combine interaction components: Synergism and antagonism are explicitly not implemented. Mixture effects must remain mathematically conservative (e.g. IA or TU).
-- Do not add arbitrary physiological modifiers or scalar tuning variables: `kappa`, `κ`, `gain`, `response_scale`, `burden_to_margin_multiplier` are entirely forbidden.
-- Do not conflate memory variables. $B_t$ is internal compound concentration and explicitly separate from unbuilt DEBtox scaled damage ($D_t$) or general physiological recovery condition ($Z_t$).
-- Do not implement explicit threshold constraints (`_gt_`, `threshold`) within standard vulnerability output vectors.
+- Do not implement synergism or antagonism interactions. Use standard mixture-effect assumptions.
+- Do not implement arbitrary empirical curve tuning parameters such as `kappa`, `κ`, `gain`, `response_scale`, or `burden_to_margin_multiplier`.
+- Do not implement threshold failures. Avoid naming or using variables like `_gt_`, `_lt_`, `threshold`, `exceedance`, `above`, or `below` in spatial feature/regime models.
+- Maintain a strict boundary between chemical memory ($B_t$), physiological condition memory ($Z_t$), and DEBtox scaled damage ($D_t$).
+- Do not use DataFrames for lightweight internal data structures.
+- Do not alter testing execution behavior arbitrarily.
 
 ## Common next tasks
 
-- Integrating formal DEBtox $D_t$ scaled damage parameters. *(future)*
-- Integrating formalized $Z_t$ physiological memory capabilities to model slow baseline health recoveries independent of chemical clearance. *(future)*
-- More formalized tests integrating external GIS processes into automated suites. *(future)*
+- Implementing physiological condition memory ($Z_t$) (Future/Planned)
+- Creating robust stable real-raster ingestion pipelines (Future/Planned)
+- Expanding diagnostic outputs and visualizations.
 
 ## Test strategy
 
-The full suite is currently heavy as it invokes plotting packages, empirical test datasets, GIS systems, and NetCDF processing. Running a simple `Pkg.test()` will often time out or take a significant amount of time due to heavy precompilation of CairoMakie or NCDatasets.
-
-**For tests:**
-Use targeted test commands. E.g., `julia --project=. test/runtests.jl` with specific components disabled, or test individual files directly.
+Full test suites may trigger massive precompilation tasks for dependencies like CairoMakie, GeoMakie, and NCDatasets. Avoid doing so unless specifically evaluating those modules. Run fast core mathematical logic manually via specific test files (e.g. `julia --project=. test/test_deb_axes.jl`). Refer to `docs/TESTING_STRATEGY.md` for details.
 
 ## Terms to use
 
@@ -56,12 +56,13 @@ Use targeted test commands. E.g., `julia --project=. test/runtests.jl` with spec
 - amplification
 - mixture-effect assumptions
 - threshold-free features
+- vulnerability regimes
 
 ## Terms to avoid or use carefully
 
-- "attack/defence" (only used previously in manuscript context)
-- "interaction" when referring to TU/IA/grouped assumptions (these are not mathematically fitted interactions, they are mixture assumptions)
-- "damage D" unless explicit DEBtox scaled damage is formally implemented.
-- "kappa"
-- "gain"
-- "response_scale"
+- attack/defence (reserved for manuscript framing, not code logic)
+- interaction (when referring to TU/IA/grouped assumptions, use "mixture-effect assumption")
+- damage / $D$ (do not use unless DEBtox scaled damage is actually implemented)
+- kappa
+- gain
+- response_scale
