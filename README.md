@@ -25,11 +25,12 @@ This package is a multi-scale resilience and toxicokinetic modelling framework. 
 
 - **DEB-axis response math:** Core impairment to response capability math (`src/deb_axes.jl`, `src/reduced_deb_response.jl`).
 - **AmP species adapter:** Parses species parameters to instantiate physical response capacities (`src/amp_library.jl`).
-- **ECOTOX parser and runtime:** Loads empirical data and routes active stress effects to DEB axes (`src/ecotox_library.jl`).
+- **ECOTOX parser:** Offline parser to build toxicity libraries from raw ASCII files (`src/ECOTOXParser.jl`).
+- **ECOTOX runtime:** Loads empirical data, manages chemical memory, and routes active stress effects to DEB axes (`src/ecotox_library.jl`).
 - **Compound memory:** Stateful updates for $B_t$ and analytical warm-up capabilities (`src/ecotox_library.jl`, `src/compound_memory_warmup.jl`).
 - **Mixture-effect aggregation:** Aggregation of effects using TU, IA, or grouped CA-then-IA math (`src/mixture_aggregation.jl`).
 - **Threshold-free feature vectors:** Construction and standardisation of geographic vulnerability features (`src/vulnerability_feature_vectors.jl`).
-- **Clustering and Outputs:** Regime clustering and bundling to NetCDF outputs (`src/vulnerability_regime_clustering.jl`, `src/vulnerability_regime_outputs.jl`).
+- **Clustering and Outputs:** Regime clustering and bundling to NetCDF outputs (`src/vulnerability_regime_clustering.jl`, `src/vulnerability_regime_outputs.jl`). Basic NetCDF utilities are implemented, but stable real external raster ingestion is mostly demonstrated in examples rather than a fully generalized API.
 
 ## What this package is not
 
@@ -38,7 +39,7 @@ This package is a multi-scale resilience and toxicokinetic modelling framework. 
 - **Not full DEBtox**
 - Does not currently implement DEB reserve, structure, maturity, kappa allocation, growth/reproduction ODEs, starvation, GUTS survival, or DEBtox scaled damage $D_t$.
 - Does not implement synergism, antagonism, or arbitrary fitted interaction coefficients.
-- Does not currently implement physiological condition memory $Z_t$.
+- Does not currently implement physiological condition memory $Z_t$. Any placeholder or optional parameter for $Z_t$ in the source should not be treated as an active implemented model layer.
 - Does not yet provide stable real external raster ingestion (this is currently only handled in example scripts).
 
 ## Core equations
@@ -87,6 +88,7 @@ flowchart LR
 
 - `src/TwoTimescaleResilience.jl`: Main module definition and exports.
 - `src/amp_library.jl`: `load_amp_species_library`, `amp_species_deb_params`
+- `src/ECOTOXParser.jl`: `parse_ecotox_data`, `write_ecotox_library_json`
 - `src/ecotox_library.jl`: `load_ecotox_library`, `ecotox_records_to_deb_burden_stateful!`, `ecotox_active_stress`
 - `src/compound_memory_warmup.jl`: `analytical_initial_burden`, `analytical_periodic_initial_burden`
 - `src/deb_axes.jl`: Core DEB routing structures
