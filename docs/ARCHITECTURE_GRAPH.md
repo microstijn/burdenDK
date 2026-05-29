@@ -22,7 +22,10 @@ flowchart LR
     AMPData[data/AmP_Species_Library.json] --> AMPLoader[load_amp_species_library]
     AMPLoader --> DEBParams[DEBAxisParams]
 
-    ECOTOXData[data/ECOTOX_Toxicity_Library.json] --> ECOTOXLoader[load_ecotox_library]
+    ECOTOXRaw[Raw ASCII ECOTOX Data] --> ECOTOXParser[ECOTOXParser]
+    ECOTOXParser --> ECOTOXData[data/ECOTOX_Toxicity_Library.json]
+
+    ECOTOXData --> ECOTOXLoader[load_ecotox_library]
     ECOTOXLoader --> ECOTOXRecords[ECOTOX records]
 
     MemoryData[data/Compound_Memory_Library.csv] --> MemoryLoader[load_compound_memory_library]
@@ -61,10 +64,13 @@ flowchart LR
     Clustering --> Regimes[vulnerability regimes]
     Regimes --> Outputs[write_vulnerability_regime_netcdf]
 
+    RealRasterIngest[Real Raster Ingestion] -.->|Partial / Examples Only| Stress
+    SyntheticRaster[Synthetic Raster Demos] --> Stress
+
     %% Future / Unimplemented
-    PhysZ[Physiological Z_t] -.->|Future| A
+    PhysZ[Physiological Z_t] -.->|Not Implemented| A
     DEBtoxD[DEBtox Scaled Damage D_t] -.->|Not Implemented| Stress
-    Synergism[Synergism/Antagonism] -.->|Not Implemented| MixtureAgg
+    Synergism[Fitted Interactions / Synergism] -.->|Not Implemented| MixtureAgg
 ```
 
 ## Node inventory
@@ -73,8 +79,9 @@ flowchart LR
 |---------|-------|------|----------------|------------|--------|-------|
 | `AMPData` | AmP_Species_Library.json | data_source | `data/AmP_Species_Library.json` | - | core_implemented | Source of physiological DEB capabilities |
 | `AMPLoader` | load_amp_species_library | parser_or_loader | `src/amp_library.jl` | `load_amp_species_library`, `amp_species_deb_params` | core_implemented_tested | Adapts JSON into internal DEBAxisParams |
+| `ECOTOXParser` | ECOTOXParser | parser_or_loader | `src/ECOTOXParser.jl` | `parse_ecotox_data` | core_implemented | Offline parser building JSON from ASCII |
 | `ECOTOXData` | ECOTOX_Toxicity_Library.json | data_source | `data/ECOTOX_Toxicity_Library.json` | - | core_implemented | Empirical toxicity dataset |
-| `ECOTOXLoader` | load_ecotox_library | parser_or_loader | `src/ecotox_library.jl` | `load_ecotox_library`, `ecotox_filter_records` | core_implemented_tested | Reads records and routes effects |
+| `ECOTOXLoader` | ecotox_library | parser_or_loader | `src/ecotox_library.jl` | `load_ecotox_library`, `ecotox_filter_records` | core_implemented_tested | Reads records and routes effects |
 | `MemoryData` | Compound_Memory_Library.csv | data_source | `data/Compound_Memory_Library.csv` | - | core_implemented | Retention/bioaccumulation factors |
 | `MemoryLoader` | load_compound_memory_library | parser_or_loader | `src/ecotox_library.jl` | `load_compound_memory_library`, `compound_retention` | core_implemented_tested | Parses compound memory logic |
 | `StatefulMemory` | EcotoxExposureState | stateful_memory | `src/ecotox_library.jl` | `EcotoxExposureState`, `update_internal_burden!` | core_implemented_tested | Chemical memory state $B_t$ |
@@ -84,14 +91,19 @@ flowchart LR
 | `Standardization` | standardize features | preprocessing | `src/vulnerability_feature_vectors.jl` | `standardize_threshold_free_vulnerability_features` | core_implemented_tested | Standardizes arrays |
 | `Clustering` | cluster regimes | clustering | `src/vulnerability_regime_clustering.jl` | `cluster_threshold_free_vulnerability_regimes` | core_implemented_tested | Discrete spatial vulnerabilities |
 | `Outputs` | vulnerability outputs | output_io | `src/vulnerability_regime_outputs.jl` | `write_vulnerability_regime_netcdf` | core_implemented_tested | Writes regime clusters to NetCDF |
-| `Z_t` | Physiological Z_t | future_or_not_implemented | - | - | planned | Z_t parameter exists but no math |
+| `ArchetypeDB` | AmP_Species_Archetypes | data_source | `data/AmP_Species_Archetypes.json` | - | core_implemented_tested | Database derived from AmP |
+| `Z_t` | Physiological Z_t | future_or_not_implemented | - | - | not_implemented | Z_t parameter exists but no math |
 | `D_t` | DEBtox D_t | future_or_not_implemented | - | - | not_implemented | - |
-| `RealRaster` | Stable Real Raster Pipeline | adapter | `src/netcdf.jl` | `load_nc_layer` | partial | Limited reusable real-raster API; mostly examples |
+| `RealRasterIngest` | Real Raster Ingestion | adapter | - | - | partial | Limited reusable real-raster API; mostly examples |
+| `NetCDFUtils` | NetCDF Layer Utilities | utility | `src/netcdf.jl` | `load_nc_layer` | core_implemented_tested | Basic NetCDF array logic |
+| `SyntheticRaster` | Synthetic Raster Demos | example | `examples/synthetic_raster_demo.jl` | - | example_only | - |
 
 ## Edge inventory
 
 | from | to | relation | evidence | notes |
 |------|----|----------|----------|-------|
+| `Raw ASCII ECOTOX Data` | `ECOTOXParser` | parsed by | `src/ECOTOXParser.jl` | Offline JSON generation |
+| `ECOTOXParser` | `data/ECOTOX_Toxicity_Library.json` | generates | `src/ECOTOXParser.jl` | |
 | `data/AmP_Species_Library.json` | `load_amp_species_library` | consumes | `src/amp_library.jl` | - |
 | `load_amp_species_library` | `DEBAxisParams` | produces | `src/amp_library.jl` | Instantiates capacity struct |
 | `data/ECOTOX_Toxicity_Library.json` | `load_ecotox_library` | consumes | `src/ecotox_library.jl` | - |

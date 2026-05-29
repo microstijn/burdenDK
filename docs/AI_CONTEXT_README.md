@@ -4,7 +4,7 @@
 
 ## Do first
 
-- Inspect the actual code before assuming functionality is present. Look at files to determine API and state.
+- Inspect the actual code before assuming functionality is present. Look at files to determine API and state. Do not infer a stable real external raster ingestion pipeline from example scripts alone.
 - Run targeted tests, not the full heavy suite, during development (see `docs/TESTING_STRATEGY.md`).
 - Preserve the architecture: look closely at the data flow before editing components.
 - Do not rewrite core math unless explicitly requested by the user.
@@ -29,10 +29,10 @@ The framework uses a **capacity–pressure–memory** architecture. Capacity lim
 
 ## What not to change
 
-- Do not implement synergism or antagonism interactions. Use standard mixture-effect assumptions.
+- Do not implement synergism or antagonism interactions. Do not call mixture-effect assumptions "interactions". Use standard mixture-effect assumptions.
 - Do not implement arbitrary empirical curve tuning parameters such as `kappa`, `κ`, `gain`, `response_scale`, or `burden_to_margin_multiplier`.
-- Do not implement threshold failures. Avoid naming or using variables like `_gt_`, `_lt_`, `threshold`, `exceedance`, `above`, or `below` in spatial feature/regime models.
-- Maintain a strict boundary between chemical memory ($B_t$), physiological condition memory ($Z_t$), and DEBtox scaled damage ($D_t$).
+- Do not implement threshold failures. Do not add thresholds to threshold-free features. Avoid naming or using variables like `_gt_`, `_lt_`, `threshold`, `exceedance`, `above`, or `below` in spatial feature/regime models.
+- Maintain a strict boundary between chemical memory ($B_t$), physiological condition memory ($Z_t$), and DEBtox scaled damage ($D_t$). Keep $B_t$, $Z_t$, and $D_t$ distinct.
 - Do not use DataFrames for lightweight internal data structures.
 - Do not alter testing execution behavior arbitrarily.
 

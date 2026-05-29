@@ -14,7 +14,7 @@ To solve this, the tests are conceptually split into multiple tiers. This ensure
 
 ### 1. Fast Default Tests
 These evaluate the pure, dependency-light mathematical engine. They run in milliseconds and should be executed frequently.
-- **Includes:** `test_deb_axes.jl`, `test_deb_axis_response.jl`, `test_mixture_aggregation.jl`, `test_ecotox_library.jl`, `test_vulnerability_feature_vectors.jl`
+- **Includes:** `test_deb_axes.jl`, `test_deb_axis_response.jl`, `test_mixture_aggregation.jl`, `test_ecotox_library.jl`, `test_vulnerability_feature_vectors.jl`, `test_analytical_warm_start.jl`
 
 ### 2. Extended Integration
 Tests covering deeper adapters, full runtime execution pipelines, and time-series memory behaviors.
@@ -22,7 +22,9 @@ Tests covering deeper adapters, full runtime execution pipelines, and time-serie
 
 ### 3. Examples and Plotting
 Tests that actually produce maps and complex terminal outputs.
-- **Includes:** `test_examples.jl`, `test_plotting.jl`, `test_response_modes.jl` (if evaluating output generations)
+- **Includes:** `test_examples.jl`, `test_plotting.jl`, `test_response_modes.jl` (mixed tests)
+
+**Note on `test_response_modes.jl`:** This file currently mixes fast response-mode unit tests with extended generated-output regression checks for CSVs. Future cleanup should either split the fast component from the extended component, or gate the generated-output sections behind an environment variable.
 
 ### 4. Data Regeneration / Outputs
 Tests that invoke NetCDF file construction or check historical outputs. Generated-output tests should not fail the fast suite merely because expected output files are absent.

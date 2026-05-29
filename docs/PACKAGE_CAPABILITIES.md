@@ -24,8 +24,17 @@
   - **Status:** core_implemented_tested
   - **Notes:** Responsible for bridging user-facing species with normalized AmP records.
 
+- `src/ECOTOXParser.jl`:
+  - **Role:** ECOTOX offline parser / toxicity-library builder
+  - **Exports:** `parse_ecotox_data`, `write_ecotox_library_json`, `build_ecotox_toxicity_library`, `build_ecotox_toxicity_library_multi`
+  - **Dependencies:** `CSV`, `DataFrames`, `Statistics`, `JSON`
+  - **Tests covering it:** None explicitly (used to build data).
+  - **Examples using it:** None.
+  - **Status:** core_implemented
+  - **Notes:** Responsible for parsing raw offline ECOTOX ASCII files and producing the library JSON.
+
 - `src/ecotox_library.jl`:
-  - **Role:** ECOTOX parsing and empirical runtime module
+  - **Role:** ECOTOX runtime adapter and compound-memory runtime utilities
   - **Exports:** `load_ecotox_library`, `validate_ecotox_record`, `ecotox_active_stress`, `ecotox_effect_to_deb_axis`, `deb_axis_index`, `ecotox_record_to_deb_burden`, `ecotox_records_to_deb_burden`, `ecotox_records_to_deb_burden_stateful!`, `ecotox_burden_to_response`, `ecotox_filter_records`, `ecotox_records_for_taxon`, `load_compound_memory_library`, `validate_compound_memory_record`, `compound_retention`, `compound_bioaccumulation_factor`, `ecotox_default_retention`, `EcotoxExposureState`, `get_internal_burden`, `set_internal_burden!`, `reset_internal_burdens!`, `update_internal_burden!`
   - **Dependencies:** `JSON`, `CSV`
   - **Tests covering it:** `test_ecotox_library.jl`
@@ -50,7 +59,7 @@
   - **Tests covering it:** `test_deb_axes.jl`, `test_deb_axes_grid.jl`
   - **Examples using it:** All core examples
   - **Status:** core_implemented_tested
-  - **Notes:** Contains foundational math definitions mapping stress to physiological DEB axes. It does NOT implement synergism or antagonism interactions, only basic matrices if requested.
+  - **Notes:** Contains foundational math definitions mapping stress to physiological DEB axes. Any internal pairwise-axis helper (`pairwise_axis_interaction`) should not be interpreted as fitted synergism/antagonism or chemical interaction modelling. Current mixture behaviour is represented by explicit mixture-effect assumptions in `src/mixture_aggregation.jl`.
 
 - `src/reduced_deb_response.jl`:
   - **Role:** Core reduced mathematical calculations
@@ -59,7 +68,7 @@
   - **Tests covering it:** `test_reduced_deb_response.jl`
   - **Examples using it:** Core workflows
   - **Status:** core_implemented_tested
-  - **Notes:** Computes adaptive margin ($A_t$), restoring force ($\lambda_t$), and amplification factor ($F_t$). Physiological memory $Z_t$ parameter is present but not fully implemented.
+  - **Notes:** Computes adaptive margin ($A_t$), restoring force ($\lambda_t$), and amplification factor ($F_t$). Physiological condition memory $Z_t$ is not an active implemented model layer. Any placeholder or optional parameter should not be treated as a validated $Z_t$ implementation.
 
 - `src/mixture_aggregation.jl`:
   - **Role:** Mixture effect mathematical aggregation models
@@ -91,7 +100,7 @@
 - `src/vulnerability_regime_outputs.jl`:
   - **Role:** Maps spatial models and structures them into valid exports
   - **Exports:** `vulnerability_regime_cluster_map`, `vulnerability_feature_maps`, `write_vulnerability_regime_netcdf`, `write_vulnerability_regime_summary_csvs`, `vulnerability_regime_output_bundle`
-  - **Dependencies:** `NCDatasets`, `DataFrames`, `CSV`
+  - **Dependencies:** `NCDatasets`, `CSV`
   - **Tests covering it:** `test_vulnerability_regime_outputs.jl`
   - **Examples using it:** None explicitly running
   - **Status:** core_implemented_tested
@@ -117,8 +126,9 @@
 - **Threshold-free feature vectors:** `build_threshold_free_vulnerability_features`
 - **Standardisation:** `standardize_threshold_free_vulnerability_features`
 - **Clustering:** `cluster_threshold_free_vulnerability_regimes`, `summarize_threshold_free_vulnerability_clusters`, `label_threshold_free_vulnerability_regimes`
-- **Raster/NetCDF outputs:** `vulnerability_regime_cluster_map`, `vulnerability_feature_maps`, `write_vulnerability_regime_netcdf`, `write_vulnerability_regime_summary_csvs`, `vulnerability_regime_output_bundle`, `load_nc_layer`, `normalise_layer`
-- **Examples / diagnostics support:** `plot_scenario_comparison`, `plot_grid`, `plot_background_layers`, `plot_amplification_grid`, `synthetic_background_layers`, `run_synthetic_raster_demo`
+- **Raster/NetCDF outputs:** `vulnerability_regime_cluster_map`, `vulnerability_feature_maps`, `write_vulnerability_regime_netcdf`, `write_vulnerability_regime_summary_csvs`, `vulnerability_regime_output_bundle`
+- **NetCDF layer utilities:** `load_nc_layer`, `normalise_layer`
+- **Important internal helpers / example support (exported):** `plot_scenario_comparison`, `plot_grid`, `plot_background_layers`, `plot_amplification_grid`, `synthetic_background_layers`, `run_synthetic_raster_demo`
 - **ISIMIP/spatial utilities:** Various internal unexported helpers, but relies on `netcdf.jl` tools.
 
 ## Data inventory
@@ -174,26 +184,29 @@
 
 ## Capability status table
 
-| Capability | Status | Evidence |
-| ---------- | ------ | -------- |
-| AmP adapter | core_implemented_tested | `src/amp_library.jl`, `test_amp_library.jl` |
-| ECOTOX parser | core_implemented_tested | `src/ecotox_library.jl`, `test_ecotox_library.jl` |
-| ECOTOX runtime | core_implemented_tested | `src/ecotox_library.jl`, `test_ecotox_library.jl` |
-| Compound memory | core_implemented_tested | `src/ecotox_library.jl` (e.g., `ecotox_records_to_deb_burden_stateful!`), `test_ecotox_library.jl` |
-| Analytical warm-up | core_implemented_tested | `src/compound_memory_warmup.jl`, `test_analytical_warm_start.jl` |
-| Mixture effects | core_implemented_tested | `src/mixture_aggregation.jl`, `test_mixture_aggregation.jl` |
-| Grouped CA-then-IA | core_implemented_tested | `src/mixture_aggregation.jl`, `test_mixture_aggregation.jl` |
-| Response modes | core_implemented_tested | `src/reduced_deb_response.jl`, implicit in core tests |
-| Archetype database | core_implemented_tested | `data/AmP_Species_Archetypes.csv`, `data/AmP_Species_Archetypes.json`, `examples/build_amp_species_archetype_database.jl`, `test_amp_species_archetypes.jl` |
-| Threshold-free features | core_implemented_tested | `src/vulnerability_feature_vectors.jl`, `test_vulnerability_feature_vectors.jl` |
-| Standardisation | core_implemented_tested | `src/vulnerability_feature_vectors.jl`, `test_vulnerability_feature_vectors.jl` |
-| Clustering | core_implemented_tested | `src/vulnerability_regime_clustering.jl`, `test_vulnerability_regime_clustering.jl` |
-| Output bundle/NetCDF | core_implemented_tested | `src/vulnerability_regime_outputs.jl`, `src/netcdf.jl`, `test_vulnerability_regime_outputs.jl` |
-| Real raster ingestion | partial | `src/netcdf.jl`, mostly demonstrated in `examples/nc_real_raster_deb_axes_demo.jl` |
-| Physiological $Z_t$ | not_implemented | Code checks reject it; noted as explicitly not implemented in source files. |
-| DEBtox $D_t$ | not_implemented | No source code evidence found. |
-| Synergism/antagonism | not_implemented | Explicitly stated in `src/mixture_aggregation.jl` as not implemented. |
-| Fitted interactions | not_implemented | No arbitrary tuning parameters implemented. |
+| Capability | Status | Evidence | Notes |
+| ---------- | ------ | -------- | ----- |
+| AmP runtime adapter | core_implemented_tested | `src/amp_library.jl`, `test_amp_library.jl` | |
+| ECOTOX offline parser/library builder | core_implemented | `src/ECOTOXParser.jl` | Rebuilds JSON from ASCII. |
+| ECOTOX runtime adapter | core_implemented_tested | `src/ecotox_library.jl`, `test_ecotox_library.jl` | |
+| Compound memory | core_implemented_tested | `src/ecotox_library.jl`, `test_ecotox_library.jl` | Stateful burden logic. |
+| Analytical compound-memory warm-up | core_implemented_tested | `src/compound_memory_warmup.jl`, `test_analytical_warm_start.jl` | |
+| Mixture-effect assumptions | core_implemented_tested | `src/mixture_aggregation.jl`, `test_mixture_aggregation.jl` | TU, IA |
+| Grouped CA-then-IA | core_implemented_tested | `src/mixture_aggregation.jl`, `test_mixture_aggregation.jl` | Preferred aggregation method. |
+| Response modes | core_implemented_tested | `src/reduced_deb_response.jl`, implicit in tests | |
+| Archetype database | core_implemented_tested | `data/AmP_Species_Archetypes.csv`, `data/AmP_Species_Archetypes.json`, `examples/build_amp_species_archetype_database.jl`, `test_amp_species_archetypes.jl` | |
+| Threshold-free features | core_implemented_tested | `src/vulnerability_feature_vectors.jl`, `test_vulnerability_feature_vectors.jl` | |
+| Standardisation | core_implemented_tested | `src/vulnerability_feature_vectors.jl`, `test_vulnerability_feature_vectors.jl` | |
+| Clustering | core_implemented_tested | `src/vulnerability_regime_clustering.jl`, `test_vulnerability_regime_clustering.jl` | |
+| Regime output bundle / NetCDF | core_implemented_tested | `src/vulnerability_regime_outputs.jl`, `test_vulnerability_regime_outputs.jl` | Spatial regime structures. |
+| NetCDF layer utilities | core_implemented_tested | `src/netcdf.jl`, `test_netcdf.jl` | Basic loading/normalization. |
+| Synthetic raster examples | example_only | `examples/synthetic_raster_demo.jl` | |
+| Real external raster demonstration examples | example_only | `examples/nc_real_raster_deb_axes_demo.jl` | |
+| Stable reusable real external raster ingestion pipeline | partial | `src/netcdf.jl` | Mostly demonstrated in scripts, missing generalized robust API. |
+| Physiological $Z_t$ | not_implemented | Checks reject it; noted as explicitly not implemented in source. | |
+| DEBtox scaled damage $D_t$ | not_implemented | No source code evidence found. | |
+| Synergism/antagonism | not_implemented | `src/mixture_aggregation.jl` | Explicitly excluded. |
+| Fitted interactions | not_implemented | | No arbitrary tuning parameters implemented. |
 
 ## Known architectural invariants
 
