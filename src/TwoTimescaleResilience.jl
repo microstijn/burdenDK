@@ -10,6 +10,10 @@ export load_nc_layer, normalise_layer, write_ascii_grid, read_ascii_grid, plot_s
 export build_threshold_free_vulnerability_features
 export standardize_threshold_free_vulnerability_features
 
+export cluster_threshold_free_vulnerability_regimes
+export summarize_threshold_free_vulnerability_clusters
+export label_threshold_free_vulnerability_regimes
+
 export amp_species_key, load_amp_species_library, validate_amp_record, amp_record_to_deb_params, amp_species_deb_params, amp_species_profile
 
 export load_ecotox_library, validate_ecotox_record, ecotox_active_stress
@@ -48,4 +52,5 @@ include("ascii.jl")
 include("netcdf.jl")
 
 include("vulnerability_feature_vectors.jl")
+include("vulnerability_regime_clustering.jl")
 end # module
