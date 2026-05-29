@@ -16,6 +16,7 @@ using TwoTimescaleResilience
     # -------------------------------------------------------------------------
     include("test_vulnerability_feature_vectors.jl")
     include("test_vulnerability_regime_clustering.jl")
+    include("test_vulnerability_regime_outputs.jl")
 
     # -------------------------------------------------------------------------
     # Lightweight empirical adapters / runtime basics
