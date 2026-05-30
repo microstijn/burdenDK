@@ -20,6 +20,16 @@ export vulnerability_feature_maps
 export write_vulnerability_regime_netcdf
 export write_vulnerability_regime_summary_csvs
 export vulnerability_regime_output_bundle
+# tranche comparison utilities
+export compare_vulnerability_feature_tranches
+export cluster_area_fractions_by_tranche
+export compare_cluster_area_fractions
+export cluster_transition_matrix
+export cluster_persistence_summary
+export cluster_distribution_distances
+export regime_intensity_scores
+export regime_intensity_transition_summary
+
 
 export amp_species_key, load_amp_species_library, validate_amp_record, amp_record_to_deb_params, amp_species_deb_params, amp_species_profile
 
@@ -63,6 +73,8 @@ include("netcdf.jl")
 include("vulnerability_feature_vectors.jl")
 include("vulnerability_regime_clustering.jl")
 include("vulnerability_regime_outputs.jl")
+include("vulnerability_tranche_comparison.jl")
+
 include("compound_memory_warmup.jl")
 
 end # module
