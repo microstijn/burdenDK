@@ -113,6 +113,7 @@ flowchart LR
 - **Medium:**
   - `examples/ecotox_amp_multispecies_multicompound_monthly_memory_demo.jl`: Demonstrates temporal updating of $B_t$ using multiple compounds.
 - **Heavy / Extended:**
+  - `examples/archetype_compound_memory_multitranche_grid_demo.jl` & `examples/plot_archetype_compound_memory_multitranche_grid_demo.jl`: Multi-tranche continuous simulation and visualization.
   - `examples/nc_monthly_longterm_isimip_moa_deb_inspection.jl`: Heavy loop producing spatial vulnerability outputs.
   - `examples/nc_real_raster_deb_axes_demo.jl`: Loads real NetCDF layers to produce response datasets.
 
