@@ -90,3 +90,5 @@ using TwoTimescaleResilience
         include("test_archetype_compound_memory_10yr_grid_plots.jl")
     end
 end
+# Multi-Tranche Grid Demo Test
+include("test_archetype_compound_memory_multitranche_grid_demo.jl")
