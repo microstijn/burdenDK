@@ -145,6 +145,17 @@ function run_archetype_compound_memory_multitranche_grid_plots(;
             hm_trans = heatmap!(ax_trans, trans_matrix', colormap=:viridis)
             Colorbar(fig_trans[1, 2], hm_trans, label="fraction of source cluster")
 
+            if K <= 8
+                for i in 1:K
+                    for j in 1:K
+                        val = trans_matrix[i, j] # i is row (source), j is col (target)
+                        # Makie plot x=target (j), y=source (i)
+                        txt = string(round(val * 100, digits=1), "%")
+                        text!(ax_trans, j, i, text=txt, align=(:center, :center), color=val > 0.5 ? :black : :white)
+                    end
+                end
+            end
+
             trans_path = joinpath(figures_dir, "cluster_transition_heatmap_T1_to_final.png")
             save(trans_path, fig_trans)
             push!(generated_figures, "cluster_transition_heatmap_T1_to_final.png")
@@ -188,7 +199,7 @@ function run_archetype_compound_memory_multitranche_grid_plots(;
                     end
                 end
 
-                max_abs = maximum(abs.(feat_matrix))
+                max_abs = isempty(feat_matrix) ? 1.0 : maximum(abs.(feat_matrix))
                 crange = max_abs > 0 ? (-max_abs, max_abs) : (-1.0, 1.0)
 
                 fig_feat = Figure(size=(800, 600))
@@ -244,8 +255,26 @@ function run_archetype_compound_memory_multitranche_grid_plots(;
                                xticks=(1:length(t_ids), string.(t_ids)), xlabel="tranche",
                                yticks=(1:length(c_ids), string.(c_ids)), ylabel="cluster_id")
 
-                hm_area = heatmap!(ax_area, area_matrix, colormap=:viridis)
+                hm_area = heatmap!(ax_area, area_matrix, colormap=:viridis, colorrange=(0.0, 1.0))
                 Colorbar(fig_area[1, 2], hm_area, label="fraction of cells")
+
+                if length(t_ids) * length(c_ids) <= 80
+                    for i in 1:length(t_ids)
+                        for j in 1:length(c_ids)
+                            val = area_matrix[i, j]
+                            txt = string(round(val * 100, digits=1), "%")
+                            text!(ax_area, i, j, text=txt, align=(:center, :center), color=val > 0.5 ? :black : :white)
+                        end
+                    end
+                end
+
+                for i in 1:length(t_ids)
+                    for j in 1:length(c_ids)
+                        if area_matrix[i, j] > 0.95
+                            @warn "Tranche $(t_ids[i]) has >95% of cells assigned to cluster $(c_ids[j])"
+                        end
+                    end
+                end
 
                 area_path = joinpath(figures_dir, "cluster_area_fraction_heatmap.png")
                 save(area_path, fig_area)
@@ -286,7 +315,7 @@ function run_archetype_compound_memory_multitranche_grid_plots(;
                     end
                 end
 
-                max_ad = maximum(abs.(ad_matrix))
+                max_ad = isempty(ad_matrix) ? 1.0 : maximum(abs.(ad_matrix))
                 crange = max_ad > 0 ? (-max_ad, max_ad) : (-1.0, 1.0)
 
                 fig_ad = Figure(size=(600, 500))
