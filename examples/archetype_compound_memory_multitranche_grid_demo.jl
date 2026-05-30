@@ -650,6 +650,12 @@ function run_archetype_compound_memory_multitranche_grid_demo(; output_dir::Stri
     CSV.write(joinpath(output_dir, "mixture_model_sensitivity_summary.csv"), mix_sens_summary)
 
 
+
+    # Helper to exclude features from fixed-reference clustering
+    function clustering_feature_mask(feature_names::Vector{String})
+        return [!startswith(name, "month_of_max_") for name in feature_names]
+    end
+
     # Helper for Baseline Standardization
     function apply_reference_standardization(feature_matrix, kept_feature_indices, means, stds; center=true, scale=true)
         n_rows = size(feature_matrix, 1)
@@ -689,21 +695,35 @@ function run_archetype_compound_memory_multitranche_grid_demo(; output_dir::Stri
             error("standardized_features columns $(size(standardized_features, 2)) must match centroids columns $n_cols")
         end
 
+        if !all(isfinite, standardized_features) || !all(isfinite, centroids)
+            error("standardized_features and centroids must contain only finite values")
+        end
+
+        if k < 1
+            error("number of centroids must be >= 1")
+        end
+
         assignments = zeros(Int, n_rows)
+        distances = zeros(Float64, n_rows)
         for i in 1:n_rows
             min_dist = Inf
-            best_k = 1
+            best_k = -1
             row = @view standardized_features[i, :]
             for j in 1:k
                 d = sum(abs2.(row .- centroids[j, :]))
+                # Deterministic tie-breaking by cluster index is handled by < instead of <=
                 if d < min_dist
                     min_dist = d
                     best_k = j
                 end
             end
+            if best_k == -1
+                error("Failed to assign cell $i to any centroid")
+            end
             assignments[i] = best_k
+            distances[i] = sqrt(min_dist) # Return euclidean distance
         end
-        return assignments
+        return assignments, distances
     end
 
     # 9. Tranche-by-Tranche Threshold-free Pipeline
@@ -716,6 +736,9 @@ function run_archetype_compound_memory_multitranche_grid_demo(; output_dir::Stri
     baseline_stds = Float64[]
     baseline_centroids = zeros(Float64, 0, 0)
     cluster_labels = String[]
+
+    tranche_centroid_assignment_diagnostics = NamedTuple[]
+    tranche_centroid_distance_summary = NamedTuple[]
 
     for h in 1:n_tranches
         t_start = tranche_defs[h].month_start
@@ -746,12 +769,29 @@ function run_archetype_compound_memory_multitranche_grid_demo(; output_dir::Stri
         tranche_feature_results[h] = feature_result_h
 
         if h == 1
+            mask = clustering_feature_mask(feature_result_h.feature_names)
+            kept_for_clustering = findall(mask)
+
+            # Record excluded features
+            excluded_names = feature_result_h.feature_names[.!mask]
+            if !isempty(excluded_names)
+                excluded_data = NamedTuple[]
+                for ename in excluded_names
+                    push!(excluded_data, (feature_name = ename, exclusion_reason = "absolute_time_feature_not_comparable_across_tranches"))
+                end
+                CSV.write(joinpath(output_dir, "excluded_from_fixed_reference_clustering.csv"), excluded_data)
+            end
+
+            baseline_feature_matrix_for_clustering = feature_result_h.feature_matrix[:, kept_for_clustering]
+            feature_names_for_clustering = feature_result_h.feature_names[kept_for_clustering]
+
             standardized = standardize_threshold_free_vulnerability_features(
-                feature_result_h.feature_matrix,
-                feature_result_h.feature_names
+                baseline_feature_matrix_for_clustering,
+                feature_names_for_clustering
             )
 
-            baseline_kept_indices = standardized.kept_feature_indices
+            # Map the kept indices within the masked matrix back to the original matrix columns
+            baseline_kept_indices = kept_for_clustering[standardized.kept_feature_indices]
             baseline_kept_names = standardized.standardized_feature_names
             baseline_means = standardized.means
             baseline_stds = standardized.stds
@@ -778,8 +818,63 @@ function run_archetype_compound_memory_multitranche_grid_demo(; output_dir::Stri
                 baseline_means,
                 baseline_stds
             )
-            cluster_id_h = assign_to_existing_centroids(standardized_features_h, baseline_centroids)
+
+            if !all(isfinite, standardized_features_h)
+                @warn "Non-finite values found in standardized_features for tranche $h"
+            end
+
+            cluster_id_h, distances_h = assign_to_existing_centroids(standardized_features_h, baseline_centroids)
             tranche_clusters[h] = cluster_id_h
+
+            # Diagnostic calculations
+            n_cells_h = length(cluster_id_h)
+            for cid in 1:k_clusters
+                idx = findall(==(cid), cluster_id_h)
+                n_assigned = length(idx)
+                if n_assigned > 0
+                    push!(tranche_centroid_assignment_diagnostics, (
+                        tranche = h,
+                        cluster_id = cid,
+                        n_assigned = n_assigned,
+                        fraction_assigned = n_assigned / n_cells_h,
+                        mean_distance_to_assigned_centroid = mean(distances_h[idx]),
+                        min_distance_to_assigned_centroid = minimum(distances_h[idx]),
+                        max_distance_to_assigned_centroid = maximum(distances_h[idx]),
+                        n_nonfinite_standardized_values = count(!isfinite, standardized_features_h[idx, :])
+                    ))
+                else
+                    push!(tranche_centroid_assignment_diagnostics, (
+                        tranche = h,
+                        cluster_id = cid,
+                        n_assigned = 0,
+                        fraction_assigned = 0.0,
+                        mean_distance_to_assigned_centroid = NaN,
+                        min_distance_to_assigned_centroid = NaN,
+                        max_distance_to_assigned_centroid = NaN,
+                        n_nonfinite_standardized_values = 0
+                    ))
+                end
+
+                if n_assigned / n_cells_h > 0.95
+                    @warn "Tranche $h has >95% of cells assigned to cluster $cid; check standardisation, feature comparability, or scenario design"
+                end
+            end
+
+            for cid in 1:k_clusters
+                c_dist = Float64[]
+                for i in 1:size(standardized_features_h, 1)
+                    d = sqrt(sum(abs2.(standardized_features_h[i, :] .- baseline_centroids[cid, :])))
+                    push!(c_dist, d)
+                end
+                push!(tranche_centroid_distance_summary, (
+                    tranche = h,
+                    centroid_cluster_id = cid,
+                    mean_distance_to_centroid = mean(c_dist),
+                    median_distance_to_centroid = median(c_dist),
+                    min_distance_to_centroid = minimum(c_dist),
+                    max_distance_to_centroid = maximum(c_dist)
+                ))
+            end
         end
     end
 
@@ -824,7 +919,12 @@ function run_archetype_compound_memory_multitranche_grid_demo(; output_dir::Stri
             tranche_from = from_str,
             tranche_to = to_str
         )
-        append!(tranche_feature_change_summary, feat_comp.feature_change_table)
+        for row in feat_comp.feature_change_table
+            push!(tranche_feature_change_summary, merge((
+                tranche_from = from_str,
+                tranche_to = to_str,
+            ), row))
+        end
 
         # 2. Cluster Area changes
         area_comp = compare_cluster_area_fractions(
@@ -887,6 +987,8 @@ function run_archetype_compound_memory_multitranche_grid_demo(; output_dir::Stri
     CSV.write(joinpath(output_dir, "tranche_cluster_persistence_summary.csv"), tranche_cluster_persistence_summary)
     CSV.write(joinpath(output_dir, "tranche_cluster_distribution_distances.csv"), tranche_cluster_distribution_distances)
     CSV.write(joinpath(output_dir, "tranche_regime_intensity_transition_summary.csv"), tranche_regime_intensity_transition_summary)
+    CSV.write(joinpath(output_dir, "tranche_centroid_assignment_diagnostics.csv"), tranche_centroid_assignment_diagnostics)
+    CSV.write(joinpath(output_dir, "tranche_centroid_distance_summary.csv"), tranche_centroid_distance_summary)
 
     # 11. Write NetCDF Outputs
     nc_path = joinpath(output_dir, "vulnerability_regime_multitranche_outputs.nc")
@@ -947,6 +1049,9 @@ function run_archetype_compound_memory_multitranche_grid_demo(; output_dir::Stri
         "reference_tranche" => 1,
         "standardisation_reference" => "tranche_1",
         "clustering_reference" => "tranche_1",
+        "fixed_reference_clustering_excluded_features" => [name for name in tranche_feature_results[1].feature_names if !clustering_feature_mask([name])[1]],
+        "fixed_reference_clustering_exclusion_rule" => "exclude_month_of_max",
+
         "species_source" => "AmP_Species_Library.json",
         "compound_source" => "Compound_Memory_Library.csv and ECOTOX_Toxicity_Library.json",
         "archetype_database_present" => archetype_db_present,

@@ -17,6 +17,19 @@ This multi-tranche approach runs directly on the foundations of the 10-year grid
 - **No parameter inflation**: Explicit variables like $\kappa$, gain parameters, burden to margins, physiological Z_t or DEBtox scaled damage (D_t) mechanisms are completely omitted.
 - **No Synergisms**: Interactions strictly adhere to package `src/mixture_aggregation.jl` structures (predominantly `grouped_ca_then_ia_axis_effects`). No matrix configurations or antagonism modifiers were embedded.
 
+## Fixed-Reference Clustering Feature Compatibility
+
+The multi-tranche workflow relies on fixed-reference clustering to evaluate categorical regime shifts.
+This involves standardizing later tranches using standardisation parameters derived strictly from the baseline (Tranche 1).
+
+**Feature Requirements:**
+- Fixed-reference clustering requires features to hold comparable meanings across tranches.
+- Absolute simulation-month features such as `month_of_max_*` (which log absolute time indices like 120, 240, etc.) are entirely excluded from fixed-reference clustering because their standardisation shifts drastically and destroys comparability.
+- If timing features are desired for clustering, they should be mathematically transformed into within-tranche month, month-of-year, or a cyclic seasonal phase.
+- Baseline standardisation is applied only to the subset of retained comparable features.
+- Later tranches are mathematically assigned to the baseline centroids using standardized nearest-neighbor Euclidean distance.
+- Centroid-assignment diagnostics (`tranche_centroid_assignment_diagnostics.csv`) are written systematically to detect degeneracy and model failure states.
+
 ## Usage
 
 ```bash
@@ -46,9 +59,9 @@ TTR_MULTITRANCHE_DEMO_OUTPUT_DIR=output/archetype_compound_memory_multitranche_g
 The script generates heatmaps and summary figures reflecting the continuous multi-tranche progression without referencing discrete safe/unsafe thresholds. Expected figures include:
 
 - **`cluster_maps_by_tranche.png`**: Shows vulnerability regime geography across each tranche.
-- **`cluster_transition_heatmap_T1_to_final.png`**: Shows categorical movement between regimes from Tranche 1 to the final tranche.
+- **`cluster_transition_heatmap_T1_to_final.png`**: Shows categorical movement between regimes from Tranche 1 to the final tranche. Annotates transition probabilities natively via text percentiles.
 - **`feature_change_heatmap_from_baseline.png`**: Explains continuous drivers underlying the regime transitions.
-- **`cluster_area_fraction_heatmap.png`**: Shows relative regime expansion/contraction over time.
+- **`cluster_area_fraction_heatmap.png`**: Shows relative regime expansion/contraction over time. Also integrates percentage annotations and automatically emits dominance warnings if one cluster occupies > 95% of a given tranche.
 - **`cluster_area_delta_heatmap.png`**: (Optional) Displays the change in fraction of cells for each cluster relative to baseline.
 - **`tranche_distance_heatmap.png`**: (Optional) Summarizes overall cluster-distribution differences between tranches.
 - **`regime_intensity_delta_map_final.png`**: (Optional) Shows where final-tranche changes are spatially concentrated via interpretive centroid-derived scores.

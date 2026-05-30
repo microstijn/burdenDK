@@ -98,6 +98,27 @@ using NCDatasets
         @test isfile(dist_csv)
         @test length(CSV.File(dist_csv)) > 0
 
+        # New output tests for correction
+        excluded_csv = joinpath(temp_dir, "excluded_from_fixed_reference_clustering.csv")
+        @test isfile(excluded_csv)
+        excluded_df = CSV.File(excluded_csv)
+        @test length(excluded_df) > 0
+        @test any(occursin.("month_of_max", string.(excluded_df.feature_name)))
+
+        # Feature change summary has tranche_from and tranche_to
+        fc_df_new = CSV.File(feature_change_csv)
+        @test "tranche_from" in string.(propertynames(fc_df_new))
+        @test "tranche_to" in string.(propertynames(fc_df_new))
+
+        diag_csv = joinpath(temp_dir, "tranche_centroid_assignment_diagnostics.csv")
+        @test isfile(diag_csv)
+        @test length(CSV.File(diag_csv)) > 0
+
+        dist_sum_csv = joinpath(temp_dir, "tranche_centroid_distance_summary.csv")
+        @test isfile(dist_sum_csv)
+        @test length(CSV.File(dist_sum_csv)) > 0
+
+
         # 12 & 13. NetCDF exists and contains tranche dimension
         nc_path = joinpath(temp_dir, "vulnerability_regime_multitranche_outputs.nc")
         @test isfile(nc_path)
