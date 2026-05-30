@@ -26,3 +26,35 @@ julia --project=. examples/archetype_compound_memory_multitranche_grid_demo.jl
 # Specify overrides specifically designed for 10-year (e.g. 40 years) scaling
 TTR_GRID_NX=40 TTR_GRID_NY=30 TTR_N_TRANCHES=4 TTR_TRANCHE_LENGTH_YEARS=5 julia --project=. examples/archetype_compound_memory_multitranche_grid_demo.jl
 ```
+
+## Plotting multi-tranche outputs
+
+After running the simulation, you can generate visualizations using the dedicated plotting script:
+
+```bash
+julia --project=. examples/plot_archetype_compound_memory_multitranche_grid_demo.jl
+```
+
+To override the default output directory, use the `TTR_MULTITRANCHE_DEMO_OUTPUT_DIR` environment variable:
+
+```bash
+TTR_MULTITRANCHE_DEMO_OUTPUT_DIR=output/archetype_compound_memory_multitranche_grid_demo julia --project=. examples/plot_archetype_compound_memory_multitranche_grid_demo.jl
+```
+
+### Expected Figures
+
+The script generates heatmaps and summary figures reflecting the continuous multi-tranche progression without referencing discrete safe/unsafe thresholds. Expected figures include:
+
+- **`cluster_maps_by_tranche.png`**: Shows vulnerability regime geography across each tranche.
+- **`cluster_transition_heatmap_T1_to_final.png`**: Shows categorical movement between regimes from Tranche 1 to the final tranche.
+- **`feature_change_heatmap_from_baseline.png`**: Explains continuous drivers underlying the regime transitions.
+- **`cluster_area_fraction_heatmap.png`**: Shows relative regime expansion/contraction over time.
+- **`cluster_area_delta_heatmap.png`**: (Optional) Displays the change in fraction of cells for each cluster relative to baseline.
+- **`tranche_distance_heatmap.png`**: (Optional) Summarizes overall cluster-distribution differences between tranches.
+- **`regime_intensity_delta_map_final.png`**: (Optional) Shows where final-tranche changes are spatially concentrated via interpretive centroid-derived scores.
+- **`p95_F_delta_map_final.png`** / **`p95_Q_delta_map_final.png`**: (Optional) Maps showing continuous parameter deltas between the baseline and final tranche.
+
+### Interpretation
+
+- Cluster maps detail *relative vulnerability regimes* representing geographical states, not absolute safe/unsafe risk classes.
+- Continuous metric maps evaluate parameter deltas spatially without introducing threshold or exceedance terminology.
