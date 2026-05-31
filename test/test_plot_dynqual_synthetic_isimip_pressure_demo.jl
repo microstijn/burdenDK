@@ -46,13 +46,14 @@ include("../examples/plot_dynqual_synthetic_isimip_pressure_demo.jl")
         defVar(ds, "cluster_id", rand(Float32, nx, ny, n_tranches), ("x", "y", "tranche"))
         defVar(ds, "feature_map", rand(Float32, nx, ny, n_features, n_tranches), ("x", "y", "feature", "tranche"))
         defVar(ds, "baseline_centroids", rand(Float64, k_clusters, n_features), ("cluster", "feature"))
+        defVar(ds, "valid_cell_mask", fill(true, nx, ny), ("x", "y"))
     end
 
     # 3. Create tiny metadata CSV
     meta_csv_path = joinpath(temp_out, "dynqual_feature_metadata.csv")
     df = DataFrame(
         feature_index = 1:n_features,
-        feature_name = ["feat1", "feat2", "feat3", "feat4"],
+        feature_name = ["p95_F_grouped", "mean_E_maintenance_grouped", "feat3", "feat4"],
         feature_descriptor = ["desc1", "desc2", "desc3", "desc4"],
         used_for_clustering = [true, true, true, true],
         units_or_scale = ["0-1", "0-1", "0-1", "0-1"]
@@ -89,5 +90,21 @@ include("../examples/plot_dynqual_synthetic_isimip_pressure_demo.jl")
         @test isfile(joinpath(fig_dir, "dynqual_derived_pressure_layers.png"))
         @test isfile(joinpath(fig_dir, "dynqual_vulnerability_regime_maps.png"))
         @test isfile(joinpath(fig_dir, "dynqual_regime_explanation_heatmap.png"))
+
+        # New figures checks
+        @test isfile(joinpath(fig_dir, "dynqual_baseline_recent_comparison.png"))
+        @test filesize(joinpath(fig_dir, "dynqual_baseline_recent_comparison.png")) > 0
+
+        @test isfile(joinpath(fig_dir, "dynqual_cluster_transition_baseline_to_recent.png"))
+        @test filesize(joinpath(fig_dir, "dynqual_cluster_transition_baseline_to_recent.png")) > 0
+
+        @test isfile(joinpath(fig_dir, "dynqual_feature_delta_by_recent_cluster.png"))
+        @test filesize(joinpath(fig_dir, "dynqual_feature_delta_by_recent_cluster.png")) > 0
+
+        @test isfile(joinpath(fig_dir, "dynqual_p95_F_grouped_delta_map.png"))
+        @test filesize(joinpath(fig_dir, "dynqual_p95_F_grouped_delta_map.png")) > 0
+
+        @test isfile(joinpath(fig_dir, "dynqual_mean_E_maintenance_grouped_delta_map.png"))
+        @test filesize(joinpath(fig_dir, "dynqual_mean_E_maintenance_grouped_delta_map.png")) > 0
     end
 end

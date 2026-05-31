@@ -88,6 +88,19 @@ $env:TTR_DYNQUAL_SPATIAL_STRIDE="1"
 julia --project=. examples/dynqual_synthetic_isimip_pressure_demo.jl 
 ```
 
+## Comparing baseline and recent tranches
+
+Comparing baseline and recent cluster maps side-by-side can be difficult. The lightweight plotting script (`examples/plot_dynqual_synthetic_isimip_pressure_demo.jl`) generates an explicit comparison panel (`dynqual_baseline_recent_comparison.png`) that highlights changes.
+
+This multi-panel figure adds:
+- A changed-regime map showing exactly where transitions occurred.
+- A cluster transition heatmap quantifying movement between regimes.
+- Feature delta maps highlighting continuous response changes (e.g. amplification $F$ and required adaptive margin $A$).
+
+Additionally, the script generates a clusterwise feature-delta heatmap to summarise what changed in each resulting regime.
+
+These plots are derived entirely from the cache (`dynqual_demo_cache.nc`); no original DynQual files are needed for replotting.
+
 ## Replotting without rerunning the DynQual analysis
 
 The analysis script writes a reusable output cache (`dynqual_demo_cache.nc`) and feature metadata. The separate plotting script reads this cache to regenerate figures without rereading the original DynQual NetCDF files. This is extremely useful for changing colormaps, modifying titles, selecting tranches, or adjusting heatmap feature selections without duplicating the heavy pressure analysis and clustering logic.
