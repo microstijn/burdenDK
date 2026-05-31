@@ -253,6 +253,5 @@ function run_archetype_compound_memory_10yr_grid_plots(;
     @info "Plotting complete. Figures saved to $figures_dir"
 end
 
-if abspath(PROGRAM_FILE) == @__FILE__
-    run_archetype_compound_memory_10yr_grid_plots()
-end
+
+run_archetype_compound_memory_10yr_grid_plots()

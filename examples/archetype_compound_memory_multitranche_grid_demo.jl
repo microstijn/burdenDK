@@ -18,7 +18,7 @@ function run_archetype_compound_memory_multitranche_grid_demo(; output_dir::Stri
     n_months = n_years * 12
     n_species_req = parse(Int, get(ENV, "TTR_N_ARCHETYPE_SPECIES", "16"))
     n_compounds_req = parse(Int, get(ENV, "TTR_N_COMPOUNDS", "12"))
-    k_clusters = parse(Int, get(ENV, "TTR_VULN_CLUSTER_K", "5"))
+    k_clusters = parse(Int, get(ENV, "TTR_VULN_CLUSTER_K", "10"))
     make_plots = get(ENV, "TTR_MAKE_EXAMPLE_PLOTS", "false") == "true"
     allow_fallback = get(ENV, "TTR_ALLOW_NON_ARCHETYPE_FALLBACK", "false") == "true"
 
