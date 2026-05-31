@@ -7,23 +7,239 @@ using JSON
 using CSV
 using DataFrames
 
-# Load optional dependencies
-try
-    using NCDatasets
-catch e
-    @warn "NCDatasets is required to read NetCDF files. Please add it to your environment."
-end
+# 1. Unconditional dependency for memory-conscious NetCDF reading
+using NCDatasets
 
 function get_env_or_fallback(env_var::String, fallback::String)
     val = get(ENV, env_var, fallback)
     return isempty(val) ? fallback : val
 end
 
+# Memory-conscious local helpers for reading NetCDF files
+function open_dynqual_dataset(file_path::String)
+    return NCDataset(file_path, "r")
+end
+
+function detect_lon_lat_time_vars(ds)
+    lon_var = haskey(ds, "lon") ? "lon" : (haskey(ds, "longitude") ? "longitude" : "")
+    lat_var = haskey(ds, "lat") ? "lat" : (haskey(ds, "latitude") ? "latitude" : "")
+    time_var = haskey(ds, "time") ? "time" : ""
+
+    if lon_var == "" || lat_var == ""
+        error("Could not identify lon/lat variables in dataset")
+    end
+    return lon_var, lat_var, time_var
+end
+
+function detect_main_variable(ds, preferred_var_name::String)
+    if haskey(ds, preferred_var_name)
+        return preferred_var_name
+    end
+    lon_var, lat_var, time_var = detect_lon_lat_time_vars(ds)
+    for v in keys(ds)
+        if v ∉ [lon_var, lat_var, time_var, "crs"]
+            return v
+        end
+    end
+    error("Could not identify main variable; preferred '$preferred_var_name' not found.")
+end
+
+function subset_indices(lons, lats, bbox, spatial_stride::Int)
+    lon_idx = findall(x -> bbox.lon[1] <= x <= bbox.lon[2], lons)
+    lat_idx = findall(x -> bbox.lat[1] <= x <= bbox.lat[2], lats)
+
+    if isempty(lon_idx) || isempty(lat_idx)
+        error("Bbox subset resulted in empty grid.")
+    end
+
+    if spatial_stride > 1
+        lon_idx = lon_idx[1:spatial_stride:end]
+        lat_idx = lat_idx[1:spatial_stride:end]
+    end
+
+    return lon_idx, lat_idx
+end
+
+function read_month_slice(ds, var_name::String, lon_idx::Vector{Int}, lat_idx::Vector{Int}, t::Int)
+    data = ds[var_name][lon_idx, lat_idx, t]
+
+    data_f = Array{Float32, 2}(undef, size(data))
+    for i in eachindex(data)
+        v = data[i]
+        if ismissing(v) || isnothing(v) || (v isa Number && !isfinite(v))
+            data_f[i] = NaN32
+        else
+            data_f[i] = Float32(v)
+        end
+    end
+    return data_f
+end
+
+function estimate_log_quantiles_sampled(
+    file_path::String,
+    preferred_var_name::String,
+    lon_idx::Vector{Int},
+    lat_idx::Vector{Int};
+    time_stride::Int = 6,
+    max_samples::Int = 2_000_000
+)
+    ds = open_dynqual_dataset(file_path)
+    var_name = detect_main_variable(ds, preferred_var_name)
+    _, _, time_var = detect_lon_lat_time_vars(ds)
+    n_time = length(ds[time_var])
+
+    sampled_vals = Float64[]
+    n_total_seen = 0
+    n_finite_seen = 0
+
+    time_indices = 1:time_stride:n_time
+    # Adaptive spatial striding based on expected samples
+    cells_per_slice = length(lon_idx) * length(lat_idx)
+    expected_finite = cells_per_slice * length(time_indices) * 0.9 # assume 90% finite
+
+    spatial_stride_inner = 1
+    if expected_finite > max_samples
+        spatial_stride_inner = ceil(Int, expected_finite / max_samples)
+    end
+
+    for t in time_indices
+        slice = read_month_slice(ds, var_name, lon_idx, lat_idx, t)
+
+        # Subsample spatially
+        if spatial_stride_inner > 1
+            slice_1d = slice[1:spatial_stride_inner:end]
+        else
+            slice_1d = slice
+        end
+
+        n_total_seen += length(slice)
+
+        for v in slice_1d
+            if !isnan(v)
+                n_finite_seen += spatial_stride_inner # Approximate count
+                v_pos = max(0.0, Float64(v))
+                log_val = log1p(v_pos)
+                if length(sampled_vals) < max_samples
+                    push!(sampled_vals, log_val)
+                end
+            end
+        end
+    end
+    close(ds)
+
+    fraction_missing_estimate = 1.0 - (n_finite_seen / max(1, n_total_seen))
+
+    if isempty(sampled_vals)
+        error("No valid values found for $preferred_var_name during sampling.")
+    end
+
+    p02 = quantile(sampled_vals, 0.02)
+    p98 = quantile(sampled_vals, 0.98)
+
+    if p98 <= p02
+        @warn "Robust scaling degenerate for $preferred_var_name: p02=$p02, p98=$p98"
+        p98 = p02 + 1.0
+    end
+
+    return p02, p98, n_total_seen, n_finite_seen, length(sampled_vals), fraction_missing_estimate
+end
+
+# Helper to scale a slice robustly
+function robust_log_scale_slice(slice::Matrix{Float32}, p02::Float64, p98::Float64)
+    scaled_slice = similar(slice)
+    for i in eachindex(slice)
+        v = slice[i]
+        if isnan(v)
+            scaled_slice[i] = 0.0f0
+        else
+            v_pos = max(0.0f0, v)
+            log_val = log1p(v_pos)
+            s = clamp((log_val - p02) / (p98 - p02), 0.0, 1.0)
+            scaled_slice[i] = Float32(s)
+        end
+    end
+    return scaled_slice
+end
+
+# Plotting helpers
+function make_dynqual_raw_climatology_figure(fig_dir, lons, lats, raw_clim_maps)
+    println("  -> Figure 1: Raw climatology")
+    fig1 = Figure(size = (1200, 800))
+    Label(fig1[0, :], "Real DynQual water-quality fields over Europe, 1980–2019 climatology", font=:bold, fontsize=20)
+
+    for (i, p_info) in enumerate(raw_clim_maps)
+        row = cld(i, 2)
+        col = mod1(i, 2) * 2 - 1
+        ax = Axis(fig1[row, col], title=p_info.title, aspect=DataAspect())
+        hm = heatmap!(ax, lons, lats, p_info.data, colormap=:viridis)
+        Colorbar(fig1[row, col+1], hm, label="log1p")
+    end
+    save(joinpath(fig_dir, "dynqual_raw_climatology_maps.png"), fig1)
+end
+
+function make_dynqual_derived_pressure_layers_figure(fig_dir, lons, lats, derived_clim_maps)
+    println("  -> Figure 2: Derived pressure archetypes")
+    fig2 = Figure(size = (1500, 1000))
+    Label(fig2[0, :], "DynQual-derived synthetic pressure archetypes (Climatological Mean)", font=:bold, fontsize=20)
+
+    for (i, p_info) in enumerate(derived_clim_maps)
+        row = cld(i, 3)
+        col = mod1(i, 3) * 2 - 1
+        ax = Axis(fig2[row, col], title=p_info.title, aspect=DataAspect())
+        hm = heatmap!(ax, lons, lats, p_info.data, colormap=:plasma, colorrange=(0.0, 1.0))
+        Colorbar(fig2[row, col+1], hm, label="Relative Impairment")
+    end
+    save(joinpath(fig_dir, "dynqual_derived_pressure_layers.png"), fig2)
+end
+
+function make_dynqual_vulnerability_regime_maps_figure(fig_dir, lons, lats, nx, ny, k_clusters, map_base, map_rec)
+    println("  -> Figure 3: Vulnerability regimes")
+    fig3 = Figure(size = (1200, 600))
+    Label(fig3[0, :], "Threshold-free vulnerability regimes from DynQual-derived pressures", font=:bold, fontsize=20)
+
+    ax_base = Axis(fig3[1, 1], title="Baseline Tranche (1980s) Vulnerability Regimes", aspect=DataAspect())
+    map_base_2d = reshape(map_base, nx, ny)
+    hm_base = heatmap!(ax_base, lons, lats, map_base_2d, colormap=:Set1_5, colorrange=(0.5, k_clusters + 0.5))
+    Colorbar(fig3[1, 2], hm_base, ticks=1:k_clusters)
+
+    ax_rec = Axis(fig3[1, 3], title="Recent Tranche (2010s) Vulnerability Regimes", aspect=DataAspect())
+    map_rec_2d = reshape(map_rec, nx, ny)
+    hm_rec = heatmap!(ax_rec, lons, lats, map_rec_2d, colormap=:Set1_5, colorrange=(0.5, k_clusters + 0.5))
+    Colorbar(fig3[1, 4], hm_rec, ticks=1:k_clusters)
+
+    save(joinpath(fig_dir, "dynqual_vulnerability_regime_maps.png"), fig3)
+end
+
+function make_dynqual_regime_explanation_heatmap_figure(fig_dir, k_clusters, baseline_kept_names, baseline_centroids)
+    println("  -> Figure 4: Regime explanation heatmap")
+    fig4 = Figure(size = (1000, 800))
+    Label(fig4[0, :], "What distinguishes the vulnerability regimes?", font=:bold, fontsize=20)
+
+    ax_heat = Axis(fig4[1, 1],
+        xticks = (1:k_clusters, ["Cluster $i" for i in 1:k_clusters]),
+        yticks = (1:length(baseline_kept_names), baseline_kept_names),
+        xticklabelrotation = pi/4
+    )
+
+    hm_heat = heatmap!(ax_heat, 1:k_clusters, 1:length(baseline_kept_names), baseline_centroids', colormap=:RdBu, colorrange=(-3.0, 3.0))
+    Colorbar(fig4[1, 2], hm_heat, label="Standardised Feature Value")
+
+    for c in 1:k_clusters
+        for f in 1:length(baseline_kept_names)
+            val = baseline_centroids[c, f]
+            text!(ax_heat, string(round(val, digits=2)), position=(c, f),
+                  align=(:center, :center), color=abs(val) > 1.5 ? :white : :black, fontsize=12)
+        end
+    end
+
+    save(joinpath(fig_dir, "dynqual_regime_explanation_heatmap.png"), fig4)
+end
+
 function run_dynqual_synthetic_isimip_pressure_demo(;
     output_dir = joinpath(dirname(@__DIR__), "output", "dynqual_synthetic_isimip_pressure_demo"),
     bbox = (lon = (-25.0, 45.0), lat = (34.0, 72.0))
 )
-    println("--- Starting DynQual Synthetic ISIMIP Pressure Demo ---")
+    println("--- Starting Memory-Conscious DynQual Synthetic ISIMIP Pressure Demo ---")
     mkpath(output_dir)
 
     # 1. Paths and environment variables
@@ -52,6 +268,11 @@ function run_dynqual_synthetic_isimip_pressure_demo(;
     n_species = parse(Int, get_env_or_fallback("TTR_DYNQUAL_N_SPECIES", "8"))
     k_clusters = parse(Int, get_env_or_fallback("TTR_DYNQUAL_CLUSTER_K", "5"))
     make_plots = get_env_or_fallback("TTR_DYNQUAL_MAKE_PLOTS", "true") == "true"
+    write_netcdf = get_env_or_fallback("TTR_DYNQUAL_WRITE_NETCDF", "false") == "true"
+
+    spatial_stride = parse(Int, get_env_or_fallback("TTR_DYNQUAL_SPATIAL_STRIDE", "1"))
+    time_stride = parse(Int, get_env_or_fallback("TTR_DYNQUAL_QUANTILE_TIME_STRIDE", "6"))
+    max_samples = parse(Int, get_env_or_fallback("TTR_DYNQUAL_MAX_QUANTILE_SAMPLES", "2000000"))
 
     if make_plots
         try
@@ -63,185 +284,63 @@ function run_dynqual_synthetic_isimip_pressure_demo(;
 
     println("Output Directory: ", output_dir)
     println("BBox: ", bbox_override)
+    println("Spatial Stride: ", spatial_stride)
     println("Plotting Enabled: ", make_plots)
 
-    # 2. Local Helper for Reading & Subsetting
-    function read_and_subset(file_path::String, var_name::String)
-        println("Reading $var_name from $file_path...")
-        ds = NCDataset(file_path, "r")
-        
-        # Identify variables
-        lon_var = haskey(ds, "lon") ? "lon" : (haskey(ds, "longitude") ? "longitude" : "")
-        lat_var = haskey(ds, "lat") ? "lat" : (haskey(ds, "latitude") ? "latitude" : "")
-        time_var = haskey(ds, "time") ? "time" : ""
-        
-        if lon_var == "" || lat_var == ""
-            close(ds)
-            error("Could not identify lon/lat variables in $file_path")
-        end
-
-        lons = ds[lon_var][:]
-        lats = ds[lat_var][:]
-        
-        # Subset indices
-        lon_idx = findall(x -> bbox_override.lon[1] <= x <= bbox_override.lon[2], lons)
-        lat_idx = findall(x -> bbox_override.lat[1] <= x <= bbox_override.lat[2], lats)
-        
-        if isempty(lon_idx) || isempty(lat_idx)
-            close(ds)
-            error("Bbox subset resulted in empty grid.")
-        end
-        
-        sub_lons = lons[lon_idx]
-        sub_lats = lats[lat_idx]
-        
-        # Find the main variable
-        target_var = var_name
-        if !haskey(ds, target_var)
-            # Try to guess
-            for v in keys(ds)
-                if v ∉ [lon_var, lat_var, time_var, "crs"]
-                    target_var = v
-                    break
-                end
-            end
-        end
-
-        data = ds[target_var][lon_idx, lat_idx, :]
-        
-        close(ds)
-        
-        # Ensure array is Float64 and handle missing/fill values
-        data_f = Array{Float64, 3}(undef, size(data))
-        for i in eachindex(data)
-            v = data[i]
-            if ismissing(v) || isnothing(v) || (v isa Number && !isfinite(v))
-                data_f[i] = NaN
-            else
-                data_f[i] = Float64(v)
-            end
-        end
-        return data_f, sub_lons, sub_lats
-    end
-
-    raw_bod, lons, lats = read_and_subset(bod_file, "organic")
-    raw_fc, _, _ = read_and_subset(fc_file, "pathogen")
-    raw_tds, _, _ = read_and_subset(tds_file, "TDSload")
-    raw_bodload, _, _ = read_and_subset(bodload_file, "BODload")
-
-    nx, ny, n_time = size(raw_bod)
-    println("Data size after subset: nx=$nx, ny=$ny, time=$n_time")
+    # 2. Get subset indices
+    ds_bod = open_dynqual_dataset(bod_file)
+    lon_var, lat_var, time_var = detect_lon_lat_time_vars(ds_bod)
+    lons_full = ds_bod[lon_var][:]
+    lats_full = ds_bod[lat_var][:]
+    n_time = length(ds_bod[time_var])
+    close(ds_bod)
 
     if n_time != 480
-        @warn "Expected 480 months (1980-2019) but got $n_time. Adjusting tranche logic."
+        @warn "Expected 480 months (1980-2019) but got $n_time."
     end
 
-    # 3. Robust scaling helper
-    scaling_summary = []
+    lon_idx, lat_idx = subset_indices(lons_full, lats_full, bbox_override, spatial_stride)
+    sub_lons = lons_full[lon_idx]
+    sub_lats = lats_full[lat_idx]
     
-    function robust_log_scale_01(data::Array{Float64, 3}, var_name::String)
-        valid_vals = Float64[]
-        n_total = length(data)
-        n_nan = 0
-        
-        log_data = similar(data)
-        for i in eachindex(data)
-            v = data[i]
-            if isnan(v)
-                n_nan += 1
-                log_data[i] = NaN
-            else
-                v_pos = max(0.0, v)
-                log_val = log1p(v_pos)
-                log_data[i] = log_val
-                push!(valid_vals, log_val)
-            end
-        end
-        
-        frac_missing = n_nan / n_total
-        if frac_missing > 0.05
-            @warn "Variable $var_name has $(round(frac_missing*100, digits=1))% missing/non-finite values."
-        end
-        
-        if isempty(valid_vals)
-            error("No valid values for variable $var_name")
-        end
-        
-        p02 = quantile(valid_vals, 0.02)
-        p98 = quantile(valid_vals, 0.98)
-        
-        if p98 <= p02
-            @warn "Robust scaling degenerate for $var_name: p02=$p02, p98=$p98"
-            p98 = p02 + 1.0
-        end
-        
-        scaled_data = similar(data)
-        scaled_vals = Float64[]
-        for i in eachindex(log_data)
-            v = log_data[i]
-            if isnan(v)
-                scaled_data[i] = 0.0
-            else
-                s = clamp((v - p02) / (p98 - p02), 0.0, 1.0)
-                scaled_data[i] = s
-                push!(scaled_vals, s)
-            end
-        end
-        
+    nx = length(lon_idx)
+    ny = length(lat_idx)
+    println("Grid size after subset and stride: nx=$nx, ny=$ny, time=$n_time")
+
+    # 3. Robust scaling sampled
+    println("Estimating robust log-scaling quantiles...")
+    scaling_summary = NamedTuple[]
+    scaling_params = Dict{String, Tuple{Float64, Float64}}()
+
+    for (fname, path, preferred) in [
+        ("BOD", bod_file, "organic_monthlyAvg_1980_2019"),
+        ("FC", fc_file, "pathogen_monthlyAvg_1980_2019"),
+        ("TDS", tds_file, "TDSload_monthlyAvg_1980_2019"),
+        ("BODload", bodload_file, "BODload_monthlyAvg_1980_2019")
+    ]
+        println("  -> Sampling $fname ...")
+        p02, p98, nt, nf, ns, frac_miss = estimate_log_quantiles_sampled(
+            path, preferred, lon_idx, lat_idx;
+            time_stride=time_stride, max_samples=max_samples
+        )
+        scaling_params[fname] = (p02, p98)
         push!(scaling_summary, (
-            variable_name = var_name,
-            n_total = n_total,
-            n_finite = n_total - n_nan,
-            n_missing_or_nonfinite = n_nan,
-            fraction_missing = frac_missing,
+            variable_name = fname,
+            preferred_var = preferred,
+            n_total_seen = nt,
+            n_finite_seen = nf,
+            n_sampled = ns,
+            fraction_missing_estimate = frac_miss,
             p02_log1p = p02,
-            p98_log1p = p98,
-            min_scaled = isempty(scaled_vals) ? NaN : minimum(scaled_vals),
-            max_scaled = isempty(scaled_vals) ? NaN : maximum(scaled_vals),
-            mean_scaled = isempty(scaled_vals) ? NaN : mean(scaled_vals)
+            p98_log1p = p98
         ))
-        
-        return scaled_data, log_data
     end
-
-    scaled_bod, _ = robust_log_scale_01(raw_bod, "organic_monthlyAvg_1980_2019")
-    scaled_fc, _ = robust_log_scale_01(raw_fc, "pathogen_monthlyAvg_1980_2019")
-    scaled_tds, _ = robust_log_scale_01(raw_tds, "TDSload_monthlyAvg_1980_2019")
-    scaled_bodload, _ = robust_log_scale_01(raw_bodload, "BODload_monthlyAvg_1980_2019")
-
     CSV.write(joinpath(output_dir, "dynqual_scaling_summary.csv"), scaling_summary)
 
-    # 4. Pressure Proxies
-    organic_pressure = scaled_bod
-    pathogen_pressure = scaled_fc
-    ionic_pressure = scaled_tds
-    wastewater_pressure = scaled_bodload
+    # Free up memory before streaming
+    GC.gc()
 
-    low_flow_pressure = similar(organic_pressure)
-    for i in eachindex(organic_pressure)
-        bod_val = max(0.0, raw_bod[i])
-        bodload_val = max(0.0, raw_bodload[i])
-        if isnan(bod_val) || isnan(bodload_val)
-            low_flow_pressure[i] = 0.0
-        else
-            q_proxy = bodload_val / (bod_val + 1e-6)
-            low_flow_pressure[i] = clamp(scaled_bod[i] * exp(-0.1 * q_proxy), 0.0, 1.0)
-        end
-    end
-
-    valid_lf = filter(x -> !isnan(x) && x > 0, low_flow_pressure)
-    if !isempty(valid_lf)
-        lf_p98 = quantile(valid_lf, 0.98)
-        if lf_p98 > 0
-            low_flow_pressure .= clamp.(low_flow_pressure ./ lf_p98, 0.0, 1.0)
-        end
-    end
-
-    combined_pressure = similar(organic_pressure)
-    for i in eachindex(combined_pressure)
-        combined_pressure[i] = clamp(0.4 * organic_pressure[i] + 0.3 * pathogen_pressure[i] + 0.2 * wastewater_pressure[i] + 0.1 * low_flow_pressure[i], 0.0, 1.0)
-    end
-
+    # 4. Model Chain & Pressure mappings
     pressure_mapping_weights = [
         (pressure_proxy = "organic_oxygen_demand_proxy", source_variables = "BOD", transform = "robust log 0-1", interpretation = "organic pollution / oxygen-demand stress", primary_deb_axis = "maintenance", secondary_deb_axis = "growth", memory_rho = 0.30, internal_magnification_K = 1.0, notes = "", w_A = 0.0, w_M = 0.8, w_G = 0.2, w_R = 0.0),
         (pressure_proxy = "pathogen_exposure_proxy", source_variables = "FC/pathogen", transform = "robust log 0-1", interpretation = "microbial/pathogen pressure", primary_deb_axis = "maintenance", secondary_deb_axis = "reproduction", memory_rho = 0.10, internal_magnification_K = 1.0, notes = "", w_A = 0.0, w_M = 0.6, w_G = 0.0, w_R = 0.4),
@@ -251,8 +350,8 @@ function run_dynqual_synthetic_isimip_pressure_demo(;
         (pressure_proxy = "combined_wastewater_proxy", source_variables = "composite", transform = "weighted sum", interpretation = "composite wastewater pressure", primary_deb_axis = "maintenance", secondary_deb_axis = "", memory_rho = 0.40, internal_magnification_K = 1.0, notes = "", w_A = 0.2, w_M = 0.4, w_G = 0.2, w_R = 0.2)
     ]
     CSV.write(joinpath(output_dir, "dynqual_pressure_mapping.csv"), pressure_mapping_weights)
+    n_proxies = length(pressure_mapping_weights)
 
-    # 5. Model Chain
     amp_lib = load_amp_species_library()
     species_keys = collect(keys(amp_lib))[1:min(n_species, length(amp_lib))]
     
@@ -263,7 +362,6 @@ function run_dynqual_synthetic_isimip_pressure_demo(;
         rec = amp_lib[sp_key]
         p = amp_record_to_deb_params(rec)
         push!(species_params, p)
-        
         push!(selected_species_summary, (
             species_key = sp_key,
             species_name = replace(sp_key, "_" => " "),
@@ -280,72 +378,7 @@ function run_dynqual_synthetic_isimip_pressure_demo(;
     end
     CSV.write(joinpath(output_dir, "selected_dynqual_demo_species.csv"), selected_species_summary)
 
-    # To avoid 30 GB memory usage, pre-allocate efficiently
-    Q_out = zeros(Float32, nx, ny, n_time, n_species, 1)
-    F_out = zeros(Float32, nx, ny, n_time, n_species, 1)
-    
-    E_assimilation = zeros(Float32, nx, ny, n_time, 1)
-    E_maintenance = zeros(Float32, nx, ny, n_time, 1)
-    E_growth = zeros(Float32, nx, ny, n_time, 1)
-    E_reproduction = zeros(Float32, nx, ny, n_time, 1)
-    
-    println("Running DEB routing and memory...")
-    
-    proxies = [
-        (layer=organic_pressure, mapping=pressure_mapping_weights[1]),
-        (layer=pathogen_pressure, mapping=pressure_mapping_weights[2]),
-        (layer=ionic_pressure, mapping=pressure_mapping_weights[3]),
-        (layer=wastewater_pressure, mapping=pressure_mapping_weights[4]),
-        (layer=low_flow_pressure, mapping=pressure_mapping_weights[5]),
-        (layer=combined_pressure, mapping=pressure_mapping_weights[6])
-    ]
-    n_proxies = length(proxies)
-    
-    Threads.@threads for idx in CartesianIndices((1:nx, 1:ny))
-        x = idx[1]
-        y = idx[2]
-        
-        B_state = zeros(Float64, n_proxies)
-        
-        for t in 1:n_time
-            for p in 1:n_proxies
-                rho = proxies[p].mapping.memory_rho
-                K_mag = proxies[p].mapping.internal_magnification_K
-                P_pt = proxies[p].layer[x, y, t]
-                if isnan(P_pt) P_pt = 0.0 end
-                B_state[p] = rho * B_state[p] + (1.0 - rho) * K_mag * P_pt
-            end
-            
-            E_a, E_m, E_g, E_r = 0.0, 0.0, 0.0, 0.0
-            for p in 1:n_proxies
-                E_proxy = min(1.0, max(0.0, B_state[p]))
-                E_a += proxies[p].mapping.w_A * E_proxy
-                E_m += proxies[p].mapping.w_M * E_proxy
-                E_g += proxies[p].mapping.w_G * E_proxy
-                E_r += proxies[p].mapping.w_R * E_proxy
-            end
-            
-            E_a = min(1.0, max(0.0, E_a))
-            E_m = min(1.0, max(0.0, E_m))
-            E_g = min(1.0, max(0.0, E_g))
-            E_r = min(1.0, max(0.0, E_r))
-            
-            E_assimilation[x, y, t, 1] = E_a
-            E_maintenance[x, y, t, 1] = E_m
-            E_growth[x, y, t, 1] = E_g
-            E_reproduction[x, y, t, 1] = E_r
-            
-            axes_imp = (assimilation=E_a, maintenance=E_m, growth=E_g, reproduction=E_r)
-            
-            for sp in 1:n_species
-                resp = compute_adaptive_margin_response_from_impairment(axes_imp, species_params[sp]; mixture_effect_model="grouped_ca_then_ia_axis_effects")
-                Q_out[x, y, t, sp, 1] = Float32(resp.Q_t)
-                F_out[x, y, t, sp, 1] = Float32(resp.amplification)
-            end
-        end
-    end
-
-    # 6. Tranches & Features
+    # 5. Tranches Definitions
     n_months_per_tranche = 120
     actual_n_tranches = min(4, floor(Int, n_time / n_months_per_tranche))
     
@@ -362,58 +395,240 @@ function run_dynqual_synthetic_isimip_pressure_demo(;
             year_end = year_end,
             month_start = start_m,
             month_end = end_m,
-            n_months = n_months_per_tranche
+            n_months = end_m - start_m + 1
         ))
     end
     CSV.write(joinpath(output_dir, "dynqual_tranche_definitions.csv"), tranches)
 
-    println("Extracting threshold-free features and clustering...")
+    # 6. Streaming Tranche Processing
+    println("Streaming data and computing tranche summaries...")
+
+    # Climatology Accumulators
+    sum_raw_bod = zeros(Float32, nx, ny)
+    sum_raw_fc = zeros(Float32, nx, ny)
+    sum_raw_tds = zeros(Float32, nx, ny)
+    sum_raw_bodload = zeros(Float32, nx, ny)
+
+    sum_org_p = zeros(Float32, nx, ny)
+    sum_pat_p = zeros(Float32, nx, ny)
+    sum_ion_p = zeros(Float32, nx, ny)
+    sum_was_p = zeros(Float32, nx, ny)
+    sum_low_p = zeros(Float32, nx, ny)
+    sum_com_p = zeros(Float32, nx, ny)
+
+    count_clim = zeros(Int32, nx, ny)
+
+    # Pressure Memory State
+    B_state = zeros(Float32, nx, ny, n_proxies)
+
+    # Baseline Clustering Objects
     baseline_kept_indices = Int[]
     baseline_kept_names = String[]
     baseline_means = Float64[]
     baseline_stds = Float64[]
     baseline_centroids = zeros(Float64, 0, 0)
-    cluster_labels = String[]
-    
     tranche_clusters = Dict{Int, Any}()
+
+    # We need to compute an overarching p98 for low_flow pressure to scale it properly.
+    # Since low flow pressure requires streaming to know, we'll use a heuristic for scaling it per tranche,
+    # or just clamp it. The instructions say "if lf_p98 > 0, scale it." We will stream and scale dynamically per tranche
+    # for simplicity, or just use it raw clamped to [0,1]
     
     for h in 1:actual_n_tranches
-        start_m = tranches[h].month_start
-        end_m = tranches[h].month_end
+        tranche = tranches[h]
+        start_m = tranche.month_start
+        end_m = tranche.month_end
+        n_m = tranche.n_months
         
-        Q_slice = Float64.(Q_out[:, :, start_m:end_m, :, :])
-        F_slice = Float64.(F_out[:, :, start_m:end_m, :, :])
-        E_a_slice = Float64.(E_assimilation[:, :, start_m:end_m, :])
-        E_m_slice = Float64.(E_maintenance[:, :, start_m:end_m, :])
-        E_g_slice = Float64.(E_growth[:, :, start_m:end_m, :])
-        E_r_slice = Float64.(E_reproduction[:, :, start_m:end_m, :])
+        println("  -> Processing Tranche $h ($start_m to $end_m)...")
         
-        resp_tuple = (
-            Q_t = Q_slice, F_t = F_slice,
-            E_assimilation = E_a_slice, E_maintenance = E_m_slice, E_growth = E_g_slice, E_reproduction = E_r_slice
-        )
+        # Open datasets
+        ds_bod = open_dynqual_dataset(bod_file)
+        var_bod = detect_main_variable(ds_bod, "organic_monthlyAvg_1980_2019")
         
-        feat_res = build_threshold_free_vulnerability_features(
-            resp_tuple;
-            mixture_model_names = ["grouped_ca_then_ia_axis_effects"],
-            preferred_mixture_model = "grouped_ca_then_ia_axis_effects",
-            month_values = collect(start_m:end_m)
-        )
+        ds_fc = open_dynqual_dataset(fc_file)
+        var_fc = detect_main_variable(ds_fc, "pathogen_monthlyAvg_1980_2019")
         
+        ds_tds = open_dynqual_dataset(tds_file)
+        var_tds = detect_main_variable(ds_tds, "TDSload_monthlyAvg_1980_2019")
+
+        ds_bodload = open_dynqual_dataset(bodload_file)
+        var_bodload = detect_main_variable(ds_bodload, "BODload_monthlyAvg_1980_2019")
+
+        # Tranche Accumulators for Features
+        sum_E_a = zeros(Float32, nx, ny)
+        sum_E_m = zeros(Float32, nx, ny)
+        sum_E_g = zeros(Float32, nx, ny)
+        sum_E_r = zeros(Float32, nx, ny)
+
+        # For Q and F exact p95 within tranche, we need n_m * n_species values per cell.
+        # This is n_cells * 120 * 8 * 4 bytes = ~3.8MB, totally safe to allocate per tranche.
+        Q_tranche = zeros(Float32, nx, ny, n_m, n_species)
+        F_tranche = zeros(Float32, nx, ny, n_m, n_species)
+
+        for (m_idx, t) in enumerate(start_m:end_m)
+            raw_bod = read_month_slice(ds_bod, var_bod, lon_idx, lat_idx, t)
+            raw_fc = read_month_slice(ds_fc, var_fc, lon_idx, lat_idx, t)
+            raw_tds = read_month_slice(ds_tds, var_tds, lon_idx, lat_idx, t)
+            raw_bodload = read_month_slice(ds_bodload, var_bodload, lon_idx, lat_idx, t)
+
+            scaled_bod = robust_log_scale_slice(raw_bod, scaling_params["BOD"]...)
+            scaled_fc = robust_log_scale_slice(raw_fc, scaling_params["FC"]...)
+            scaled_tds = robust_log_scale_slice(raw_tds, scaling_params["TDS"]...)
+            scaled_bodload = robust_log_scale_slice(raw_bodload, scaling_params["BODload"]...)
+
+            # Update Raw Climatology sums
+            for x in 1:nx, y in 1:ny
+                # Only add if raw bod is valid (proxy for water cell)
+                if !isnan(raw_bod[x,y])
+                    sum_raw_bod[x,y] += log1p(max(0.0f0, raw_bod[x,y]))
+                    sum_raw_fc[x,y] += log1p(max(0.0f0, raw_fc[x,y]))
+                    sum_raw_tds[x,y] += log1p(max(0.0f0, raw_tds[x,y]))
+                    sum_raw_bodload[x,y] += log1p(max(0.0f0, raw_bodload[x,y]))
+                    count_clim[x,y] += 1
+                end
+            end
+            
+            # Low flow proxy computation
+            low_flow_pressure = zeros(Float32, nx, ny)
+            for x in 1:nx, y in 1:ny
+                bod_val = max(0.0f0, raw_bod[x,y])
+                bodload_val = max(0.0f0, raw_bodload[x,y])
+                if isnan(bod_val) || isnan(bodload_val)
+                    low_flow_pressure[x,y] = 0.0f0
+                else
+                    q_proxy = bodload_val / (bod_val + 1f-6)
+                    low_flow_pressure[x,y] = clamp(scaled_bod[x,y] * exp(-0.1f0 * q_proxy), 0.0f0, 1.0f0)
+                end
+            end
+
+            combined_pressure = zeros(Float32, nx, ny)
+            for x in 1:nx, y in 1:ny
+                combined_pressure[x,y] = clamp(0.4f0 * scaled_bod[x,y] + 0.3f0 * scaled_fc[x,y] + 0.2f0 * scaled_bodload[x,y] + 0.1f0 * low_flow_pressure[x,y], 0.0f0, 1.0f0)
+            end
+
+            # Update Derived Climatology sums
+            for x in 1:nx, y in 1:ny
+                if !isnan(raw_bod[x,y])
+                    sum_org_p[x,y] += scaled_bod[x,y]
+                    sum_pat_p[x,y] += scaled_fc[x,y]
+                    sum_ion_p[x,y] += scaled_tds[x,y]
+                    sum_was_p[x,y] += scaled_bodload[x,y]
+                    sum_low_p[x,y] += low_flow_pressure[x,y]
+                    sum_com_p[x,y] += combined_pressure[x,y]
+                end
+            end
+            
+            # Route through memory & DEB
+            proxies_slices = [scaled_bod, scaled_fc, scaled_tds, scaled_bodload, low_flow_pressure, combined_pressure]
+
+            for x in 1:nx, y in 1:ny
+                if isnan(raw_bod[x,y]) continue end
+
+                # Memory update
+                for p in 1:n_proxies
+                    rho = pressure_mapping_weights[p].memory_rho
+                    K_mag = pressure_mapping_weights[p].internal_magnification_K
+                    P_pt = proxies_slices[p][x, y]
+                    B_state[x, y, p] = rho * B_state[x, y, p] + (1.0f0 - rho) * K_mag * P_pt
+                end
+
+                # E_axis
+                E_a, E_m, E_g, E_r = 0.0f0, 0.0f0, 0.0f0, 0.0f0
+                for p in 1:n_proxies
+                    E_proxy = clamp(B_state[x, y, p], 0.0f0, 1.0f0)
+                    E_a += pressure_mapping_weights[p].w_A * E_proxy
+                    E_m += pressure_mapping_weights[p].w_M * E_proxy
+                    E_g += pressure_mapping_weights[p].w_G * E_proxy
+                    E_r += pressure_mapping_weights[p].w_R * E_proxy
+                end
+
+                E_a = clamp(E_a, 0.0f0, 1.0f0)
+                E_m = clamp(E_m, 0.0f0, 1.0f0)
+                E_g = clamp(E_g, 0.0f0, 1.0f0)
+                E_r = clamp(E_r, 0.0f0, 1.0f0)
+
+                sum_E_a[x, y] += E_a
+                sum_E_m[x, y] += E_m
+                sum_E_g[x, y] += E_g
+                sum_E_r[x, y] += E_r
+
+                axes_imp = (assimilation=Float64(E_a), maintenance=Float64(E_m), growth=Float64(E_g), reproduction=Float64(E_r))
+
+                for sp in 1:n_species
+                    resp = compute_adaptive_margin_response_from_impairment(axes_imp, species_params[sp]; mixture_effect_model="grouped_ca_then_ia_axis_effects")
+                    Q_tranche[x, y, m_idx, sp] = Float32(resp.Q_t)
+                    F_tranche[x, y, m_idx, sp] = Float32(resp.amplification)
+                end
+            end
+        end
+
+        close(ds_bod)
+        close(ds_fc)
+        close(ds_tds)
+        close(ds_bodload)
+        GC.gc()
+
+        # Build compact feature matrix for this tranche
+        feature_names = [
+            "mean_E_assimilation_grouped", "mean_E_maintenance_grouped", "mean_E_growth_grouped", "mean_E_reproduction_grouped",
+            "mean_Q_grouped", "p95_Q_grouped", "mean_F_grouped", "p95_F_grouped", "max_F_grouped", "axis_entropy"
+        ]
+        n_features = length(feature_names)
+
+        # We only keep cells that are valid (water)
+        valid_cells = CartesianIndices((1:nx, 1:ny))
+        flat_valid = filter(idx -> count_clim[idx[1], idx[2]] > 0, vec(valid_cells))
+        n_valid = length(flat_valid)
+
+        feat_matrix = zeros(Float64, n_valid, n_features)
+
+        for (i, idx) in enumerate(flat_valid)
+            x, y = idx[1], idx[2]
+
+            # Means
+            feat_matrix[i, 1] = sum_E_a[x, y] / n_m
+            feat_matrix[i, 2] = sum_E_m[x, y] / n_m
+            feat_matrix[i, 3] = sum_E_g[x, y] / n_m
+            feat_matrix[i, 4] = sum_E_r[x, y] / n_m
+
+            # Q & F aggregations
+            Q_vals = vec(Q_tranche[x, y, :, :])
+            F_vals = vec(F_tranche[x, y, :, :])
+
+            feat_matrix[i, 5] = mean(Q_vals)
+            feat_matrix[i, 6] = quantile(Q_vals, 0.95)
+            feat_matrix[i, 7] = mean(F_vals)
+            feat_matrix[i, 8] = quantile(F_vals, 0.95)
+            feat_matrix[i, 9] = maximum(F_vals)
+
+            # Entropy
+            E_total = feat_matrix[i, 1] + feat_matrix[i, 2] + feat_matrix[i, 3] + feat_matrix[i, 4]
+            entropy = 0.0
+            if E_total > 1e-6
+                for f in 1:4
+                    p = feat_matrix[i, f] / E_total
+                    if p > 0
+                        entropy -= p * log(p)
+                    end
+                end
+            end
+            feat_matrix[i, 10] = entropy
+        end
+
+        # Free memory
+        Q_tranche = zeros(Float32,0)
+        F_tranche = zeros(Float32,0)
+        GC.gc()
+
+        # Clustering
         if h == 1
-            mask = .!occursin.("month_of_max", feat_res.feature_names)
-            kept_for_clustering = findall(mask)
-            
-            excluded = feat_res.feature_names[.!mask]
-            CSV.write(joinpath(output_dir, "dynqual_excluded_from_fixed_reference_clustering.csv"), 
-                      [(feature_name=f, reason="absolute_time") for f in excluded])
-            
             standardized = standardize_threshold_free_vulnerability_features(
-                feat_res.feature_matrix[:, kept_for_clustering],
-                feat_res.feature_names[kept_for_clustering]
+                feat_matrix,
+                feature_names
             )
             
-            baseline_kept_indices = kept_for_clustering[standardized.kept_feature_indices]
+            baseline_kept_indices = standardized.kept_feature_indices
             baseline_kept_names = standardized.standardized_feature_names
             baseline_means = standardized.means
             baseline_stds = standardized.stds
@@ -425,9 +640,13 @@ function run_dynqual_synthetic_isimip_pressure_demo(;
             )
             
             baseline_centroids = cluster_res.centroids_standardized
-            cluster_labels = label_threshold_free_vulnerability_regimes(baseline_centroids, baseline_kept_names)
             
-            tranche_clusters[h] = cluster_res.cluster_id
+            # Map back to 2D
+            cluster_map = fill(NaN, nx, ny)
+            for (i, idx) in enumerate(flat_valid)
+                cluster_map[idx[1], idx[2]] = cluster_res.cluster_id[i]
+            end
+            tranche_clusters[h] = cluster_map
             
             summary = summarize_threshold_free_vulnerability_clusters(
                 cluster_res, standardized.standardized_features;
@@ -435,7 +654,8 @@ function run_dynqual_synthetic_isimip_pressure_demo(;
             )
             CSV.write(joinpath(output_dir, "dynqual_vulnerability_cluster_summary.csv"), summary.cluster_table)
         else
-            f_mat = feat_res.feature_matrix[:, baseline_kept_indices]
+            # Project onto baseline
+            f_mat = feat_matrix[:, baseline_kept_indices]
             s_mat = zeros(Float64, size(f_mat))
             for out_idx in 1:length(baseline_kept_names)
                 col = f_mat[:, out_idx]
@@ -459,7 +679,12 @@ function run_dynqual_synthetic_isimip_pressure_demo(;
                 end
                 assignments[i] = best_k
             end
-            tranche_clusters[h] = assignments
+
+            cluster_map = fill(NaN, nx, ny)
+            for (i, idx) in enumerate(flat_valid)
+                cluster_map[idx[1], idx[2]] = assignments[i]
+            end
+            tranche_clusters[h] = cluster_map
         end
     end
 
@@ -471,21 +696,21 @@ function run_dynqual_synthetic_isimip_pressure_demo(;
         "bbox" => bbox_override,
         "input_files" => Dict("BOD" => bod_file, "FC" => fc_file, "TDS" => tds_file, "BODload" => bodload_file),
         "input_files_present" => true,
+        "memory_optimized" => true,
+        "streaming_reader" => true,
+        "quantile_estimation" => "deterministic_sampled_log_quantiles",
+        "quantile_time_stride" => time_stride,
+        "max_quantile_samples" => max_samples,
+        "spatial_stride" => spatial_stride,
+        "write_netcdf" => write_netcdf,
+        "full_monthly_arrays_materialized" => false,
+        "memory_initialization" => "zero",
         "pressure_proxies" => [p.pressure_proxy for p in pressure_mapping_weights],
-        "pressure_mapping_weights" => pressure_mapping_weights,
         "tranches" => tranches,
-        "species_selection_mode" => "first_N_from_AmP_Library",
         "n_species" => n_species,
         "cluster_k" => k_clusters,
         "synthetic_pressure_proxies" => true,
-        "real_dynqual_spatiotemporal_patterns" => true,
-        "real_raster_ingestion_core_feature" => false,
-        "threshold_free_features" => true,
-        "safe_unsafe_classes" => false,
-        "physiological_Z_t" => false,
-        "DEBtox_D_t" => false,
-        "synergism_antagonism" => false,
-        "fitted_interactions" => false
+        "threshold_free_features" => true
     )
     open(joinpath(output_dir, "dynqual_synthetic_isimip_metadata.json"), "w") do f
         JSON.print(f, metadata, 4)
@@ -497,91 +722,44 @@ function run_dynqual_synthetic_isimip_pressure_demo(;
         fig_dir = joinpath(output_dir, "figures")
         mkpath(fig_dir)
         
-        @eval begin
-            println("  -> Figure 1: Raw climatology")
-            fig1 = Figure(size = (1200, 800))
-            Label(fig1[0, :], "Real DynQual water-quality fields over Europe, 1980–2019 climatology", font=:bold, fontsize=20)
-            
-            axes_data = [
-                (title="BOD / organic", data=dropdims(mean($raw_bod, dims=3), dims=3)),
-                (title="Pathogen / FC proxy", data=dropdims(mean($raw_fc, dims=3), dims=3)),
-                (title="TDS load", data=dropdims(mean($raw_tds, dims=3), dims=3)),
-                (title="BOD load", data=dropdims(mean($raw_bodload, dims=3), dims=3))
-            ]
-            
-            for (i, p_info) in enumerate(axes_data)
-                row = cld(i, 2)
-                col = mod1(i, 2) * 2 - 1
-                ax = Axis(fig1[row, col], title=p_info.title, aspect=DataAspect())
-                plot_data = log1p.(max.(0.0, p_info.data))
-                hm = heatmap!(ax, $lons, $lats, plot_data, colormap=:viridis)
-                Colorbar(fig1[row, col+1], hm, label="log1p")
-            end
-            save(joinpath($fig_dir, "dynqual_raw_climatology_maps.png"), fig1)
-            
-            println("  -> Figure 2: Derived pressure archetypes")
-            fig2 = Figure(size = (1500, 1000))
-            Label(fig2[0, :], "DynQual-derived synthetic pressure archetypes (Climatological Mean)", font=:bold, fontsize=20)
-            
-            der_data = [
-                (title="Organic O2 Demand Proxy", data=dropdims(mean($organic_pressure, dims=3), dims=3)),
-                (title="Pathogen Exposure Proxy", data=dropdims(mean($pathogen_pressure, dims=3), dims=3)),
-                (title="Ionic / Salinity Proxy", data=dropdims(mean($ionic_pressure, dims=3), dims=3)),
-                (title="Wastewater Source Proxy", data=dropdims(mean($wastewater_pressure, dims=3), dims=3)),
-                (title="Low-flow Concentration Proxy", data=dropdims(mean($low_flow_pressure, dims=3), dims=3)),
-                (title="Combined Wastewater Proxy", data=dropdims(mean($combined_pressure, dims=3), dims=3))
-            ]
-            
-            for (i, p_info) in enumerate(der_data)
-                row = cld(i, 3)
-                col = mod1(i, 3) * 2 - 1
-                ax = Axis(fig2[row, col], title=p_info.title, aspect=DataAspect())
-                hm = heatmap!(ax, $lons, $lats, p_info.data, colormap=:plasma, colorrange=(0.0, 1.0))
-                Colorbar(fig2[row, col+1], hm, label="Relative Impairment")
-            end
-            save(joinpath($fig_dir, "dynqual_derived_pressure_layers.png"), fig2)
-            
-            if $actual_n_tranches >= 2
-                println("  -> Figure 3: Vulnerability regimes")
-                fig3 = Figure(size = (1200, 600))
-                Label(fig3[0, :], "Threshold-free vulnerability regimes from DynQual-derived pressures", font=:bold, fontsize=20)
-                
-                ax_base = Axis(fig3[1, 1], title="Baseline Tranche (1980s) Vulnerability Regimes", aspect=DataAspect())
-                map_base = reshape($tranche_clusters[1], $nx, $ny)
-                hm_base = heatmap!(ax_base, $lons, $lats, map_base, colormap=:Set1_5, colorrange=(0.5, $k_clusters + 0.5))
-                Colorbar(fig3[1, 2], hm_base, ticks=1:$k_clusters)
-                
-                ax_rec = Axis(fig3[1, 3], title="Recent Tranche (2010s) Vulnerability Regimes", aspect=DataAspect())
-                map_rec = reshape($tranche_clusters[$actual_n_tranches], $nx, $ny)
-                hm_rec = heatmap!(ax_rec, $lons, $lats, map_rec, colormap=:Set1_5, colorrange=(0.5, $k_clusters + 0.5))
-                Colorbar(fig3[1, 4], hm_rec, ticks=1:$k_clusters)
-                
-                save(joinpath($fig_dir, "dynqual_vulnerability_regime_maps.png"), fig3)
-            end
-            
-            println("  -> Figure 4: Regime explanation heatmap")
-            fig4 = Figure(size = (1000, 800))
-            Label(fig4[0, :], "What distinguishes the vulnerability regimes?", font=:bold, fontsize=20)
-            
-            ax_heat = Axis(fig4[1, 1],
-                xticks = (1:$k_clusters, ["Cluster $i" for i in 1:$k_clusters]),
-                yticks = (1:length($baseline_kept_names), $baseline_kept_names),
-                xticklabelrotation = pi/4
-            )
-            
-            hm_heat = heatmap!(ax_heat, 1:$k_clusters, 1:length($baseline_kept_names), $baseline_centroids', colormap=:RdBu, colorrange=(-3.0, 3.0))
-            Colorbar(fig4[1, 2], hm_heat, label="Standardised Feature Value")
-            
-            for c in 1:$k_clusters
-                for f in 1:length($baseline_kept_names)
-                    val = $baseline_centroids[c, f]
-                    text!(ax_heat, string(round(val, digits=2)), position=(c, f), 
-                          align=(:center, :center), color=abs(val) > 1.5 ? :white : :black, fontsize=12)
-                end
-            end
-            
-            save(joinpath($fig_dir, "dynqual_regime_explanation_heatmap.png"), fig4)
+        # Prepare valid mean maps
+        safe_div(a, b) = b > 0 ? a / b : NaN32
+
+        mean_raw_bod = safe_div.(sum_raw_bod, count_clim)
+        mean_raw_fc = safe_div.(sum_raw_fc, count_clim)
+        mean_raw_tds = safe_div.(sum_raw_tds, count_clim)
+        mean_raw_bodload = safe_div.(sum_raw_bodload, count_clim)
+
+        raw_clim_maps = [
+            (title="BOD / organic", data=mean_raw_bod),
+            (title="Pathogen / FC proxy", data=mean_raw_fc),
+            (title="TDS load", data=mean_raw_tds),
+            (title="BOD load", data=mean_raw_bodload)
+        ]
+        make_dynqual_raw_climatology_figure(fig_dir, sub_lons, sub_lats, raw_clim_maps)
+
+        mean_org_p = safe_div.(sum_org_p, count_clim)
+        mean_pat_p = safe_div.(sum_pat_p, count_clim)
+        mean_ion_p = safe_div.(sum_ion_p, count_clim)
+        mean_was_p = safe_div.(sum_was_p, count_clim)
+        mean_low_p = safe_div.(sum_low_p, count_clim)
+        mean_com_p = safe_div.(sum_com_p, count_clim)
+
+        derived_clim_maps = [
+            (title="Organic O2 Demand Proxy", data=mean_org_p),
+            (title="Pathogen Exposure Proxy", data=mean_pat_p),
+            (title="Ionic / Salinity Proxy", data=mean_ion_p),
+            (title="Wastewater Source Proxy", data=mean_was_p),
+            (title="Low-flow Concentration Proxy", data=mean_low_p),
+            (title="Combined Wastewater Proxy", data=mean_com_p)
+        ]
+        make_dynqual_derived_pressure_layers_figure(fig_dir, sub_lons, sub_lats, derived_clim_maps)
+
+        if actual_n_tranches >= 2
+            make_dynqual_vulnerability_regime_maps_figure(fig_dir, sub_lons, sub_lats, nx, ny, k_clusters, tranche_clusters[1], tranche_clusters[actual_n_tranches])
         end
+
+        make_dynqual_regime_explanation_heatmap_figure(fig_dir, k_clusters, baseline_kept_names, baseline_centroids)
     end
     
     println("--- Demo Complete ---")

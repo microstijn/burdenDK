@@ -59,3 +59,31 @@ All outputs are generated inside `output/dynqual_synthetic_isimip_pressure_demo/
 
 - The generated figures provide diagnostic communication value. They do not constitute formal risk assessments.
 - This is a demonstration script and does not represent a generalised raster ingestion pipeline for `TwoTimescaleResilience`.
+
+## Memory-conscious execution
+
+This demo has been refactored for a memory-conscious execution due to the potentially massive size of the underlying NetCDF datasets.
+
+- The script streams monthly NetCDF slices using `NCDatasets`.
+- Robust scaling quantiles are estimated by deterministic sampling over time and space slices.
+- Full monthly raw, scaled, and response (Q/F/E) 3D arrays are not materialized simultaneously.
+- Pressure memory (`B_state`) is carried by current 2D state arrays only.
+- An optional spatial stride can reduce memory usage for demonstration purposes.
+- NetCDF outputs are disabled by default for memory safety.
+
+### Examples
+
+PowerShell low-memory first run:
+
+```powershell
+$env:TTR_DYNQUAL_SPATIAL_STRIDE="4"
+$env:TTR_DYNQUAL_WRITE_NETCDF="false"
+julia --project=. examples/dynqual_synthetic_isimip_pressure_demo.jl
+```
+
+Fuller-resolution run if memory allows:
+
+```powershell
+$env:TTR_DYNQUAL_SPATIAL_STRIDE="1"
+julia --project=. examples/dynqual_synthetic_isimip_pressure_demo.jl
+```
