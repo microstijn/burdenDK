@@ -37,7 +37,7 @@ function detect_main_variable(ds, preferred_var_name::String)
     end
     lon_var, lat_var, time_var = detect_lon_lat_time_vars(ds)
     for v in keys(ds)
-        if v ∉ [lon_var, lat_var, time_var, "crs"]
+        if v ∉ [lon_var, lat_var, time_var, "crs", "time_bnds", "lat_bnds", "lon_bnds"]
             return v
         end
     end
@@ -105,7 +105,7 @@ function read_month_slice(ds, var_name::String, lon_idx::Vector{Int}, lat_idx::V
                 data[i, j]
             end
 
-            if ismissing(v) || isnothing(v) || (v isa Number && !isfinite(v))
+            if ismissing(v) || isnothing(v) || typeof(v) <: Dates.TimeType || (v isa Number && !isfinite(v))
                 data_f[i, j] = NaN32
             else
                 data_f[i, j] = Float32(v)
@@ -559,7 +559,7 @@ function run_dynqual_synthetic_isimip_pressure_demo(;
                     sum_com_p[x,y] += combined_pressure[x,y]
                 end
             end
-            
+
             # Route through memory & DEB
             proxies_slices = [scaled_bod, scaled_fc, scaled_tds, scaled_bodload, low_flow_pressure, combined_pressure]
 
