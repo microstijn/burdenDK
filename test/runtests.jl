@@ -92,3 +92,10 @@ using TwoTimescaleResilience
 end
 # Multi-Tranche Grid Demo Test
 include("test_archetype_compound_memory_multitranche_grid_demo.jl")
+# Add DynQual helper tests if the flag is set
+if get(ENV, "TTR_RUN_DYNQUAL_TESTS", "false") == "true" || get(ENV, "TTR_RUN_EXAMPLE_TESTS", "false") == "true"
+    @info "Running DynQual example script tests..."
+    include("test_dynqual_demo_helpers.jl")
+else
+    @info "Skipping DynQual helper tests. Set TTR_RUN_DYNQUAL_TESTS=true to run."
+end
