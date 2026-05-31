@@ -83,6 +83,9 @@ using TwoTimescaleResilience
     RUN_EXTENDED_TESTS = get(ENV, "TTR_RUN_EXTENDED_TESTS", "false") == "true"
     RUN_EXAMPLE_TESTS = get(ENV, "TTR_RUN_EXAMPLE_TESTS", "false") == "true"
     RUN_PLOTTING_TESTS = get(ENV, "TTR_RUN_PLOTTING_TESTS", "false") == "true"
+    if RUN_PLOTTING_TESTS
+        include("test_plot_dynqual_synthetic_isimip_pressure_demo.jl")
+    end
     if RUN_EXTENDED_TESTS || RUN_EXAMPLE_TESTS
         include("test_archetype_compound_memory_10yr_grid_demo.jl")
     end

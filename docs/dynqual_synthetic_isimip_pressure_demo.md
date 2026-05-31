@@ -87,3 +87,42 @@ Fuller-resolution run if memory allows:
 $env:TTR_DYNQUAL_SPATIAL_STRIDE="1" 
 julia --project=. examples/dynqual_synthetic_isimip_pressure_demo.jl 
 ```
+
+## Replotting without rerunning the DynQual analysis
+
+The analysis script writes a reusable output cache (`dynqual_demo_cache.nc`) and feature metadata. The separate plotting script reads this cache to regenerate figures without rereading the original DynQual NetCDF files. This is extremely useful for changing colormaps, modifying titles, selecting tranches, or adjusting heatmap feature selections without duplicating the heavy pressure analysis and clustering logic.
+
+First, run the heavy analysis to compute vulnerability features and write the cache:
+
+**Using Bash (Linux / macOS):**
+```bash
+TTR_DYNQUAL_WRITE_CACHE="true" julia --project=. examples/dynqual_synthetic_isimip_pressure_demo.jl
+```
+
+**Using PowerShell (Windows):**
+```powershell
+$env:TTR_DYNQUAL_WRITE_CACHE="true"
+julia --project=. examples/dynqual_synthetic_isimip_pressure_demo.jl
+```
+
+Then, you can freely regenerate plots only:
+
+**Using Bash (Linux / macOS):**
+```bash
+julia --project=. examples/plot_dynqual_synthetic_isimip_pressure_demo.jl
+```
+
+**Using PowerShell (Windows):**
+```powershell
+julia --project=. examples/plot_dynqual_synthetic_isimip_pressure_demo.jl
+```
+
+If you saved your outputs to an optional custom output directory, specify it:
+
+**Using PowerShell (Windows):**
+```powershell
+$env:TTR_DYNQUAL_DEMO_OUTPUT_DIR="output/dynqual_synthetic_isimip_pressure_demo"
+julia --project=. examples/plot_dynqual_synthetic_isimip_pressure_demo.jl
+```
+
+The plotting script exclusively uses the computed arrays in `dynqual_demo_cache.nc` and metadata from `dynqual_feature_metadata.csv`. It does not require access to the original DynQual files.
