@@ -394,10 +394,10 @@ function run_dynqual_synthetic_isimip_pressure_demo(;
         )
 
         feat_res = build_threshold_free_vulnerability_features(
-            resp_tuple,
-            nx = nx, ny = ny, n_species = n_species,
-            months = collect(start_m:end_m),
-            mixture_model_names = ["grouped_ca_then_ia_axis_effects"]
+            resp_tuple;
+            mixture_model_names = ["grouped_ca_then_ia_axis_effects"],
+            preferred_mixture_model = "grouped_ca_then_ia_axis_effects",
+            month_values = collect(start_m:end_m)
         )
 
         if h == 1
