@@ -76,14 +76,14 @@ This demo has been refactored for a memory-conscious execution due to the potent
 PowerShell low-memory first run:
 
 ```powershell
-$env:TTR_DYNQUAL_SPATIAL_STRIDE="4"
-$env:TTR_DYNQUAL_WRITE_NETCDF="false"
-julia --project=. examples/dynqual_synthetic_isimip_pressure_demo.jl
+$env:TTR_DYNQUAL_SPATIAL_STRIDE="4" 
+$env:TTR_DYNQUAL_WRITE_NETCDF="false" 
+julia --project=. examples/dynqual_synthetic_isimip_pressure_demo.jl 
 ```
 
 Fuller-resolution run if memory allows:
 
 ```powershell
-$env:TTR_DYNQUAL_SPATIAL_STRIDE="1"
-julia --project=. examples/dynqual_synthetic_isimip_pressure_demo.jl
+$env:TTR_DYNQUAL_SPATIAL_STRIDE="1" 
+julia --project=. examples/dynqual_synthetic_isimip_pressure_demo.jl 
 ```
