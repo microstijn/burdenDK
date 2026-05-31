@@ -1,1 +1,1 @@
--bash: julia: command not found
+/run/devbox-session/default/command: line 1: julia: command not found
