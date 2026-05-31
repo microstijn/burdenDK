@@ -61,17 +61,58 @@ function subset_indices(lons, lats, bbox, spatial_stride::Int)
 end
 
 function read_month_slice(ds, var_name::String, lon_idx::Vector{Int}, lat_idx::Vector{Int}, t::Int)
-    data = ds[var_name][lon_idx, lat_idx, t]
+    dim_names = dimnames(ds[var_name])
 
-    data_f = Array{Float32, 2}(undef, size(data))
-    for i in eachindex(data)
-        v = data[i]
-        if ismissing(v) || isnothing(v) || (v isa Number && !isfinite(v))
-            data_f[i] = NaN32
-        else
-            data_f[i] = Float32(v)
+    # We must construct the slicing tuple dynamically based on dimension names
+    # typically ("lon", "lat", "time") or ("longitude", "latitude", "time")
+
+    idx_tuple = Any[Colon() for _ in 1:length(dim_names)]
+    for (i, dname) in enumerate(dim_names)
+        if dname == "lon" || dname == "longitude"
+            idx_tuple[i] = lon_idx
+        elseif dname == "lat" || dname == "latitude"
+            idx_tuple[i] = lat_idx
+        elseif dname == "time"
+            idx_tuple[i] = t
         end
     end
+
+    data = ds[var_name][idx_tuple...]
+
+    # Force data into 2D [lon, lat] explicitly to handle different dimension orders safely
+    lon_dim_idx = findfirst(x -> x == "lon" || x == "longitude", dim_names)
+    lat_dim_idx = findfirst(x -> x == "lat" || x == "latitude", dim_names)
+
+    # If the file had [time, lat, lon], data is a Matrix but indices are swapped.
+    # We always return data_f as [lon_idx, lat_idx]
+
+    data_f = Array{Float32, 2}(undef, length(lon_idx), length(lat_idx))
+
+    for i in 1:length(lon_idx)
+        for j in 1:length(lat_idx)
+            v = if lon_dim_idx == 1 && lat_dim_idx == 2
+                data[i, j]
+            elseif lon_dim_idx == 2 && lat_dim_idx == 1
+                data[j, i]
+            elseif length(dim_names) == 3 && lon_dim_idx == 3 && lat_dim_idx == 2
+                # e.g., time, lat, lon
+                data[j, i]
+            elseif length(dim_names) == 3 && lon_dim_idx == 2 && lat_dim_idx == 3
+                # e.g., time, lon, lat
+                data[i, j]
+            else
+                # Fallback assuming data was fetched in order [lon, lat]
+                data[i, j]
+            end
+
+            if ismissing(v) || isnothing(v) || (v isa Number && !isfinite(v))
+                data_f[i, j] = NaN32
+            else
+                data_f[i, j] = Float32(v)
+            end
+        end
+    end
+
     return data_f
 end
 
@@ -488,7 +529,7 @@ function run_dynqual_synthetic_isimip_pressure_demo(;
                     count_clim[x,y] += 1
                 end
             end
-            
+
             # Low flow proxy computation
             low_flow_pressure = zeros(Float32, nx, ny)
             for x in 1:nx, y in 1:ny
