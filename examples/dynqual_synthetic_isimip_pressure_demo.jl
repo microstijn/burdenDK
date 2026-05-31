@@ -310,6 +310,7 @@ function run_dynqual_synthetic_isimip_pressure_demo(;
     k_clusters = parse(Int, get_env_or_fallback("TTR_DYNQUAL_CLUSTER_K", "5"))
     make_plots = get_env_or_fallback("TTR_DYNQUAL_MAKE_PLOTS", "true") == "true"
     write_netcdf = get_env_or_fallback("TTR_DYNQUAL_WRITE_NETCDF", "false") == "true"
+    write_cache = get_env_or_fallback("TTR_DYNQUAL_WRITE_CACHE", "true") == "true"
 
     spatial_stride = parse(Int, get_env_or_fallback("TTR_DYNQUAL_SPATIAL_STRIDE", "1"))
     time_stride = parse(Int, get_env_or_fallback("TTR_DYNQUAL_QUANTILE_TIME_STRIDE", "6"))
@@ -470,6 +471,11 @@ function run_dynqual_synthetic_isimip_pressure_demo(;
     baseline_centroids = zeros(Float64, 0, 0)
     tranche_clusters = Dict{Int, Any}()
 
+    # Feature caching map
+    n_features_total = 10 # 4 means + 5 Q/F aggregations + 1 entropy
+    feature_map = fill(NaN32, nx, ny, n_features_total, actual_n_tranches)
+    valid_cell_mask = zeros(Bool, nx, ny)
+
     # We need to compute an overarching p98 for low_flow pressure to scale it properly.
     # Since low flow pressure requires streaming to know, we'll use a heuristic for scaling it per tranche, 
     # or just clamp it. The instructions say "if lf_p98 > 0, scale it." We will stream and scale dynamically per tranche 
@@ -623,6 +629,9 @@ function run_dynqual_synthetic_isimip_pressure_demo(;
         n_valid = length(flat_valid)
         
         feat_matrix = zeros(Float64, n_valid, n_features)
+        for idx in flat_valid
+            valid_cell_mask[idx[1], idx[2]] = true
+        end
         
         for (i, idx) in enumerate(flat_valid)
             x, y = idx[1], idx[2]
@@ -655,6 +664,10 @@ function run_dynqual_synthetic_isimip_pressure_demo(;
                 end
             end
             feat_matrix[i, 10] = entropy
+
+            for f in 1:n_features
+                feature_map[x, y, f, h] = Float32(feat_matrix[i, f])
+            end
         end
         
         # Free memory
@@ -729,6 +742,83 @@ function run_dynqual_synthetic_isimip_pressure_demo(;
         end
     end
 
+    # Safe div helper
+    safe_div(a, b) = b > 0 ? a / b : NaN32
+
+    mean_raw_bod = safe_div.(sum_raw_bod, count_clim)
+    mean_raw_fc = safe_div.(sum_raw_fc, count_clim)
+    mean_raw_tds = safe_div.(sum_raw_tds, count_clim)
+    mean_raw_bodload = safe_div.(sum_raw_bodload, count_clim)
+
+    mean_org_p = safe_div.(sum_org_p, count_clim)
+    mean_pat_p = safe_div.(sum_pat_p, count_clim)
+    mean_ion_p = safe_div.(sum_ion_p, count_clim)
+    mean_was_p = safe_div.(sum_was_p, count_clim)
+    mean_low_p = safe_div.(sum_low_p, count_clim)
+    mean_com_p = safe_div.(sum_com_p, count_clim)
+
+    # Cache outputs
+    if write_cache
+        println("Writing analysis cache...")
+        cache_path = joinpath(output_dir, "dynqual_demo_cache.nc")
+        NCDataset(cache_path, "c") do ds
+            defDim(ds, "x", nx)
+            defDim(ds, "y", ny)
+            defDim(ds, "tranche", actual_n_tranches)
+            defDim(ds, "feature", n_features_total)
+            defDim(ds, "cluster", k_clusters)
+            defDim(ds, "clustered_feature", length(baseline_kept_names))
+
+            defVar(ds, "lon", sub_lons, ("x",))
+            defVar(ds, "lat", sub_lats, ("y",))
+            defVar(ds, "tranche", 1:actual_n_tranches, ("tranche",))
+            defVar(ds, "feature_index", 1:n_features_total, ("feature",))
+            defVar(ds, "cluster", 1:k_clusters, ("cluster",))
+
+            defVar(ds, "raw_BOD_climatology", mean_raw_bod, ("x", "y"))
+            defVar(ds, "raw_pathogen_climatology", mean_raw_fc, ("x", "y"))
+            defVar(ds, "raw_TDSload_climatology", mean_raw_tds, ("x", "y"))
+            defVar(ds, "raw_BODload_climatology", mean_raw_bodload, ("x", "y"))
+
+            defVar(ds, "organic_pressure_climatology", mean_org_p, ("x", "y"))
+            defVar(ds, "pathogen_pressure_climatology", mean_pat_p, ("x", "y"))
+            defVar(ds, "ionic_pressure_climatology", mean_ion_p, ("x", "y"))
+            defVar(ds, "wastewater_source_pressure_climatology", mean_was_p, ("x", "y"))
+            defVar(ds, "low_flow_concentration_pressure_climatology", mean_low_p, ("x", "y"))
+            defVar(ds, "combined_wastewater_pressure_climatology", mean_com_p, ("x", "y"))
+
+            # Cluster ID
+            cluster_id_var = defVar(ds, "cluster_id", Float32, ("x", "y", "tranche"))
+            for h in 1:actual_n_tranches
+                cluster_id_var[:, :, h] = tranche_clusters[h]
+            end
+
+            defVar(ds, "feature_map", feature_map, ("x", "y", "feature", "tranche"))
+            defVar(ds, "baseline_centroids", baseline_centroids, ("cluster", "clustered_feature"))
+        end
+
+        feature_metadata = DataFrame(
+            feature_index = 1:n_features_total,
+            feature_name = [
+                "mean_E_assimilation_grouped", "mean_E_maintenance_grouped", "mean_E_growth_grouped", "mean_E_reproduction_grouped",
+                "mean_Q_grouped", "p95_Q_grouped", "mean_F_grouped", "p95_F_grouped", "max_F_grouped", "axis_entropy"
+            ],
+            feature_descriptor = [
+                "mean assimilation-axis pressure", "mean maintenance-axis pressure", "mean growth-axis pressure", "mean reproduction-axis pressure",
+                "mean total weighted burden", "upper-tail total weighted burden", "mean amplification", "upper-tail amplification", "max amplification", "spread of impairment across DEB axes"
+            ],
+            used_for_clustering = [(name in baseline_kept_names) for name in [
+                "mean_E_assimilation_grouped", "mean_E_maintenance_grouped", "mean_E_growth_grouped", "mean_E_reproduction_grouped",
+                "mean_Q_grouped", "p95_Q_grouped", "mean_F_grouped", "p95_F_grouped", "max_F_grouped", "axis_entropy"
+            ]],
+            units_or_scale = ["0-1", "0-1", "0-1", "0-1", "0-1", "0-1", "dimensionless", "dimensionless", "dimensionless", "dimensionless"]
+        )
+        CSV.write(joinpath(output_dir, "dynqual_feature_metadata.csv"), feature_metadata)
+    else
+        @warn "Cache writing disabled. Set TTR_DYNQUAL_WRITE_CACHE=true to enable it. Changing plots will require rerunning."
+        cache_path = ""
+    end
+
     # 7. Metadata
     metadata = Dict(
         "generated_by" => "TwoTimescaleResilience",
@@ -751,7 +841,15 @@ function run_dynqual_synthetic_isimip_pressure_demo(;
         "n_species" => n_species,
         "cluster_k" => k_clusters,
         "synthetic_pressure_proxies" => true,
-        "threshold_free_features" => true
+        "threshold_free_features" => true,
+        "cache_written" => write_cache,
+        "cache_path" => write_cache ? cache_path : "",
+        "cache_contains_raw_climatologies" => write_cache,
+        "cache_contains_pressure_climatologies" => write_cache,
+        "cache_contains_cluster_maps" => write_cache,
+        "cache_contains_feature_maps" => write_cache,
+        "cache_contains_baseline_centroids" => write_cache,
+        "plotting_can_run_without_original_dynqual_files" => write_cache
     )
     open(joinpath(output_dir, "dynqual_synthetic_isimip_metadata.json"), "w") do f
         JSON.print(f, metadata, 4)
@@ -764,12 +862,7 @@ function run_dynqual_synthetic_isimip_pressure_demo(;
         mkpath(fig_dir)
         
         # Prepare valid mean maps
-        safe_div(a, b) = b > 0 ? a / b : NaN32
         
-        mean_raw_bod = safe_div.(sum_raw_bod, count_clim)
-        mean_raw_fc = safe_div.(sum_raw_fc, count_clim)
-        mean_raw_tds = safe_div.(sum_raw_tds, count_clim)
-        mean_raw_bodload = safe_div.(sum_raw_bodload, count_clim)
         
         raw_clim_maps = [
             (title="BOD / organic", data=mean_raw_bod),
@@ -780,12 +873,6 @@ function run_dynqual_synthetic_isimip_pressure_demo(;
         make_dynqual_raw_climatology_figure(fig_dir, sub_lons, sub_lats, raw_clim_maps)
         
         mean_org_p = safe_div.(sum_org_p, count_clim)
-        mean_pat_p = safe_div.(sum_pat_p, count_clim)
-        mean_ion_p = safe_div.(sum_ion_p, count_clim)
-        mean_was_p = safe_div.(sum_was_p, count_clim)
-        mean_low_p = safe_div.(sum_low_p, count_clim)
-        mean_com_p = safe_div.(sum_com_p, count_clim)
-        
         derived_clim_maps = [
             (title="Organic O2 Demand Proxy", data=mean_org_p),
             (title="Pathogen Exposure Proxy", data=mean_pat_p),
