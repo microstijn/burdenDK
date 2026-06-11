@@ -479,44 +479,95 @@ function ec50_anchored_fractional_impairment(axis_pressures)
     )
 end
 
+function _equal_axis_weights(axis_weight_scope::String)
+    return (
+        w_assimilation = 0.25,
+        w_maintenance = 0.25,
+        w_growth = 0.25,
+        w_reproduction = 0.25,
+        axis_weight_method = "equal_weight_diagnostic_fallback",
+        axis_weight_scope = axis_weight_scope
+    )
+end
+
+"""
+    axis_weights_for_species(params; method="auto", axis_weight_scope="all_axes")
+
+Dimensionless weights over the four DEB-informed axes
+(assimilation, maintenance, growth, reproduction) used to combine per-axis
+impairments into the scalar `Q_t`.
+
+Methods:
+
+- `"kappa_rule_assimilation_led"` (and `"auto"`, the **default**): kappa-rule
+  weights grounded in the DEB allocation split. Assimilation gates the reserve
+  buffer (which *is* the adaptive margin), so it carries the largest share; the
+  somatic fraction `kappa` is split equally over maintenance and growth, and
+  reproduction carries `1 - kappa`:
+
+      w_raw = [1, kappa/2, kappa/2, 1 - kappa]   (sum = 2)
+      w     = [1/2, kappa/4, kappa/4, (1 - kappa)/2]
+
+  `kappa` is recovered from the growth/reproduction split,
+  `kappa = alpha_G / (alpha_G + alpha_R)`, so the scheme is robust to alpha-axes
+  that are not already normalized.
+
+- `"normalized_alpha_axes"`: **legacy / diagnostic only.** Normalizes the raw
+  alpha-axes, which mixes quantities with different units (1/E_m, 1/L_m, kappa,
+  1-kappa) and drives the assimilation weight to ~0 for AmP-derived species. Not
+  recommended as an output path; retained for backwards comparison.
+
+- `"equal_weight_diagnostic_fallback"`: equal 0.25 weights.
+"""
 function axis_weights_for_species(params::DEBAxisParams; method::String = "auto", axis_weight_scope::String = "all_axes")
-    if method == "auto" || method == "normalized_alpha_axes"
+    if method == "auto" || method == "kappa_rule_assimilation_led"
         alphas = params.alpha_axes
-        sum_alphas = sum(alphas)
-        
-        # Validation
+
         for a in alphas
             if !isfinite(a) || a < 0.0
-                if method == "normalized_alpha_axes"
+                if method == "kappa_rule_assimilation_led"
                     throw(ArgumentError("Alpha axes values must be finite and non-negative"))
                 else
-                    return (
-                        w_assimilation = 0.25,
-                        w_maintenance = 0.25,
-                        w_growth = 0.25,
-                        w_reproduction = 0.25,
-                        axis_weight_method = "equal_weight_diagnostic_fallback",
-                        axis_weight_scope = axis_weight_scope
-                    )
+                    return _equal_axis_weights(axis_weight_scope)
                 end
             end
         end
-        
-        if sum_alphas <= 0.0
-            if method == "normalized_alpha_axes"
-                throw(ArgumentError("Sum of alpha axes must be > 0"))
+
+        alpha_G = alphas[3]
+        alpha_R = alphas[4]
+        denom = alpha_G + alpha_R
+        if denom <= 0.0
+            if method == "kappa_rule_assimilation_led"
+                throw(ArgumentError("alpha_G + alpha_R must be > 0 to recover kappa"))
             else
-                return (
-                    w_assimilation = 0.25,
-                    w_maintenance = 0.25,
-                    w_growth = 0.25,
-                    w_reproduction = 0.25,
-                    axis_weight_method = "equal_weight_diagnostic_fallback",
-                    axis_weight_scope = axis_weight_scope
-                )
+                return _equal_axis_weights(axis_weight_scope)
             end
         end
-        
+
+        kappa = alpha_G / denom
+        return (
+            w_assimilation = 0.5,
+            w_maintenance = kappa / 4,
+            w_growth = kappa / 4,
+            w_reproduction = (1.0 - kappa) / 2,
+            axis_weight_method = "kappa_rule_assimilation_led",
+            axis_weight_scope = axis_weight_scope
+        )
+    elseif method == "normalized_alpha_axes"
+        # Legacy / diagnostic only: dimensionally-incoherent normalized alpha.
+        alphas = params.alpha_axes
+        sum_alphas = sum(alphas)
+
+        for a in alphas
+            if !isfinite(a) || a < 0.0
+                throw(ArgumentError("Alpha axes values must be finite and non-negative"))
+            end
+        end
+
+        if sum_alphas <= 0.0
+            throw(ArgumentError("Sum of alpha axes must be > 0"))
+        end
+
         return (
             w_assimilation = alphas[1] / sum_alphas,
             w_maintenance = alphas[2] / sum_alphas,
@@ -526,21 +577,31 @@ function axis_weights_for_species(params::DEBAxisParams; method::String = "auto"
             axis_weight_scope = axis_weight_scope
         )
     elseif method == "equal_weight_diagnostic_fallback"
-        return (
-            w_assimilation = 0.25,
-            w_maintenance = 0.25,
-            w_growth = 0.25,
-            w_reproduction = 0.25,
-            axis_weight_method = "equal_weight_diagnostic_fallback",
-            axis_weight_scope = axis_weight_scope
-        )
+        return _equal_axis_weights(axis_weight_scope)
     else
         throw(ArgumentError("Unsupported axis weight method: $method"))
     end
 end
 
-function compute_adaptive_margin_response(axis_pressures, params::DEBAxisParams; 
-    response_mode::String = "raw_margin_subtraction", 
+"""
+    compute_adaptive_margin_response(axis_pressures, params; response_mode="ec50_anchored_fractional_impairment", ...)
+
+Compute the adaptive margin `A_t`, restoring force `lambda_t`, and amplification
+factor `F_t` from per-axis pressures.
+
+`response_mode`:
+
+- `"ec50_anchored_fractional_impairment"` (**default, canonical**): nondimensional
+  margin `A_t = A0 * max(A_floor_fraction, 1 - Q_t)`, with `Q_t` a weighted sum of
+  bounded per-axis impairments `E = x/(1+x)`. The margin responds across the full
+  `[0, A0]` range at realistic stress.
+- `"raw_margin_subtraction"` (**diagnostic only**): `A_t = A0 - sum(alpha .* s)`.
+  Because `A0` is O(1e3) while `alpha .* s` is O(1) for realistic stress, the margin
+  barely moves and `F_t ~ 1` for almost every species. Retained for comparison; not
+  recommended as an output path.
+"""
+function compute_adaptive_margin_response(axis_pressures, params::DEBAxisParams;
+    response_mode::String = "ec50_anchored_fractional_impairment",
     A_floor_fraction::Float64 = 1e-6)
     
     if !isfinite(A_floor_fraction) || A_floor_fraction <= 0.0 || A_floor_fraction > 1.0
