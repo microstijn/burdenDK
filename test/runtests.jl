@@ -26,6 +26,7 @@ using TwoTimescaleResilience
     # -------------------------------------------------------------------------
     include("test_ecotox_library.jl")
     include("test_amp_library.jl")
+    include("test_amp_translator_identities.jl")
 
     # -------------------------------------------------------------------------
     # Temporarily disabled: heavier / integration / IO / plotting / examples

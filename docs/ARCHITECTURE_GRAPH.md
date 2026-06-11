@@ -2,7 +2,7 @@
 
 ## Audited date
 
-2026-05-29
+2026-05-29. **Partial re-audit 2026-06-11** — see `docs/claude/TwoTimescaleResilience_source_audit_2026-06-11.md`. The `Z_t` node status was corrected (now implemented, opt-in); the node/edge inventory otherwise predates several added source files.
 
 ## Purpose
 
@@ -68,7 +68,7 @@ flowchart LR
     SyntheticRaster[Synthetic Raster Demos] --> Stress
 
     %% Future / Unimplemented
-    PhysZ[Physiological Z_t] -.->|Not Implemented| A
+    PhysZ[Physiological Z_t] -.->|Opt-in, off by default| A
     DEBtoxD[DEBtox Scaled Damage D_t] -.->|Not Implemented| Stress
     Synergism[Fitted Interactions / Synergism] -.->|Not Implemented| MixtureAgg
 ```
@@ -92,7 +92,7 @@ flowchart LR
 | `Clustering` | cluster regimes | clustering | `src/vulnerability_regime_clustering.jl` | `cluster_threshold_free_vulnerability_regimes` | core_implemented_tested | Discrete spatial vulnerabilities |
 | `Outputs` | vulnerability outputs | output_io | `src/vulnerability_regime_outputs.jl` | `write_vulnerability_regime_netcdf` | core_implemented_tested | Writes regime clusters to NetCDF |
 | `ArchetypeDB` | AmP_Species_Archetypes | data_source | `data/AmP_Species_Archetypes.json` | - | core_implemented_tested | Database derived from AmP |
-| `Z_t` | Physiological Z_t | future_or_not_implemented | - | - | not_implemented | Z_t parameter exists but no math |
+| `Z_t` | Physiological Z_t | core_math | `src/condition_buffer.jl` | `simulate_condition_buffer`, `adaptive_margin_with_buffer` | implemented_opt_in | Full condition-buffer math; off by default, not yet validated/calibrated |
 | `D_t` | DEBtox D_t | future_or_not_implemented | - | - | not_implemented | - |
 | `RealRasterIngest` | Real Raster Ingestion | adapter | - | - | partial | Limited reusable real-raster API; mostly examples |
 | `NetCDFUtils` | NetCDF Layer Utilities | utility | `src/netcdf.jl` | `load_nc_layer` | core_implemented_tested | Basic NetCDF array logic |
@@ -132,7 +132,7 @@ flowchart LR
 
 ## Future or explicitly not implemented paths
 
-- **Physiological condition memory $Z_t$:** Planned, parameter placeholders exist, but mathematical carryover is not currently implemented. Must wait until chemical memory and spatial features are completely stable.
+- **Physiological condition memory $Z_t$:** Implemented as an opt-in layer in `src/condition_buffer.jl` (`simulate_condition_buffer`, `adaptive_margin_with_buffer`, wired into `deb_amplification_pipeline`). Off by default (`beta_Z=0`, `use_buffer_recovery_factor=false`) and not yet validated/calibrated, so it is not on the default path — but the mathematical carryover does exist.
 - **DEBtox scaled damage $D_t$:** Explicitly not implemented to avoid confusing with basic internal burden $B_t$.
 - **Synergism/Antagonism:** Excluded; the package focuses on mixture-effect assumptions, not curve-fitted interaction parameters.
 - **Fitted interactions:** The codebase must avoid arbitrary mathematical tuning parameters (like `kappa`, `gain`, `response_scale`).

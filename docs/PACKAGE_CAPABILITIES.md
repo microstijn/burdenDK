@@ -2,7 +2,9 @@
 
 ## Audited date
 
-2026-05-29
+2026-05-29. **Partial re-audit 2026-06-11** — see `docs/claude/TwoTimescaleResilience_source_audit_2026-06-11.md`.
+
+> **Stale-inventory warning.** The source-file inventory below predates 17 source files added since 2026-05-29 and not yet listed here: `AmP_Translator.jl`, `ascii.jl`, `background.jl`, `condition_buffer.jl`, `default_isimip_moa.jl`, `exposure_filters.jl`, `grids.jl`, `isimip_deb_pipeline.jl`, `isimip_event_response.jl`, `metrics.jl`, `moa_deb_mapping.jl`, `mode_of_action.jl`, `plotting.jl`, `pulses.jl`, `simulation.jl`, `species_defaults.jl`, `vulnerability_tranche_comparison.jl`. Note `AmP_Translator.jl` is a standalone offline data-generation script (depends on `MAT`, reads `data/allStat.mat`, writes `data/AmP_Species_Library.json`) and is **not `include`d** in the module; it is where the `{p_Am,p_M,κ,v} → A0/α-axes/KA` mapping actually lives. Regenerate this inventory from the module before relying on it as complete.
 
 ## Source-file inventory
 
@@ -235,14 +237,14 @@ Some tests in this group may validate real core functionality but are operationa
 | Synthetic raster examples | example_only | `examples/synthetic_raster_demo.jl` | Demonstration workflow, not source of core model equations. |
 | Real external raster demonstration examples | example_only | `examples/nc_real_raster_deb_axes_demo.jl` | Demonstrates use of raster/NetCDF inputs if present. |
 | Stable reusable real external raster ingestion pipeline | partial | `src/netcdf.jl`, raster examples | Basic utilities exist, but generalized robust real-raster ingestion is not yet the main stable workflow. |
-| Physiological condition memory `Z_t` | not_implemented | No active validated `Z_t` model layer found. | Keep distinct from chemical memory `B_t`. |
+| Physiological condition memory `Z_t` | implemented_opt_in | `src/condition_buffer.jl` (`ConditionBufferParams`, `simulate_condition_buffer`, `adaptive_margin_with_buffer`); wired into `deb_amplification_pipeline` and `restoring_force_from_margin_and_axes`. | Off by default (`beta_Z=0`, `use_buffer_recovery_factor=false`); not yet validated/calibrated. Keep distinct from chemical memory `B_t`. |
 | DEBtox scaled damage `D_t` | not_implemented | No source code evidence found. | Future TKTD extension only; do not conflate with `B_t` or `E_axis`. |
 | Synergism/antagonism | not_implemented | `src/mixture_aggregation.jl` documents explicit mixture-effect assumptions. | TU, IA, and grouped CA-then-IA are not fitted interaction models. |
 | Fitted interactions | not_implemented | No source evidence found for fitted interaction coefficients or arbitrary interaction matrices. | Current mixture layer is assumption-based. |
 
 ## Known architectural invariants
 
-- **Compound memory vs physiological condition:** Maintain absolute separation of chemical memory `B_t` from physiological condition memory `Z_t` and DEBtox scaled damage `D_t`. `Z_t` and `D_t` are not implemented as active validated model layers.
+- **Compound memory vs physiological condition:** Maintain absolute separation of chemical memory `B_t` from physiological condition memory `Z_t` and DEBtox scaled damage `D_t`. `Z_t` is implemented as an opt-in layer (`src/condition_buffer.jl`), off by default and not yet validated/calibrated; `D_t` remains unimplemented. Keep the three distinct.
 - **Threshold-free definitions:** Threshold-free feature construction must not introduce arbitrary exceedance features. Naming or logic using patterns such as `_gt_`, `_lt_`, `threshold`, `exceedance`, `above`, or `below` should fail validation if the guards are present in source.
 - **Mixture assumptions:** The package implements mathematical mixture-effect assumptions such as TU, IA, and grouped CA-then-IA, not arbitrary curve-tuned chemical interaction models.
 - **Prohibited tuning parameters:** Mathematical tuning parameters named or behaving like `kappa`, `κ`, `gain`, `response_scale`, or `burden_to_margin_multiplier` should remain absent unless a separate, explicitly scoped model extension is introduced and reviewed.

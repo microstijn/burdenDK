@@ -6,6 +6,8 @@ using JSON
 using CSV
 using DataFrames
 using NCDatasets
+using Downloads
+using GeoJSON
 
 # --- Helper Functions ---
 
@@ -97,7 +99,6 @@ function feature_delta_map(feature_map, feature_index, baseline_idx, recent_idx)
 end
 
 function clusterwise_feature_delta(feature_map, cluster_recent, feature_indices, baseline_idx, recent_idx, k; valid_mask=nothing)
-    # Return feature × cluster matrix
     delta_matrix = zeros(Float64, length(feature_indices), k)
 
     for (f_i, feat_idx) in enumerate(feature_indices)
@@ -129,11 +130,54 @@ end
 
 # --- Plotting Functions ---
 
-function make_dynqual_raw_climatology_figure(fig_dir, lons, lats, raw_clim_maps)
+function draw_geojson_ring!(ax, ring; color=:black, linewidth=0.45)
+    n = length(ring)
+    n < 2 && return
+
+    xs = Vector{Float64}(undef, n)
+    ys = Vector{Float64}(undef, n)
+
+    for i in 1:n
+        xs[i] = Float64(ring[i][1])
+        ys[i] = Float64(ring[i][2])
+    end
+
+    lines!(ax, xs, ys; color=color, linewidth=linewidth)
+end
+
+function add_borders!(ax, countries)
+    if countries isa AbstractDict && haskey(countries, "features")
+        for feature in countries["features"]
+            geom = get(feature, "geometry", nothing)
+            isnothing(geom) && continue
+
+            geom_type = get(geom, "type", "")
+            coords = get(geom, "coordinates", nothing)
+            isnothing(coords) && continue
+
+            if geom_type == "Polygon"
+                for ring in coords
+                    draw_geojson_ring!(ax, ring)
+                end
+
+            elseif geom_type == "MultiPolygon"
+                for polygon in coords
+                    for ring in polygon
+                        draw_geojson_ring!(ax, ring)
+                    end
+                end
+            end
+        end
+    else
+        lines!(ax, GeoMakie.coastlines(); color=:black, linewidth=0.8)
+    end
+end
+
+function make_dynqual_raw_climatology_figure(fig_dir, lons, lats, lon_lims, lat_lims, raw_clim_maps, countries)
     try
-        @eval using CairoMakie
+        @eval using CairoMakie, GeoMakie
     catch
-        error("CairoMakie is required for plotting but is not available.")
+        error("CairoMakie and GeoMakie are required for plotting but are not available.")
     end
 
     println("  -> Figure 1: Raw climatology")
@@ -143,18 +187,20 @@ function make_dynqual_raw_climatology_figure(fig_dir, lons, lats, raw_clim_maps)
     for (i, p_info) in enumerate(raw_clim_maps)
         row = cld(i, 2)
         col = mod1(i, 2) * 2 - 1
-        ax = Axis(fig1[row, col], title=p_info.title, aspect=DataAspect())
+        ax = GeoAxis(fig1[row, col], title=p_info.title, dest="+proj=longlat", xgridvisible=false, ygridvisible=false, limits=(lon_lims, lat_lims))
         hm = heatmap!(ax, lons, lats, p_info.data, colormap=:viridis)
+        add_borders!(ax, countries)
         Colorbar(fig1[row, col+1], hm, label="log1p")
+        colsize!(fig1.layout, col+1, Auto())
     end
     save(joinpath(fig_dir, "dynqual_raw_climatology_maps.png"), fig1)
 end
 
-function make_dynqual_derived_pressure_layers_figure(fig_dir, lons, lats, derived_clim_maps)
+function make_dynqual_derived_pressure_layers_figure(fig_dir, lons, lats, lon_lims, lat_lims, derived_clim_maps, countries)
     try
-        @eval using CairoMakie
+        @eval using CairoMakie, GeoMakie
     catch
-        error("CairoMakie is required for plotting but is not available.")
+        error("CairoMakie and GeoMakie are required for plotting but are not available.")
     end
 
     println("  -> Figure 2: Derived pressure archetypes")
@@ -164,84 +210,95 @@ function make_dynqual_derived_pressure_layers_figure(fig_dir, lons, lats, derive
     for (i, p_info) in enumerate(derived_clim_maps)
         row = cld(i, 3)
         col = mod1(i, 3) * 2 - 1
-        ax = Axis(fig2[row, col], title=p_info.title, aspect=DataAspect())
+        ax = GeoAxis(fig2[row, col], title=p_info.title, dest="+proj=longlat", xgridvisible=false, ygridvisible=false, limits=(lon_lims, lat_lims))
         hm = heatmap!(ax, lons, lats, p_info.data, colormap=:plasma, colorrange=(0.0, 1.0))
+        add_borders!(ax, countries)
         Colorbar(fig2[row, col+1], hm, label="Relative Impairment")
+        colsize!(fig2.layout, col+1, Auto())
     end
     save(joinpath(fig_dir, "dynqual_derived_pressure_layers.png"), fig2)
 end
 
-function make_dynqual_vulnerability_regime_maps_figure(fig_dir, lons, lats, nx, ny, k_clusters, map_base, map_rec)
+function make_dynqual_vulnerability_regime_maps_figure(fig_dir, lons, lats, nx, ny, lon_lims, lat_lims, k_clusters, map_base, map_rec, countries)
     try
-        @eval using CairoMakie
+        @eval using CairoMakie, GeoMakie
     catch
-        error("CairoMakie is required for plotting but is not available.")
+        error("CairoMakie and GeoMakie are required for plotting but are not available.")
     end
 
     println("  -> Figure 3: Vulnerability regimes")
     fig3 = Figure(size = (1200, 600))
     Label(fig3[0, :], "Threshold-free vulnerability regimes from DynQual-derived pressures", font=:bold, fontsize=20)
 
-    ax_base = Axis(fig3[1, 1], title="Baseline Tranche (1980s) Vulnerability Regimes", aspect=DataAspect())
+    ax_base = GeoAxis(fig3[1, 1], title="Baseline Tranche (1980s) Vulnerability Regimes", dest="+proj=longlat", xgridvisible=false, ygridvisible=false, limits=(lon_lims, lat_lims))
     map_base_2d = ndims(map_base) == 1 ? reshape(map_base, nx, ny) : map_base
     hm_base = heatmap!(ax_base, lons, lats, map_base_2d, colormap=:Set1_5, colorrange=(0.5, k_clusters + 0.5))
+    add_borders!(ax_base, countries)
     Colorbar(fig3[1, 2], hm_base, ticks=1:k_clusters)
+    colsize!(fig3.layout, 2, Auto())
 
-    ax_rec = Axis(fig3[1, 3], title="Recent Tranche (2010s) Vulnerability Regimes", aspect=DataAspect())
+    ax_rec = GeoAxis(fig3[1, 3], title="Recent Tranche (2010s) Vulnerability Regimes", dest="+proj=longlat", xgridvisible=false, ygridvisible=false, limits=(lon_lims, lat_lims))
     map_rec_2d = ndims(map_rec) == 1 ? reshape(map_rec, nx, ny) : map_rec
     hm_rec = heatmap!(ax_rec, lons, lats, map_rec_2d, colormap=:Set1_5, colorrange=(0.5, k_clusters + 0.5))
+    add_borders!(ax_rec, countries)
     Colorbar(fig3[1, 4], hm_rec, ticks=1:k_clusters)
+    colsize!(fig3.layout, 4, Auto())
 
     save(joinpath(fig_dir, "dynqual_vulnerability_regime_maps.png"), fig3)
 end
 
-function make_dynqual_baseline_recent_comparison_figure(fig_dir, lons, lats, nx, ny, k_clusters, cluster_base, cluster_recent, df_meta, feature_map, valid_cell_mask)
+function make_dynqual_baseline_recent_comparison_figure(fig_dir, lons, lats, nx, ny, lon_lims, lat_lims, k_clusters, cluster_base, cluster_recent, df_meta, feature_map, valid_cell_mask, countries)
     try
-        @eval using CairoMakie
+        @eval using CairoMakie, GeoMakie
     catch
-        error("CairoMakie is required for plotting but is not available.")
+        error("CairoMakie and GeoMakie are required for plotting but are not available.")
     end
 
     println("  -> Figure A: Baseline vs Recent Comparison")
-    fig = Figure(size = (1800, 1200))
-    Label(fig[0, :], "Baseline vs Recent Vulnerability Regimes Comparison", font=:bold, fontsize=24)
+    fig = Figure(size = (2800, 1600))
+    Label(fig[0, 1], "Baseline vs Recent Vulnerability Regimes Comparison", font=:bold, fontsize=24)
 
-    # Top Row: Baseline Map, Recent Map, Changed Regime Map
+    top_grid = fig[1, 1] = GridLayout()
+    bottom_grid = fig[2, 1] = GridLayout()
 
-    # 1. Baseline Map
-    ax_base = Axis(fig[1, 1], title="Baseline Tranche", aspect=DataAspect())
+    # --- Top Row: Baseline Map, Recent Map, Changed Regime Map ---
+    ax_base = GeoAxis(top_grid[1, 1], title="Baseline Tranche", dest="+proj=longlat", xgridvisible=false, ygridvisible=false, limits=(lon_lims, lat_lims))
     cb_2d = ndims(cluster_base) == 1 ? reshape(cluster_base, nx, ny) : cluster_base
     hm_base = heatmap!(ax_base, lons, lats, cb_2d, colormap=:Set1_5, colorrange=(0.5, k_clusters + 0.5))
-    Colorbar(fig[1, 2], hm_base, ticks=1:k_clusters)
+    add_borders!(ax_base, countries)
+    Colorbar(top_grid[1, 2], hm_base, ticks=1:k_clusters)
 
-    # 2. Recent Map
-    ax_rec = Axis(fig[1, 3], title="Recent Tranche", aspect=DataAspect())
+    ax_rec = GeoAxis(top_grid[1, 3], title="Recent Tranche", dest="+proj=longlat", xgridvisible=false, ygridvisible=false, limits=(lon_lims, lat_lims))
     cr_2d = ndims(cluster_recent) == 1 ? reshape(cluster_recent, nx, ny) : cluster_recent
     hm_rec = heatmap!(ax_rec, lons, lats, cr_2d, colormap=:Set1_5, colorrange=(0.5, k_clusters + 0.5))
-    Colorbar(fig[1, 4], hm_rec, ticks=1:k_clusters)
+    add_borders!(ax_rec, countries)
+    Colorbar(top_grid[1, 4], hm_rec, ticks=1:k_clusters)
 
-    # 3. Changed Regime Map
     changed_map, frac_changed = changed_regime_map(cluster_base, cluster_recent; valid_mask=valid_cell_mask)
     changed_2d = ndims(changed_map) == 1 ? reshape(changed_map, nx, ny) : changed_map
-
-    ax_change = Axis(fig[1, 5], title="Changed regime cells", subtitle="$(round(frac_changed * 100, digits=1))% of valid cells changed regime", aspect=DataAspect())
-
-    # create a custom colormap for the changed map: unchanged (0) = grey, changed (1) = red/purple
+    ax_change = GeoAxis(top_grid[1, 5], title="Changed regime cells\n$(round(frac_changed * 100, digits=1))% of valid cells changed", dest="+proj=longlat", xgridvisible=false, ygridvisible=false, limits=(lon_lims, lat_lims))
     cmap_change = cgrad([:lightgrey, :purple], 2, categorical=true)
     hm_change = heatmap!(ax_change, lons, lats, changed_2d, colormap=cmap_change, colorrange=(-0.5, 1.5))
-    # Custom colorbar for the binary changed map
-    Colorbar(fig[1, 6], hm_change, ticks=( [0.0, 1.0], ["Unchanged", "Changed"] ))
+    add_borders!(ax_change, countries)
+    Colorbar(top_grid[1, 6], hm_change, ticks=( [0.0, 1.0], ["Unchanged", "Changed"] ))
 
-    # Bottom Row: Transition Heatmap, Feature Delta Map 1, Feature Delta Map 2
+    colsize!(top_grid, 2, Auto())
+    colsize!(top_grid, 4, Auto())
+    colsize!(top_grid, 6, Auto())
 
-    # 4. Transition Heatmap
+    # --- Bottom Row: Transition Heatmap, Feature Delta Map 1, Feature Delta Map 2 ---
     T, counts = transition_matrix(cluster_base, cluster_recent, k_clusters; valid_mask=valid_cell_mask)
-    ax_trans = Axis(fig[2, 1:2], title="Cluster transitions: baseline to recent",
-        xticks=(1:k_clusters, ["Recent $i" for i in 1:k_clusters]),
-        yticks=(1:k_clusters, ["Baseline $i" for i in 1:k_clusters])
+    
+    # Enforce strict String array to prevent Makie Vector{Any} StackOverflow
+    x_ticks_labels = String["Recent $i" for i in 1:k_clusters]
+    y_ticks_labels = String["Baseline $i" for i in 1:k_clusters]
+    
+    ax_trans = Axis(bottom_grid[1, 1], title="Cluster transitions: baseline to recent",
+        xticks=(1:k_clusters, x_ticks_labels),
+        yticks=(1:k_clusters, y_ticks_labels)
     )
     hm_trans = heatmap!(ax_trans, 1:k_clusters, 1:k_clusters, T', colormap=:viridis, colorrange=(0.0, 1.0))
-    Colorbar(fig[2, 3], hm_trans, label="fraction of baseline cluster")
+    Colorbar(bottom_grid[1, 2], hm_trans, label="fraction of baseline cluster")
 
     if k_clusters <= 8
         for i in 1:k_clusters
@@ -255,17 +312,15 @@ function make_dynqual_baseline_recent_comparison_figure(fig_dir, lons, lats, nx,
         end
     end
 
-    # Feature Delta Maps
-    ax_feat1 = Axis(fig[2, 4], title="No first feature-delta map available", aspect=DataAspect())
+    ax_feat1 = Axis(bottom_grid[1, 3], title="No first feature-delta map available")
     hidespines!(ax_feat1)
     hidedecorations!(ax_feat1)
 
-    ax_feat2 = Axis(fig[2, 5], title="No second feature-delta map available", aspect=DataAspect())
+    ax_feat2 = Axis(bottom_grid[1, 5], title="No second feature-delta map available")
     hidespines!(ax_feat2)
     hidedecorations!(ax_feat2)
 
     if !isnothing(feature_map)
-        # Select first feature (amplification/burden)
         group1_prefs = ["p95_F_grouped", "mean_F_grouped", "p95_Q_grouped", "mean_Q_grouped",
                         "mean_E_maintenance_grouped", "mean_E_growth_grouped", "mean_E_reproduction_grouped", "mean_E_assimilation_grouped", "axis_entropy"]
         idx1_arr, name1_arr, desc1_arr = select_available_features(df_meta, group1_prefs)
@@ -281,12 +336,12 @@ function make_dynqual_baseline_recent_comparison_figure(fig_dir, lons, lats, nx,
             max_v = finite_max_abs(delta1)
             if isfinite(max_v) && max_v > 0
                 delta1_2d = ndims(delta1) == 1 ? reshape(delta1, nx, ny) : delta1
-                ax_feat1 = Axis(fig[2, 4], title="Δ $(feat1_desc)", aspect=DataAspect())
-                hm_feat1 = heatmap!(ax_feat1, lons, lats, delta1_2d, colormap=:balance, colorrange=(-max_v, max_v))
-                Colorbar(fig[2, 5], hm_feat1)
+                ax_feat1_geo = GeoAxis(bottom_grid[1, 3], title="Δ $(feat1_desc)", dest="+proj=longlat", xgridvisible=false, ygridvisible=false, limits=(lon_lims, lat_lims))
+                hm_feat1 = heatmap!(ax_feat1_geo, lons, lats, delta1_2d, colormap=:balance, colorrange=(-max_v, max_v))
+                add_borders!(ax_feat1_geo, countries)
+                Colorbar(bottom_grid[1, 4], hm_feat1)
             end
 
-            # Select second feature (axis pressure) excluding the first
             group2_prefs = filter(x -> x != name1_arr[1], [
                 "mean_E_maintenance_grouped", "mean_E_growth_grouped", "mean_E_reproduction_grouped", "mean_E_assimilation_grouped",
                 "p95_F_grouped", "mean_F_grouped", "p95_Q_grouped", "mean_Q_grouped", "axis_entropy"
@@ -301,13 +356,18 @@ function make_dynqual_baseline_recent_comparison_figure(fig_dir, lons, lats, nx,
                 max_v2 = finite_max_abs(delta2)
                 if isfinite(max_v2) && max_v2 > 0
                     delta2_2d = ndims(delta2) == 1 ? reshape(delta2, nx, ny) : delta2
-                    ax_feat2 = Axis(fig[2, 6], title="Δ $(feat2_desc)", aspect=DataAspect())
-                    hm_feat2 = heatmap!(ax_feat2, lons, lats, delta2_2d, colormap=:balance, colorrange=(-max_v2, max_v2))
-                    Colorbar(fig[2, 7], hm_feat2)
+                    ax_feat2_geo = GeoAxis(bottom_grid[1, 5], title="Δ $(feat2_desc)", dest="+proj=longlat", xgridvisible=false, ygridvisible=false, limits=(lon_lims, lat_lims))
+                    hm_feat2 = heatmap!(ax_feat2_geo, lons, lats, delta2_2d, colormap=:balance, colorrange=(-max_v2, max_v2))
+                    add_borders!(ax_feat2_geo, countries)
+                    Colorbar(bottom_grid[1, 6], hm_feat2)
                 end
             end
         end
     end
+
+    colsize!(bottom_grid, 2, Auto())
+    colsize!(bottom_grid, 4, Auto())
+    colsize!(bottom_grid, 6, Auto())
 
     save(joinpath(fig_dir, "dynqual_baseline_recent_comparison.png"), fig)
 end
@@ -325,13 +385,17 @@ function make_dynqual_cluster_transition_heatmap_figure(fig_dir, k_clusters, clu
 
     T, counts = transition_matrix(cluster_base, cluster_recent, k_clusters; valid_mask=valid_cell_mask)
 
+    x_ticks_labels = String["Recent $i" for i in 1:k_clusters]
+    y_ticks_labels = String["Baseline $i" for i in 1:k_clusters]
+
     ax_trans = Axis(fig[1, 1],
-        xticks=(1:k_clusters, ["Recent $i" for i in 1:k_clusters]),
-        yticks=(1:k_clusters, ["Baseline $i" for i in 1:k_clusters])
+        xticks=(1:k_clusters, x_ticks_labels),
+        yticks=(1:k_clusters, y_ticks_labels)
     )
 
     hm_trans = heatmap!(ax_trans, 1:k_clusters, 1:k_clusters, T', colormap=:viridis, colorrange=(0.0, 1.0))
     Colorbar(fig[1, 2], hm_trans, label="fraction of baseline cluster")
+    colsize!(fig.layout, 2, Auto())
 
     if k_clusters <= 8
         for i in 1:k_clusters
@@ -348,11 +412,11 @@ function make_dynqual_cluster_transition_heatmap_figure(fig_dir, k_clusters, clu
     save(joinpath(fig_dir, "dynqual_cluster_transition_baseline_to_recent.png"), fig)
 end
 
-function make_dynqual_feature_delta_maps(fig_dir, lons, lats, nx, ny, df_meta, feature_map, skipped_figures)
+function make_dynqual_feature_delta_maps(fig_dir, lons, lats, nx, ny, lon_lims, lat_lims, df_meta, feature_map, skipped_figures, countries)
     try
-        @eval using CairoMakie
+        @eval using CairoMakie, GeoMakie
     catch
-        error("CairoMakie is required for plotting but is not available.")
+        error("CairoMakie and GeoMakie are required for plotting but are not available.")
     end
 
     println("  -> Figure C: Feature delta maps")
@@ -392,11 +456,13 @@ function make_dynqual_feature_delta_maps(fig_dir, lons, lats, nx, ny, df_meta, f
         fig = Figure(size = (800, 600))
         desc = df_meta.feature_descriptor[findfirst(df_meta.feature_name .== name)]
 
-        ax = Axis(fig[1, 1], title="Δ $(desc) (Recent - Baseline)", aspect=DataAspect())
+        ax = GeoAxis(fig[1, 1], title="Δ $(desc) (Recent - Baseline)", dest="+proj=longlat", xgridvisible=false, ygridvisible=false, limits=(lon_lims, lat_lims))
         delta_2d = ndims(delta) == 1 ? reshape(delta, nx, ny) : delta
 
         hm = heatmap!(ax, lons, lats, delta_2d, colormap=:balance, colorrange=(-max_v, max_v))
+        add_borders!(ax, countries)
         Colorbar(fig[1, 2], hm)
+        colsize!(fig.layout, 2, Auto())
 
         filename = "dynqual_$(name)_delta_map.png"
         save(joinpath(fig_dir, filename), fig)
@@ -437,7 +503,6 @@ function make_dynqual_feature_delta_by_recent_cluster_figure(fig_dir, k_clusters
     baseline_idx = 1
     recent_idx = size(feature_map, 4)
 
-    # Find valid mask: only valid cells (both base and recent are valid)
     if isnothing(valid_cell_mask)
         valid_mask = map(i -> isfinite(cluster_base[i]) && isfinite(cluster_recent[i]) && cluster_base[i] > 0 && cluster_recent[i] > 0, eachindex(cluster_base))
     else
@@ -449,14 +514,13 @@ function make_dynqual_feature_delta_by_recent_cluster_figure(fig_dir, k_clusters
     fig = Figure(size = (1000, 800))
     Label(fig[0, :], "Mean feature change by Recent Cluster", font=:bold, fontsize=20)
 
-    # Matrix is features x clusters
     n_features = length(indices)
 
-    # Truncate labels if too long
-    trunc_desc = map(d -> length(d) > 30 ? d[1:27] * "..." : d, descriptors)
+    trunc_desc = String[length(d) > 30 ? d[1:27] * "..." : d for d in descriptors]
+    x_ticks_labels = String["Cluster $i" for i in 1:k_clusters]
 
     ax_heat = Axis(fig[1, 1],
-        xticks = (1:k_clusters, ["Cluster $i" for i in 1:k_clusters]),
+        xticks = (1:k_clusters, x_ticks_labels),
         yticks = (1:n_features, trunc_desc),
         xticklabelrotation = pi/4
     )
@@ -466,6 +530,7 @@ function make_dynqual_feature_delta_by_recent_cluster_figure(fig_dir, k_clusters
 
     hm_heat = heatmap!(ax_heat, 1:k_clusters, 1:n_features, delta_matrix', colormap=:balance, colorrange=colorrange)
     Colorbar(fig[1, 2], hm_heat, label="Mean Δ (Recent - Baseline)")
+    colsize!(fig.layout, 2, Auto())
 
     if k_clusters * n_features <= 80
         for i in 1:n_features
@@ -494,7 +559,6 @@ function make_dynqual_regime_explanation_heatmap_figure(fig_dir, k_clusters, bas
     fig4 = Figure(size = (1000, 800))
     Label(fig4[0, :], "What distinguishes the vulnerability regimes?", font=:bold, fontsize=20)
 
-    # preferred feature order
     preferred_names = [
         "mean_E_assimilation_grouped",
         "mean_E_maintenance_grouped",
@@ -511,33 +575,30 @@ function make_dynqual_regime_explanation_heatmap_figure(fig_dir, k_clusters, bas
     selected_descriptors = String[]
 
     for name in preferred_names
-        # check if it was kept in baseline
         idx = findfirst(df_meta.feature_name .== name)
         if !isnothing(idx) && df_meta.used_for_clustering[idx]
-            # Find which row this corresponds to in baseline_kept_names and baseline_centroids
             desc = df_meta.feature_descriptor[idx]
             centroid_row_idx = findfirst(baseline_kept_names .== desc)
             if !isnothing(centroid_row_idx)
                 push!(selected_indices, centroid_row_idx)
-
-                # Truncate to a readable length if necessary
                 trunc_desc = length(desc) > 30 ? desc[1:27] * "..." : desc
                 push!(selected_descriptors, trunc_desc)
             end
         end
     end
 
-    # If none of the preferred features were found, fallback to the original behavior (using all features)
     if isempty(selected_indices)
         selected_indices = 1:length(baseline_kept_names)
-        selected_descriptors = baseline_kept_names
+        selected_descriptors = String[baseline_kept_names...]
     end
 
     n_features = length(selected_indices)
     filtered_centroids = baseline_centroids[:, selected_indices]
 
+    x_ticks_labels = String["Cluster $i" for i in 1:k_clusters]
+
     ax_heat = Axis(fig4[1, 1],
-        xticks = (1:k_clusters, ["Cluster $i" for i in 1:k_clusters]),
+        xticks = (1:k_clusters, x_ticks_labels),
         yticks = (1:n_features, selected_descriptors),
         xticklabelrotation = pi/4
     )
@@ -545,12 +606,8 @@ function make_dynqual_regime_explanation_heatmap_figure(fig_dir, k_clusters, bas
     max_v = finite_max_abs(filtered_centroids)
     colorrange = max_v > 0 ? (-max_v, max_v) : (-1.0, 1.0)
 
-    # Check if CairoMakie has balance, else fallback
-    cmap = :balance
+    hm_heat = heatmap!(ax_heat, 1:k_clusters, 1:n_features, filtered_centroids, colormap=:balance, colorrange=colorrange)
 
-    hm_heat = heatmap!(ax_heat, 1:k_clusters, 1:n_features, filtered_centroids, colormap=cmap, colorrange=colorrange)
-
-    # Add text annotations if grid is small enough
     if k_clusters * n_features <= 80
         for i in 1:k_clusters
             for j in 1:n_features
@@ -564,6 +621,7 @@ function make_dynqual_regime_explanation_heatmap_figure(fig_dir, k_clusters, bas
     end
 
     Colorbar(fig4[1, 2], hm_heat, label="Standardized Feature Value")
+    colsize!(fig4.layout, 2, Auto())
 
     save(joinpath(fig_dir, "dynqual_regime_explanation_heatmap.png"), fig4)
 end
@@ -593,108 +651,108 @@ function run_plot_dynqual_synthetic_isimip_pressure_demo(;
         error("Feature metadata CSV missing: Run examples/dynqual_synthetic_isimip_pressure_demo.jl first.")
     end
 
-    cluster_summary_csv = joinpath(output_dir, "dynqual_vulnerability_cluster_summary.csv")
-    if !isfile(cluster_summary_csv)
-        @warn "Cluster summary CSV missing: dynqual_vulnerability_cluster_summary.csv not found, proceeding without it."
-    end
-
     mkpath(figures_dir)
     println("Reading from cache: $cache_path")
 
-    # Tracking lists for final reporting
+    # Download GeoJSON country borders (cached locally to prevent re-downloading)
+    country_geojson_url = "https://raw.githubusercontent.com/nvkelso/natural-earth-vector/master/geojson/ne_50m_admin_0_countries.geojson"
+    country_geojson_path = joinpath(output_dir, "ne_50m_admin_0_countries.geojson")
+    
+    local countries = nothing
+    try
+        if !isfile(country_geojson_path)
+            println("Downloading 50m country borders for overlay...")
+            Downloads.download(country_geojson_url, country_geojson_path)
+        end
+        countries = GeoJSON.read(read(country_geojson_path))
+    catch e
+        @warn "Failed to download/read GeoJSON country borders. Falling back to simple coastlines."
+    end
+
+    # Extract tightly bound, strongly-typed variables using a NamedTuple.
+    # This entirely prevents Julia from "boxing" local variables into `Any` types,
+    # solving the root cause of the Makie StackOverflow.
+    cache = NCDataset(cache_path, "r") do ds
+        clean_map(x) = Float64.(coalesce.(x, NaN))
+        
+        return (
+            lons = Float64.(ds["lon"][:]),
+            lats = Float64.(ds["lat"][:]),
+            nx = Int(length(ds["lon"])),
+            ny = Int(length(ds["lat"])),
+            actual_n_tranches = Int(length(ds["tranche"])),
+            k_clusters = Int(length(ds["cluster"])),
+
+            mean_raw_bod = clean_map(ds["raw_BOD_climatology"][:,:]),
+            mean_raw_fc = clean_map(ds["raw_pathogen_climatology"][:,:]),
+            mean_raw_tds = clean_map(ds["raw_TDSload_climatology"][:,:]),
+            mean_raw_bodload = clean_map(ds["raw_BODload_climatology"][:,:]),
+
+            mean_org_p = clean_map(ds["organic_pressure_climatology"][:,:]),
+            mean_pat_p = clean_map(ds["pathogen_pressure_climatology"][:,:]),
+            mean_ion_p = clean_map(ds["ionic_pressure_climatology"][:,:]),
+            mean_was_p = clean_map(ds["wastewater_source_pressure_climatology"][:,:]),
+            mean_low_p = clean_map(ds["low_flow_concentration_pressure_climatology"][:,:]),
+            mean_com_p = clean_map(ds["combined_wastewater_pressure_climatology"][:,:]),
+
+            cluster_id_all = clean_map(ds["cluster_id"][:, :, :]),
+            baseline_centroids_all = clean_map(ds["baseline_centroids"][:, :]),
+
+            feature_map_all = haskey(ds, "feature_map") ? clean_map(ds["feature_map"][:, :, :, :]) : nothing,
+            valid_cell_mask = haskey(ds, "valid_cell_mask") ? coalesce.(ds["valid_cell_mask"][:, :], false) : nothing
+        )
+    end
+    
+    lon_lims = extrema(filter(isfinite, cache.lons))
+    lat_lims = extrema(filter(isfinite, cache.lats))
+
+    df_meta = CSV.read(feature_metadata_csv, DataFrame)
+    df_clust = df_meta[df_meta.used_for_clustering .== true, :]
+    baseline_kept_names = String[df_clust.feature_descriptor...]
+
     generated_figures = String[]
     skipped_figures = String[]
 
-    # Read NetCDF
-    local lons, lats, nx, ny, actual_n_tranches, k_clusters
-    local mean_raw_bod, mean_raw_fc, mean_raw_tds, mean_raw_bodload
-    local mean_org_p, mean_pat_p, mean_ion_p, mean_was_p, mean_low_p, mean_com_p
-    local cluster_id_all, baseline_centroids_all
-    local feature_map_all = nothing
-    local valid_cell_mask = nothing
-
-    NCDataset(cache_path, "r") do ds
-        lons = ds["lon"][:]
-        lats = ds["lat"][:]
-        nx = length(lons)
-        ny = length(lats)
-        actual_n_tranches = length(ds["tranche"])
-        k_clusters = length(ds["cluster"])
-
-        mean_raw_bod = ds["raw_BOD_climatology"][:,:]
-        mean_raw_fc = ds["raw_pathogen_climatology"][:,:]
-        mean_raw_tds = ds["raw_TDSload_climatology"][:,:]
-        mean_raw_bodload = ds["raw_BODload_climatology"][:,:]
-
-        mean_org_p = ds["organic_pressure_climatology"][:,:]
-        mean_pat_p = ds["pathogen_pressure_climatology"][:,:]
-        mean_ion_p = ds["ionic_pressure_climatology"][:,:]
-        mean_was_p = ds["wastewater_source_pressure_climatology"][:,:]
-        mean_low_p = ds["low_flow_concentration_pressure_climatology"][:,:]
-        mean_com_p = ds["combined_wastewater_pressure_climatology"][:,:]
-
-        cluster_id_all = ds["cluster_id"][:, :, :]
-        baseline_centroids_all = ds["baseline_centroids"][:, :]
-
-        if haskey(ds, "feature_map")
-            feature_map_all = ds["feature_map"][:, :, :, :]
-        else
-            @warn "feature_map not found in cache. Feature-delta maps and heatmaps will be skipped."
-        end
-
-        if haskey(ds, "valid_cell_mask")
-            valid_cell_mask = ds["valid_cell_mask"][:, :]
-        end
-    end
-
-    # Read feature metadata
-    df_meta = CSV.read(feature_metadata_csv, DataFrame)
-
-    # Keep only those used for clustering
-    df_clust = df_meta[df_meta.used_for_clustering .== true, :]
-    baseline_kept_names = df_clust.feature_descriptor # use descriptors for better labels
-
     raw_clim_maps = [
-        (title="BOD / organic", data=mean_raw_bod),
-        (title="Pathogen / FC proxy", data=mean_raw_fc),
-        (title="TDS load", data=mean_raw_tds),
-        (title="BOD load", data=mean_raw_bodload)
+        (title="BOD / organic", data=cache.mean_raw_bod),
+        (title="Pathogen / FC proxy", data=cache.mean_raw_fc),
+        (title="TDS load", data=cache.mean_raw_tds),
+        (title="BOD load", data=cache.mean_raw_bodload)
     ]
-    make_dynqual_raw_climatology_figure(figures_dir, lons, lats, raw_clim_maps)
+    
+
+    make_dynqual_raw_climatology_figure(figures_dir, cache.lons, cache.lats, lon_lims, lat_lims, raw_clim_maps, countries)
     push!(generated_figures, "dynqual_raw_climatology_maps.png")
 
     derived_clim_maps = [
-        (title="Organic O2 Demand Proxy", data=mean_org_p),
-        (title="Pathogen Exposure Proxy", data=mean_pat_p),
-        (title="Ionic / Salinity Proxy", data=mean_ion_p),
-        (title="Wastewater Source Proxy", data=mean_was_p),
-        (title="Low-flow Concentration Proxy", data=mean_low_p),
-        (title="Combined Wastewater Proxy", data=mean_com_p)
+        (title="Organic O2 Demand Proxy", data=cache.mean_org_p),
+        (title="Pathogen Exposure Proxy", data=cache.mean_pat_p),
+        (title="Ionic / Salinity Proxy", data=cache.mean_ion_p),
+        (title="Wastewater Source Proxy", data=cache.mean_was_p),
+        (title="Low-flow Concentration Proxy", data=cache.mean_low_p),
+        (title="Combined Wastewater Proxy", data=cache.mean_com_p)
     ]
-    make_dynqual_derived_pressure_layers_figure(figures_dir, lons, lats, derived_clim_maps)
+    make_dynqual_derived_pressure_layers_figure(figures_dir, cache.lons, cache.lats, lon_lims, lat_lims, derived_clim_maps, countries)
     push!(generated_figures, "dynqual_derived_pressure_layers.png")
 
-    if actual_n_tranches >= 2
-        cluster_base = cluster_id_all[:, :, 1]
-        cluster_recent = cluster_id_all[:, :, actual_n_tranches]
-        make_dynqual_vulnerability_regime_maps_figure(figures_dir, lons, lats, nx, ny, k_clusters, cluster_base, cluster_recent)
+    if cache.actual_n_tranches >= 2
+        cluster_base = cache.cluster_id_all[:, :, 1]
+        cluster_recent = cache.cluster_id_all[:, :, cache.actual_n_tranches]
+        
+        make_dynqual_vulnerability_regime_maps_figure(figures_dir, cache.lons, cache.lats, cache.nx, cache.ny, lon_lims, lat_lims, cache.k_clusters, cluster_base, cluster_recent, countries)
         push!(generated_figures, "dynqual_vulnerability_regime_maps.png")
 
-        # Figure A
-        make_dynqual_baseline_recent_comparison_figure(figures_dir, lons, lats, nx, ny, k_clusters, cluster_base, cluster_recent, df_meta, feature_map_all, valid_cell_mask)
+        make_dynqual_baseline_recent_comparison_figure(figures_dir, cache.lons, cache.lats, cache.nx, cache.ny, lon_lims, lat_lims, cache.k_clusters, cluster_base, cluster_recent, df_meta, cache.feature_map_all, cache.valid_cell_mask, countries)
         push!(generated_figures, "dynqual_baseline_recent_comparison.png")
 
-        # Figure B
-        make_dynqual_cluster_transition_heatmap_figure(figures_dir, k_clusters, cluster_base, cluster_recent, valid_cell_mask)
+        make_dynqual_cluster_transition_heatmap_figure(figures_dir, cache.k_clusters, cluster_base, cluster_recent, cache.valid_cell_mask)
         push!(generated_figures, "dynqual_cluster_transition_baseline_to_recent.png")
 
-        if !isnothing(feature_map_all)
-            # Figure C
-            generated_delta_maps = make_dynqual_feature_delta_maps(figures_dir, lons, lats, nx, ny, df_meta, feature_map_all, skipped_figures)
+        if !isnothing(cache.feature_map_all)
+            generated_delta_maps = make_dynqual_feature_delta_maps(figures_dir, cache.lons, cache.lats, cache.nx, cache.ny, lon_lims, lat_lims, df_meta, cache.feature_map_all, skipped_figures, countries)
             append!(generated_figures, generated_delta_maps)
 
-            # Figure D
-            if make_dynqual_feature_delta_by_recent_cluster_figure(figures_dir, k_clusters, cluster_base, cluster_recent, df_meta, feature_map_all, valid_cell_mask)
+            if make_dynqual_feature_delta_by_recent_cluster_figure(figures_dir, cache.k_clusters, cluster_base, cluster_recent, df_meta, cache.feature_map_all, cache.valid_cell_mask)
                 push!(generated_figures, "dynqual_feature_delta_by_recent_cluster.png")
             else
                 push!(skipped_figures, "dynqual_feature_delta_by_recent_cluster.png: no valid features")
@@ -706,7 +764,7 @@ function run_plot_dynqual_synthetic_isimip_pressure_demo(;
         end
     end
 
-    make_dynqual_regime_explanation_heatmap_figure(figures_dir, k_clusters, baseline_kept_names, baseline_centroids_all, df_meta)
+    make_dynqual_regime_explanation_heatmap_figure(figures_dir, cache.k_clusters, baseline_kept_names, cache.baseline_centroids_all, df_meta)
     push!(generated_figures, "dynqual_regime_explanation_heatmap.png")
 
     println("\nGenerated figures:")
@@ -723,6 +781,7 @@ function run_plot_dynqual_synthetic_isimip_pressure_demo(;
 
     println("--- Lightweight Plotting Complete ---")
 end
+
 
 if abspath(PROGRAM_FILE) == @__FILE__
     run_plot_dynqual_synthetic_isimip_pressure_demo()

@@ -1,0 +1,21 @@
+\frametitle{What makes a regime?}
+\centering
+		\scriptsize
+		\resizebox{\linewidth}{!}{%
+			\begin{tabular}{>{\raggedright\arraybackslash}p{2.9cm}ccccc}
+				\toprule
+				Feature & Descriptor & Cluster 1 & Cluster 2 & Cluster 3 & Cluster 4 \\
+				\midrule
+				$p95(F^G)$ & upper-tail amplification & \cellcolor{lowblue}low & \cellcolor{midblue}med & \cellcolor{midblue}med & \cellcolor{highblue}\textcolor{white}{high} \\
+				$p95(Q^G)$ & upper-tail total burden & \cellcolor{lowgreen}low & \cellcolor{midgreen}med & \cellcolor{midgreen}med & \cellcolor{highgreen}\textcolor{white}{high} \\
+				$\overline E_M^G$ & maintenance pressure & \cellcolor{lowred}low & \cellcolor{highred}\textcolor{white}{high} & \cellcolor{midred}med & \cellcolor{midred}med \\
+				$\overline E_G^G$ & growth pressure & \cellcolor{loworange}low & \cellcolor{loworange}low & \cellcolor{highorange}\textcolor{white}{high} & \cellcolor{midorange}med \\
+				$H_E$ & spread across axes & \cellcolor{purpleA}low & \cellcolor{purpleA}low & \cellcolor{purpleC}\textcolor{white}{high} & \cellcolor{purpleB}med \\
+				$\Delta F_{G-TU}$ & mixture-model sensitivity & \cellcolor{lowblue}low & \cellcolor{midblue}med & \cellcolor{midblue}med & \cellcolor{highblue}\textcolor{white}{high} \\
+				$A/A_0$ & margin remaining & \cellcolor{marginA}high & \cellcolor{marginB}med & \cellcolor{marginB}med & \cellcolor{marginC}\textcolor{white}{low} \\
+				\bottomrule
+			\end{tabular}%
+		}
+		
+		\vspace{0.8em}
+		\large Regimes are named by continuous centroid characteristics, not by fixed exceedance thresholds.

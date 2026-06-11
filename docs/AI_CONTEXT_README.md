@@ -1,6 +1,6 @@
 # AI Context for TwoTimescaleResilience
 
-*Audited Date: 2026-05-29*
+*Audited Date: 2026-05-29. Partial re-audit 2026-06-11 — see `docs/claude/TwoTimescaleResilience_source_audit_2026-06-11.md`. The source inventory below is known stale (17 source files added since the 2026-05-29 audit are not listed); the `Z_t` status was corrected in this re-audit.*
 
 ## Do first
 
@@ -32,13 +32,13 @@ The framework uses a **capacity–pressure–memory** architecture. Capacity lim
 - Do not implement synergism or antagonism interactions. Do not call mixture-effect assumptions "interactions". Use standard mixture-effect assumptions.
 - Do not implement arbitrary empirical curve tuning parameters such as `kappa`, `κ`, `gain`, `response_scale`, or `burden_to_margin_multiplier`.
 - Do not implement threshold failures. Do not add thresholds to threshold-free features. Avoid naming or using variables like `_gt_`, `_lt_`, `threshold`, `exceedance`, `above`, or `below` in spatial feature/regime models.
-- Maintain a strict boundary between chemical memory ($B_t$), physiological condition memory ($Z_t$), and DEBtox scaled damage ($D_t$). Keep $B_t$, $Z_t$, and $D_t$ distinct.
+- Maintain a strict boundary between chemical memory ($B_t$), physiological condition memory ($Z_t$), and DEBtox scaled damage ($D_t$). Keep $B_t$, $Z_t$, and $D_t$ distinct. ($Z_t$ now exists as an **opt-in** layer in `src/condition_buffer.jl`, off by default; $D_t$ remains unimplemented.)
 - Do not use DataFrames for lightweight internal data structures.
 - Do not alter testing execution behavior arbitrarily.
 
 ## Common next tasks
 
-- Implementing physiological condition memory ($Z_t$) (Future/Planned)
+- Physiological condition memory ($Z_t$): implemented as an opt-in layer (`src/condition_buffer.jl`), off by default. Validation/calibration and default-path integration remain open.
 - Creating robust stable real-raster ingestion pipelines (Future/Planned)
 - Expanding diagnostic outputs and visualizations.
 
