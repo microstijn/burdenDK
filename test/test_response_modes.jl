@@ -39,13 +39,15 @@ end
         # Default valid DEBAxisParams
         params = DEBAxisParams(alpha_axes=(0.30, 0.35, 0.20, 0.15))
         
-        # Test "auto" method
+        # Test "auto" method (kappa-rule, assimilation-led, is the default)
         res_auto = axis_weights_for_species(params)
-        @test res_auto.axis_weight_method == "normalized_alpha_axes"
-        @test isapprox(res_auto.w_assimilation, 0.30)
-        @test isapprox(res_auto.w_maintenance, 0.35)
-        @test isapprox(res_auto.w_growth, 0.20)
-        @test isapprox(res_auto.w_reproduction, 0.15)
+        @test res_auto.axis_weight_method == "kappa_rule_assimilation_led"
+        # alpha_axes=(0.30,0.35,0.20,0.15): kappa = alpha_G/(alpha_G+alpha_R) = 0.20/0.35
+        kappa_expected = 0.20 / 0.35
+        @test isapprox(res_auto.w_assimilation, 0.5)
+        @test isapprox(res_auto.w_maintenance, kappa_expected / 4)
+        @test isapprox(res_auto.w_growth, kappa_expected / 4)
+        @test isapprox(res_auto.w_reproduction, (1.0 - kappa_expected) / 2)
         sum_weights = res_auto.w_assimilation + res_auto.w_maintenance + res_auto.w_growth + res_auto.w_reproduction
         @test isapprox(sum_weights, 1.0)
         
@@ -268,7 +270,7 @@ end
             @test isfinite(r.max_Q_t)
             @test isfinite(r.delta_max_F_t_ec50_minus_raw)
             @test isfinite(r.delta_min_A_t_ec50_minus_raw)
-            @test r.axis_weight_method == "normalized_alpha_axes" || r.axis_weight_method == "equal_weight_diagnostic_fallback"
+            @test r.axis_weight_method == "kappa_rule_assimilation_led" || r.axis_weight_method == "equal_weight_diagnostic_fallback"
             @test r.axis_weight_scope == "all_axes"
             
             if r.response_mode == "ec50_anchored_fractional_impairment"
