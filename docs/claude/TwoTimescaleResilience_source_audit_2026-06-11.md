@@ -94,6 +94,27 @@ The diagnostic settles which proposed fixes touch the headline collapse and whic
 
 This is exactly the first Kooijman question in agenda task #6, and the diagnostic shows it cannot be dodged: as built, the model asserts "chronic-then-acute vulnerability = allocation fraction κ, full stop." Whether that is a finding or a bug is a modelling decision, not a refactor — it must be made before the headline result is trusted.
 
+## Finding 3c — Structural comparison: the κ-lock is in the λ-bounds, not `KA`
+
+`examples/amp_lambda_structure_comparison.jl` (read-only, 7,335 species) re-runs the library under three single-lever variants of the restoring-force structure, to make the Finding 3b fork concrete. Each variant changes exactly one lever from the current baseline.
+
+**F correlations at Q = 0.5 erosion:**
+
+| structure | ρ(F, κ) | ρ(F, A0) | ρ(F, L_m) | reshuffle vs S0 |
+| --- | --- | --- | --- | --- |
+| S0 baseline (`KA = 0.3·A0`) | **−1.000** | −0.15 | 0.21 | 1.000 |
+| S1 `KA` absolute (`0.3·median A0`) | −0.901 | −0.40 | 0.27 | 0.901 |
+| S2 `λ_min` absolute floor (`median λ_min`) | **+0.176** | −0.06 | **−0.811** | **−0.176** |
+
+(The full-erosion ceiling `Fmax` tells the same story; under S2 the max `Fmax` explodes to ~574 and 44% of species fall below the floor and cannot amplify.)
+
+**The non-obvious result: the κ-lock is anchored in the λ-bounds, not in `KA`.**
+
+1. **Making `KA` absolute (S1) is a *weak* lever.** F stays ~90% κ-ranked, A0 enters only weakly, the ranking barely moves. Structural reason: at the ceiling, `Fmax = λ(A0)/λ_min ≤ λ_max/λ_min = 1/κ` for *any* `KA` — `KA` only slides F *within* `[1, 1/κ]`; it cannot escape the κ-bounded ceiling. So the Finding 3b option (2) framing ("`KA` absolute → vulnerability ≡ A0") **overstated `KA`'s power**; it does not meaningfully decouple F from κ.
+2. **Re-anchoring `λ_min` (S2) is the *real* lever.** F decouples from κ entirely (ρ → +0.18) and becomes size/rate-driven (ρ(F, L_m) = −0.81), full ranking reshuffle — but a crude flat floor is violent (44% non-amplifying, `Fmax` to ~574), so option (3) needs a *principled* re-anchoring, not a constant.
+
+**Consequence — the fork is really a decision about the λ-bounds.** Specifically: should the slow-recovery floor `λ_min` stay reserve-normalized (`p_M/A0`, which is exactly what forces `λ_max/λ_min ≡ 1/κ`) or be anchored to a size/rate quantity? `KA` is a secondary shape knob. This sharpens the Kooijman question from "relative-vs-absolute margin" to **"what physiological quantity sets the slow recovery rate `λ_min`?"** Caveat: S1's specific magnitude depends on the chosen absolute `KA` (here `0.3·median A0`); the κ-bounded-ceiling argument, however, holds for any `KA`.
+
 ## Finding 4 — Physiological condition memory `Z_t` IS implemented (contradicts the docs)
 
 `docs/PACKAGE_CAPABILITIES.md` and `docs/AI_CONTEXT_README.md` state `Z_t` is `not_implemented` / "no math." That is now **false**. `src/condition_buffer.jl` is a full `Z_t` layer:
