@@ -94,6 +94,7 @@ the scientific framing is capacity–pressure–memory.
 - **Not threshold-based.** The spatial layer forbids exceedance features by
   construction.
 
-For the important caveats — including the fact that the current amplification
-factor is, numerically, a function of the DEB allocation fraction κ alone — see
+For the important caveats — including the fact that the amplification factor is a
+one-dimensional index (the allocation fraction κ originally; the energy investment
+ratio `g` after the recovery-floor fix) and is not yet externally validated — see
 [Limitations & open questions](Limitations-and-Open-Questions.md).

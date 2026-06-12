@@ -7,70 +7,86 @@ the weak points visible. Keep it current in the same PR as any change that affec
 it. Evidence: [source audit (2026-06-11)](../claude/TwoTimescaleResilience_source_audit_2026-06-11.md)
 and the read-only diagnostics in `examples/`.
 
-## 1. The headline open question — amplification is functionally κ-only
+## 1. The headline finding — amplification is a one-dimensional index
 
-**As currently parameterized, the amplification factor `F` is determined by the
-DEB allocation fraction κ alone.** Across the whole AmP library (7,335 species),
-`F` at any fixed erosion level matches a κ-only closed form to machine epsilon,
-with Spearman(F, κ) = −1.000. The baseline margin `A0` spans six orders of
-magnitude and contributes **nothing** to `F`; three of the four α-axes contribute
-nothing either.
+`F = λ(A₀)/λ(A_t)` is, by construction, a *ratio of one saturating curve*. Because
+the margin erodes proportionally (`A_t = A₀(1−Q)`) and `KA ∝ A₀`, the species scale
+`A₀` cancels, so **F reduces to a one-parameter family per species** — it cannot
+simultaneously carry capacity (`A₀`), allocation (κ), *and* economy. The question has
+always been *which* one parameter, and whether it is meaningful. (Full derivation:
+[the tex note](../notes/lambda_min_maintenance_rate.tex).)
 
-![Amplification is a function of kappa](figures/kappa_collapse.png)
+**Originally that parameter was the bare allocation fraction κ.** Across the whole
+library `Spearman(F, κ) = −1.000` to machine epsilon; `A₀` (six orders of magnitude)
+and three of the four α-axes contributed nothing. Cause: the slow floor was
+`λ_min = [p_M]/[E_m]` (maintenance over *reserve density*), which forced
+`λ_max/λ_min ≡ 1/κ`. A structural comparison
+(`examples/amp_lambda_structure_comparison.jl`) showed the lock lived in the
+**λ-bounds**, not in `KA`.
 
-*Each point is a species. `F` at moderate erosion collapses onto a single curve in
-κ — `A0` and the other axes do not move it.*
+**This has been addressed** by re-anchoring the floor to the textbook DEB somatic
+maintenance rate constant `λ_min = min(k_M, λ_max)`, `k_M = [p_M]/[E_G]`. The
+timescale ratio then becomes the **energy investment ratio** `g = (v/L_m)/k_M` — a
+primary DEB parameter — and F now tracks `g`, not κ:
 
-**Why:** two stacked causes in the offline mapping
-([Equations §1](Equations.md#1-capacity-mapping-offline-amp--parameters)):
+![F tracks g, not kappa](figures/amplification_vs_kappa_and_g.png)
 
-- `λ_max/λ_min = 1/κ` **exactly** (an artifact of how both bounds are normalized), and
-- `KA = 0.3·A0`, so the species scale `A0` cancels out of the restoring-force curve.
+| | before fix | after fix |
+| --- | --- | --- |
+| Spearman(F, κ) | −1.000 | −0.107 |
+| Spearman(F, g) | — | +0.725 |
+| Spearman(g, κ) | — | −0.244 |
 
-A structural comparison (`examples/amp_lambda_structure_comparison.jl`) shows the
-κ-lock lives in the **λ-bounds**, not in `KA`: making `KA` absolute barely changes
-the ranking, because `Fmax ≤ λ_max/λ_min = 1/κ` for *any* `KA`. The real lever is
-what sets the slow recovery floor `λ_min`.
+Vulnerability now partitions species as *reserve-rich (`g ≤ 1`) → resilient (`F = 1`)*
+and *reserve-poor (`g > 1`) → amplification graded by `g`*. (Status: on branch
+`fix/lambda-min-maintenance-rate`; validate with `examples/amp_lambda_min_validation.jl`.)
 
-**This is an open scientific decision, not a settled result.** The choices:
+### The remaining open questions (now sharper)
 
-1. Keep `λ_min = p_M/A0` (relative margin) → own "vulnerability ≡ κ" as a finding,
-   and check whether "low κ = more vulnerable" is ecologically correct or inverted.
-2. Anchor `λ_min` to a size/rate quantity → vulnerability becomes size-driven (needs
-   a principled, not crude, re-anchoring).
-3. Re-derive the λ-bounds so their ratio is not identically `1/κ`.
+1. **One-dimensionality is structural.** F-as-a-ratio can express only one
+   physiological number per species. If capacity, allocation *and* economy should all
+   matter, the single-ratio F is the wrong vehicle — that needs a richer response
+   model, not another re-anchoring.
+2. **The range of `g`.** `g` spans ~`10⁻³`–`10²`, so 65% of species clamp to `F = 1`
+   and the `Q→1` ceiling reaches ~559 for extreme `g` (though at `Q = 0.5` it is tame,
+   `F ≤ 1.23`). Mapping the rate ratio to `g` *raw* is likely too literal; how to tame
+   it — and whether the `g = 1` clamp is a real biological boundary — is open. **Do
+   not add a compressing transform without justification** — that would re-introduce
+   exactly the kind of free knob this whole effort removed.
+3. **Is `g`-driven vulnerability correct?** "Reserve-poor, structure-expensive species
+   amplify more" is testable but **unvalidated**. This needs an external anchor and DEB
+   expert review, not more internal tuning.
 
-This is the first question for DEB/AmP domain experts. Until it is resolved, treat
-`F` rankings as **κ rankings**.
-
-## 2. The `KA = 0.3·A0` constant is an undocumented knob
+## 2. The `KA = 0.3·A0` constant is still an undocumented knob
 
 The `0.3` has **no derivation** anywhere in the manuscripts — the derivation
 section justifies every other λ-parameter as AmP-anchored but lists `KA` as a bare
-"half-saturation constant". It violates the project's own no-knob invariant and is
-flagged for removal as part of resolving §1. It only sets the `1/(1+0.3)` factor;
-changing the number rescales the amplification spread but does **not** break the
-κ-collapse.
+"half-saturation constant". It violates the project's own no-knob invariant. It is
+**still present** (the `λ_min` fix did not touch it) and is now the *main remaining*
+unjustified constant in the λ-curve. It only sets the `1/(1+0.3)` factor and does not
+affect the κ→g result; it sets *where on the saturation curve* the pristine margin
+sits, and remains a candidate for removal/justification.
 
 ## 3. What was fixed (and what those fixes did *not* fix)
 
-Two real defects in the **point-level** response API have been addressed:
+Three real defects have been addressed:
 
+- **`λ_min` mis-normalization (the κ-collapse, §1).** `λ_min = [p_M]/[E_m]` →
+  `λ_min = min(k_M, λ_max)` with `k_M = [p_M]/[E_G]`. Amplification now tracks the
+  energy investment ratio `g` instead of the allocation fraction κ. *(Branch
+  `fix/lambda-min-maintenance-rate`.)*
 - **Margin inertness (D1).** The default response mode is now the nondimensional
   `ec50_anchored_fractional_impairment` (`A_t = A0·(1−Q_t)`). The old
   `raw_margin_subtraction` (`A_t = A0 − Σ α·s`, inert because `A0 ≫ Σ α·s`) is
   retained as a diagnostic only.
 - **Dead assimilation axis (D2).** The default weights are now κ-rule,
   assimilation-led. The previous normalized-α weights gave assimilation a weight
-  of ~0.00004 for **every** species (an assimilation-targeting toxicant was
-  ignored); it is now 0.5.
+  of ~0.00004 for **every** species; it is now 0.5.
 
-**Neither fix changes the κ-collapse** (§1) — that is structural in the λ-curve,
-independent of the margin mapping and the weights.
-
-**Still on the raw margin:** the **grid / ECOTOX / ISIMIP** pipelines have *not*
-yet been moved to the nondimensional margin, so the spatial vulnerability *maps*
-can still be inert. This is a known follow-up.
+**What these did *not* fix:** F is still a *one-dimensional* index (§1) — the `λ_min`
+fix changed *which* parameter (κ → g), not the dimensionality. And the **grid /
+ECOTOX / ISIMIP** pipelines are still on the raw subtractive margin, so the spatial
+vulnerability *maps* can still be inert — a known follow-up.
 
 ## 4. Scope boundaries (by design, not bugs)
 
@@ -97,8 +113,9 @@ can still be inert. This is a known follow-up.
 
 | Script | Question it answers |
 | --- | --- |
-| [`examples/amp_kappa_collapse_diagnostic.jl`](../../examples/amp_kappa_collapse_diagnostic.jl) | How κ-locked is `F`? (Answer: completely.) |
+| [`examples/amp_kappa_collapse_diagnostic.jl`](../../examples/amp_kappa_collapse_diagnostic.jl) | How κ-locked is `F`? (Characterizes the *original* collapse; on the fixed library it now shows `Spearman(F,κ) ≠ −1`.) |
 | [`examples/amp_lambda_structure_comparison.jl`](../../examples/amp_lambda_structure_comparison.jl) | Which structural lever breaks the κ-lock? (Answer: `λ_min`, not `KA`.) |
+| [`examples/amp_lambda_min_validation.jl`](../../examples/amp_lambda_min_validation.jl) | Did the `λ_min = k_M` fix work? (F now tracks `g`, not κ; reports the before/after correlations.) |
 | [`examples/amp_species_response_capacity_diagnostics.jl`](../../examples/amp_species_response_capacity_diagnostics.jl) | Per-species response capacity from AmP. |
 
 ## 7. Deferred (hold until the core is stable)

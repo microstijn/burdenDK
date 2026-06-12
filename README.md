@@ -72,9 +72,11 @@ adaptive margin → restoring force → amplification. Full detail in
 | Real-raster ingestion | partial (mostly examples) |
 | DEBtox `D_t`, synergism/antagonism | not implemented (by design) |
 
-> ⚠️ **Important caveat:** as currently parameterized the amplification factor is,
-> numerically, a function of the DEB allocation fraction **κ alone** — an open
-> scientific question, not a settled result. See
+> ⚠️ **Important caveat:** the amplification factor `F` is a **one-dimensional
+> index** — by construction it carries one physiological number per species. That
+> number was the allocation fraction κ; after re-anchoring the recovery floor to
+> the DEB maintenance rate constant it is now the energy investment ratio `g`. It is
+> still unvalidated against external data. See
 > [Limitations & open questions](docs/wiki/Limitations-and-Open-Questions.md).
 
 ## Not a full DEB model
