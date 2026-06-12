@@ -25,9 +25,8 @@ using TwoTimescaleResilience
 
         # Check AmP parameters
         @test profile.deb_params.A0 ≈ 1539.9871108901957
-        @test profile.deb_params.lambda_min ≈ 0.00899027004972587
+        @test profile.deb_params.lambda_min ≈ 0.005783592166791565   # = k_M
         @test profile.deb_params.lambda_max ≈ 0.011568702452292915
-        @test profile.deb_params.KA ≈ 461.99613326705867
     end
 
     @testset "Custom profile attributes" begin

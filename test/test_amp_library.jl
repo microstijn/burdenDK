@@ -34,7 +34,6 @@ using TwoTimescaleResilience
         @test params.alpha_axes[4] ≈ 0.22287999999999997
         @test params.lambda_min ≈ 0.005783592166791565   # = k_M (somatic maintenance rate constant)
         @test params.lambda_max ≈ 0.011568702452292915
-        @test params.KA ≈ 461.99613326705867
     end
 
     @testset "Flexible species lookup" begin
@@ -46,13 +45,15 @@ using TwoTimescaleResilience
         @test params_key.alpha_axes == params_name.alpha_axes
         @test params_key.lambda_min ≈ params_name.lambda_min
         @test params_key.lambda_max ≈ params_name.lambda_max
-        @test params_key.KA ≈ params_name.KA
     end
 
     @testset "Restoring force sanity check" begin
         library = load_amp_species_library(library_path)
         params = amp_species_deb_params(library, "Abatus_cordatus")
-        @test restoring_force_from_margin(params.A0, params) ≈ 0.01023 atol=1e-4
+        # Linear recovery curve: at the pristine margin A0 the restoring force is
+        # exactly lambda_max (no half-saturation compression).
+        @test restoring_force_from_margin(params.A0, params) ≈ params.lambda_max
+        @test restoring_force_from_margin(0.0, params) ≈ params.lambda_min
     end
 
     @testset "Invalid record tests" begin
@@ -71,11 +72,11 @@ using TwoTimescaleResilience
         )
         @test_throws ArgumentError validate_amp_record(invalid_record_2)
 
-        # negative KA
+        # missing lambda_min (KA is no longer required or validated)
         invalid_record_3 = Dict(
             "A0" => 100.0,
             "alpha_axes" => [0.1, 0.2, 0.3, 0.4],
-            "lambda_bounds" => Dict("KA" => -10.0, "lambda_min" => 0.1, "lambda_max" => 1.0)
+            "lambda_bounds" => Dict("lambda_max" => 1.0)
         )
         @test_throws ArgumentError validate_amp_record(invalid_record_3)
 

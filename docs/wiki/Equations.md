@@ -15,13 +15,14 @@ $$ E_m = \frac{p_{Am}}{v}, \qquad A_0 = E_m, \qquad L_m = \frac{\kappa\,p_{Am}}{
 
 $$ \alpha_A = \frac{1}{E_m},\quad \alpha_M = \frac{p_M}{\kappa\,p_{Am}}=\frac{1}{L_m},\quad \alpha_G = \kappa,\quad \alpha_R = 1-\kappa $$
 
-$$ \lambda_{\max} = \frac{v}{L_m}, \qquad \lambda_{\min} = \min\!\left(k_M,\ \lambda_{\max}\right),\quad k_M = \frac{[p_M]}{[E_G]}, \qquad K_A = 0.3\,A_0 $$
+$$ \lambda_{\max} = \frac{v}{L_m}, \qquad \lambda_{\min} = \min\!\left(k_M,\ \lambda_{\max}\right),\quad k_M = \frac{[p_M]}{[E_G]} $$
 
 > **`λ_min` was re-anchored** to the DEB somatic maintenance rate constant `k_M`
 > (it used to be `p_M/A_0 = [p_M]/[E_m]`). The timescale ratio is now the energy
 > investment ratio $\lambda_{\max}/\lambda_{\min} = g = [E_G]/(\kappa[E_m])$ instead of
-> the artifact $1/\kappa$, so amplification tracks `g`, not κ. The `0.3` in `K_A`
-> remains an unjustified constant. Full story:
+> the artifact $1/\kappa$, so amplification tracks `g`, not κ. The old `K_A = 0.3·A_0`
+> half-saturation knob has since been **removed** (the recovery curve is now linear —
+> see §7), satisfying the no-knob invariant. Full story:
 > [the tex note](../notes/lambda_min_maintenance_rate.tex) ·
 > [Limitations §1](Limitations-and-Open-Questions.md).
 
@@ -86,9 +87,23 @@ $$ A_t = A_0 - \sum_a \alpha_a\,s_a $$
 
 ## 7. Restoring force and amplification
 
-$$ \lambda(A) = \lambda_{\min} + (\lambda_{\max}-\lambda_{\min})\,\frac{A_+}{K_A + A_+},\qquad A_+ = \max(A,0) $$
+The restoring force scales **linearly** with the fraction of the pristine adaptive
+margin that remains, between the two DEB-derived rate bounds:
 
-$$ \boxed{\,F_t = \dfrac{\lambda(A_0)}{\lambda(A_t)}\,} $$
+$$ \lambda(A) = \lambda_{\min} + (\lambda_{\max}-\lambda_{\min})\,\operatorname{clamp}\!\left(\frac{A}{A_0},\,0,\,1\right) $$
+
+So the pristine margin ($A = A_0$) gives $\lambda_{\max}$ and a fully eroded margin gives
+$\lambda_{\min}$. This replaced the earlier Michaelis–Menten form with the arbitrary
+half-saturation constant $K_A = 0.3\,A_0$ (which violated the no-knob invariant and
+meant $\lambda$ never reached $\lambda_{\max}$ at finite margin).
+
+$$ \boxed{\,F_t = \dfrac{\lambda(A_0)}{\lambda(A_t)}\,}\qquad F_{\max}=\frac{\lambda_{\max}}{\lambda_{\min}}=g $$
+
+> **`F_t` is a derived diagnostic, not the headline.** The margin state $A_t$ and the
+> recovery rate $\lambda(A_t)$ are the product; $F_t$ is a lossy scalar readout of
+> them. External validation (vs COMADRE) corroborates the recovery/margin layer
+> (`k_M`, `R_i`) but finds the amplification scalar `g`/`F` **null** — so `F_t` is
+> reported as a diagnostic only. See [Limitations & open questions](Limitations-and-Open-Questions.md).
 
 `F_t = 1` ⇒ no amplification; `F_t > 1` ⇒ chronic pressure has weakened recovery.
 
@@ -134,6 +149,6 @@ is what avoids per-cell ecosystem Jacobians over large rasters.
 | `A_0`, `A_t` | baseline / current adaptive margin |
 | `α_a` | per-axis sensitivity (assimilation, maintenance, growth, reproduction) |
 | `κ` | DEB somatic allocation fraction = `α_G/(α_G+α_R)` |
-| `λ_min`, `λ_max`, `K_A` | restoring-force bounds and half-saturation |
+| `λ_min`, `λ_max` | restoring-force bounds (`λ_min = k_M`; `λ_max = v/L_m`) |
 | `λ(A)` | restoring force at margin `A` |
 | `F_t` | amplification factor `λ(A_0)/λ(A_t)` |

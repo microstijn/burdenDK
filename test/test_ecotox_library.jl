@@ -166,8 +166,7 @@ using TwoTimescaleResilience
         A0 = 100.0,
         alpha_axes = (1.0, 2.0, 3.0, 4.0),
         lambda_min = 0.1,
-        lambda_max = 1.0,
-        KA = 50.0
+        lambda_max = 1.0
     )
 
     response_zero = ecotox_burden_to_response(burden_zero, params)

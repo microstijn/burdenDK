@@ -12,11 +12,14 @@ using TwoTimescaleResilience
 # == 1/kappa and made amplification a function of kappa alone (the kappa-collapse).
 # See docs/notes/lambda_min_maintenance_rate.tex.
 #
+# The recovery curve is now LINEAR in margin (no KA half-saturation constant), so
+# at the pristine margin A0 the restoring force is exactly lambda_max and
+#   Fmax == lambda(A0)/lambda_min == lambda_max/lambda_min == g.
+#
 # Identities pinned:
-#   - KA == 0.3 * A0
 #   - lambda_min == min(k_M, lambda_max)            (k_M from auxiliary_metrics)
 #   - unclamped species: lambda_max/lambda_min == g (energy investment ratio)
-#                        and Fmax == 1 + (g - 1)/1.3
+#                        and Fmax == g
 #   - clamped species (g <= 1): lambda_min == lambda_max, Fmax == 1 (resilient)
 # ---------------------------------------------------------------------------
 
@@ -43,16 +46,14 @@ using TwoTimescaleResilience
             k_M = Float64(aux["k_M"])
             g   = Float64(aux["g"])
 
-            # KA is the (still-present) 0.3*A0 shape constant.
-            @test params.KA ≈ 0.3 * params.A0
-
             # Slow floor is the clamped maintenance rate constant.
             @test params.lambda_min ≈ min(k_M, params.lambda_max)
 
             if params.lambda_min < params.lambda_max - 1e-12
                 # Unclamped: the timescale-separation ratio is the energy investment ratio g.
                 @test params.lambda_max / params.lambda_min ≈ g rtol = 1e-6
-                @test amplification_from_margin(0.0, params) ≈ 1 + (g - 1) / 1.3 rtol = 1e-6
+                # Linear recovery curve: Fmax = lambda(A0)/lambda_min = lambda_max/lambda_min = g.
+                @test amplification_from_margin(0.0, params) ≈ g rtol = 1e-6
             else
                 # Clamped (g <= 1): no separation, no amplification.
                 clamped += 1
@@ -70,12 +71,10 @@ using TwoTimescaleResilience
 
         @test params.lambda_min ≈ 0.005783592166791565
         @test params.lambda_min ≈ Float64(aux["k_M"])
-        @test params.KA ≈ 0.3 * params.A0
         @test Float64(aux["g"]) ≈ 2.0002624871647248
         @test params.lambda_max / params.lambda_min ≈ 2.0002624871647248
 
-        # Fmax = 1 + (g - 1)/1.3, closed form and pinned numeric value.
-        @test amplification_from_margin(0.0, params) ≈ 1 + (2.0002624871647248 - 1) / 1.3
-        @test amplification_from_margin(0.0, params) ≈ 1.7694326824344038 atol = 1e-10
+        # Linear recovery curve: Fmax = lambda_max/lambda_min = g (pinned numeric).
+        @test amplification_from_margin(0.0, params) ≈ 2.0002624871647248
     end
 end

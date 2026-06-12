@@ -90,7 +90,7 @@ using Test
     end
     
     @testset "Test 1.6 -- restoring force boundedness" begin
-        params = DEBAxisParams(lambda_min=0.04, lambda_max=1.0, KA=0.30)
+        params = DEBAxisParams(lambda_min=0.04, lambda_max=1.0)
         for A in range(-2.0, 2.0, length=50)
             lambda_val = restoring_force_from_margin(A, params)
             @test lambda_val >= params.lambda_min

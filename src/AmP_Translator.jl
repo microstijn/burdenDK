@@ -74,8 +74,10 @@ function process_species_data()
             # timescale separation -> lambda is constant -> F ~ 1 (resilient by construction).
             lambda_min = min(k_M, lambda_max)
 
-            # KA remains the same
-            K_A = A_0 * 0.3
+            # Recovery curve is now LINEAR in margin (lambda_min..lambda_max scaled
+            # by A/A0), so there is no half-saturation constant. The old
+            # KA = 0.3*A0 knob has been removed (no-knob invariant). Legacy JSON
+            # records may still carry a "KA" field; it is ignored by amp_library.jl.
 
             # Tranche 3: JSON Structure formatting
             results[species] = Dict(
@@ -83,8 +85,7 @@ function process_species_data()
                 "alpha_axes" => [alpha_A, alpha_M, alpha_G, alpha_R],
                 "lambda_bounds" => Dict(
                     "lambda_min" => lambda_min,
-                    "lambda_max" => lambda_max,
-                    "KA" => K_A
+                    "lambda_max" => lambda_max
                 ),
                 "auxiliary_metrics" => Dict(
                     "L_m" => L_m,
