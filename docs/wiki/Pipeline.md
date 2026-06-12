@@ -140,7 +140,11 @@ margin remaining, the **capacity-aware absolute-margin** features
 (`*_log_absolute_margin_*`, `*_baseline_capacity` — which keep the `A_0` scale the
 `F`-ratio discards), and the **axis-composition** fingerprint (`mean_E_*`,
 `axis_entropy`, `dominant_axis_code`). `F`-derived features are retained but are a
-secondary, derived summary.
+secondary, derived summary. Use **`standardize_for_clustering`** (not the bare
+standardiser) for the clustering step: it drops the ~70% redundant features while
+preserving the margin-state dimensions, so regimes are driven by load, capacity, and
+axis composition rather than duplicate `F` summaries
+([why](Limitations-and-Open-Questions.md), [M1 note](../notes/feature_redundancy_check.md)).
 
 - [`vulnerability_feature_vectors.jl`](../../src/vulnerability_feature_vectors.jl) → [Feature vectors](../vulnerability_feature_vectors.md)
 - [`vulnerability_regime_clustering.jl`](../../src/vulnerability_regime_clustering.jl)

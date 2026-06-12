@@ -9,6 +9,7 @@ export load_nc_layer, normalise_layer, write_ascii_grid, read_ascii_grid, plot_s
 # build threshold-free vulnerability features
 export build_threshold_free_vulnerability_features
 export standardize_threshold_free_vulnerability_features
+export standardize_for_clustering
 
 export cluster_threshold_free_vulnerability_regimes
 export summarize_threshold_free_vulnerability_clusters
