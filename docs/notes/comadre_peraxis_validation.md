@@ -64,15 +64,45 @@ convergent measurement of fecundity, not proof of an emergent abstract "margin."
 manuscript must frame it as the former. (The `k_M`/`r_B`↔resistance/recovery cells
 are less mechanically coupled and so carry more independent weight, but are weaker.)
 
+## Robustness — is reproduction↔compensation more than raw fecundity?
+The strongest cell (`R_i`↔reactivity) is partly mechanical. To test whether the map
+survives beyond raw fecundity *magnitude*, three further reproduction descriptors,
+all generation-time-controlled (n=193):
+
+| predictor → compensation | partial rank ρ | note |
+| --- | --- | --- |
+| `a_p` (timing) \| gen | +0.359 ** | reproduction timing, *not* a fecundity count |
+| `R_i/Ww_i` (mass-specific) \| gen | +0.628 ** | size-free fecundity |
+| `R_i` \| gen, **a_p** | +0.793 ** | fecundity magnitude survives timing control |
+| `a_p` \| gen, **R_i** | +0.442 ** | timing survives fecundity-magnitude control |
+
+(`kap_R` not tested: AmP default 0.95 for ~97% of species — no variance.)
+
+**This substantially allays the mechanical concern.** Two *distinct, non-redundant*
+reproduction descriptors each independently predict compensation beyond pace: (i)
+mass-specific fecundity (+0.63 — so not merely body-size magnitude), and (ii)
+reproduction timing `a_p`, whose link to reactivity is **not** mechanical and which
+survives controlling fecundity magnitude (+0.44). So the reproduction→compensation
+correspondence is a real, multi-faceted reproduction-strategy signal, not reducible
+to the single `R_i`↔reactivity fecundity-count identity — though that strongest cell
+retains a mechanical component.
+
+**Pre-registration deviation (logged honestly):** I pre-registered `a_p`→compensation
+as *negative* (later puberty → less compensation). It is **positive** (+0.36). The
+interpretation is non-trivial: within a fixed generation time, `a_p` co-varies
+positively with fecundity, and the suppression pattern (the `a_p` effect *grows* to
++0.44 when `R_i` is controlled) indicates joint reproduction-strategy structure
+rather than a simple timing axis. Not over-interpreted; flagged for follow-up.
+
 ## Verdict
 **The pre-registered core passed: the reproduction axis specifically and robustly
 predicts the compensation component** — the first multi-dimensional external result,
-and stronger than anything scalar. Tempered by the mechanical-coupling caveat for
-that specific cell. The maintenance/growth↔resistance/recovery side is directionally
-as predicted but weaker and noisier. Next: (i) a less fecundity-mechanical
-reproduction predictor (e.g. `kap_R`, or reproduction *timing* `a_p`) to test whether
-the reproduction↔compensation map holds beyond raw fecundity; (ii) carry the dated
-phylogeny (Idea A TODO) through to this matrix; (iii) decide which cells are
+and stronger than anything scalar. The mechanical-coupling caveat for the headline
+cell is **substantially mitigated** by the robustness checks: size-free fecundity and
+(non-mechanical) reproduction timing both independently predict compensation. The
+maintenance/growth↔resistance/recovery side is directionally as predicted but weaker
+and noisier. Next: (i) carry the dated phylogeny (Idea A TODO) through to this matrix;
+(ii) resolve the positive-`a_p` interpretation; (iii) decide which cells are
 manuscript-grade given the coupling audit.
 
 ## Sources

@@ -10,13 +10,16 @@
 #   julia +release --project=<that-env> scripts/extract_amp_reproduction_rates.jl
 #
 # Writes data/external/amp_reproduction_rates.csv (committed):
-#   species,k_M,R_i,r_B,kap_R,k_J,Ww_i
+#   species,k_M,R_i,r_B,kap_R,k_J,Ww_i,a_p
 #     k_M  somatic maintenance rate constant   (1/d)  — maintenance axis
-#     R_i  ultimate reproduction rate          (#/d)  — reproduction axis
+#     R_i  ultimate reproduction rate          (#/d)  — reproduction axis (magnitude)
 #     r_B  von Bertalanffy growth rate         (1/d)  — growth axis
-#     kap_R reproduction efficiency            (-)    — intensive reproduction
+#     kap_R reproduction efficiency            (-)    — NOTE: AmP default 0.95 for
+#           ~97% of species (std 0.06); essentially no variance, not a usable axis
 #     k_J  maturity maintenance rate constant  (1/d)
 #     Ww_i ultimate wet weight                 (g)    — body-size control
+#     a_p  age at puberty                      (d)    — reproduction *timing* (a
+#           less fecundity-mechanical reproduction predictor than R_i)
 # All at AmP reference temperature. See docs/notes/comadre_peraxis_prereg.md.
 # ===========================================================================
 
@@ -32,14 +35,16 @@ okany(d, k) = haskey(d, k) && d[k] isa Number && isfinite(d[k])   # kap_R may be
 
 n = 0
 open(OUT, "w") do io
-    println(io, "species,k_M,R_i,r_B,kap_R,k_J,Ww_i")
+    println(io, "species,k_M,R_i,r_B,kap_R,k_J,Ww_i,a_p")
     for sp in sort(collect(keys(allStat)))
         d = allStat[sp]
-        # require the core rates; allow Ww_i/kap_R to be blank if missing
+        # require the core rates; allow Ww_i/kap_R/a_p to be blank if missing
         (okpos(d, "k_M") && okpos(d, "R_i") && okpos(d, "r_B") && okpos(d, "k_J")) || continue
         kapR = okany(d, "kap_R") ? string(d["kap_R"]) : ""
         wwi  = okpos(d, "Ww_i") ? string(d["Ww_i"]) : ""
-        println(io, sp, ",", d["k_M"], ",", d["R_i"], ",", d["r_B"], ",", kapR, ",", d["k_J"], ",", wwi)
+        ap   = okpos(d, "a_p") ? string(d["a_p"]) : ""
+        println(io, sp, ",", d["k_M"], ",", d["R_i"], ",", d["r_B"], ",", kapR, ",",
+                d["k_J"], ",", wwi, ",", ap)
         global n += 1
     end
 end
