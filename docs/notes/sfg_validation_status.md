@@ -44,6 +44,56 @@ Modest (ρ≈0.4) and single-species, but it validates the *thing we want to use
 margin state under pressure — not just adjacent rates. Next: an across-species SFG set
 (or a second gradient) to test the capacity weighting the single-species design holds fixed.
 
+## ⚠️ RESULTS (2026-06-13) — second species (*M. galloprovincialis*): does NOT replicate (condition/age confound)
+Second gradient added: **Albentosa et al. 2012**, *Sci. Total Environ.* 435–436:430–445,
+doi:10.1016/j.scitotenv.2012.07.025 — the Iberian SMP survey of *Mytilus galloprovincialis*
+(2007 & 2008, 39 site×survey records). Committed as `sfg_albentosa2012_iberia.csv` (SFG) +
+`sfg_albentosa2012_contaminants.csv` (Table 6) + `sfg_albentosa2012_biometric_repeated.csv`
+(CI/ST confounders for the 16 repeated-site records, Table 5); run via
+`examples/sfg_margin_validation_albentosa2012.jl`. *(The 2026-06-13 handover and the first
+draft mislabelled this "Beiras et al." — corrected here; the author is Albentosa.)*
+
+**This is the cleanest possible negative: the authors' own paper diagnoses the failure.**
+Albentosa et al.'s headline finding is that SFG here is dominated by **condition index**
+(`SFG~CI` r=−0.617\*\*\*, R²=51.7%) and **age** (shell thickness, `SFG~ST` r=−0.465\*\*,
+R²=26.4%); chemicals add only **16.95%** of variance, and *no* relationship exists with the
+global pollution index (`SFG~CPI` r=0.092, n.s.). Their stepwise model keeps **Zn
+*positive*** even with CI+ST included — tissue metal burden indexes something beneficial
+(food/essential-element availability), not toxic stress. Only **DDTs and chlordanes**
+behave as toxicants (inverse), weakly.
+
+**Our harness reproduces every piece of that, independently:**
+- *Empirical signs invert vs Widdows.* `SFG~Zn` ρ=**+0.59\*\*** (pooled), `SFG~Cu` +0.40\*,
+  most metals positive; `SFG~CPI` ρ=+0.19 (n.s., matching their r=0.092). PAHs null
+  (`SFG~PAH13` +0.12, vs Widdows' −0.47\*\*). Organochlorines the only "expected" sign
+  (`DDTs` −0.27, `chlordanes` −0.34\*).
+- *Axis diagnostic* (signed; toxic axis should be negative): metal route ρ=**+0.49\*\***
+  (confound), organochlorine route ρ=−0.09 (toxic direction, weak — diluted by adding
+  PCB7, which the authors also found n.s.), PAH route +0.12.
+- *Margin* therefore anti-tracks SFG: `SFG~A_t` ρ=**−0.11** (pooled; per-survey −0.10/−0.07).
+  The model is internally correct (pressure erodes margin) — the *pressure proxy* is wrong.
+- *Confound control* (16 repeated-site records, partialling CI+ST): our `SFG~CI` ρ=−0.668\*\*
+  and `SFG~ST` ρ=−0.491\* **reproduce the authors' coefficients** (a transcription
+  cross-check). Controlling CI+ST does **not** rescue the margin (raw −0.45 → partial
+  −0.39): the confound lives in the pressure proxy (burden∝food), not as an additive term.
+
+**Reading — a BOUNDING result, not a tuning failure.** No re-routing was done to chase a
+negative (that would be p-hacking against an invariant). The margin replicates **where
+tissue burden indexes exposure** (Widdows North Sea, hydrocarbon-dominated, ρ=+0.41) and
+fails **where burden is condition/food-confounded** (Iberian SMP metals, ρ=−0.11). The
+boundary is exactly the long-standing *tissue-burden ≠ exposure* caveat — and the authors
+say the same ("SFG biomarker needs corrective strategies to avoid effect of confounding
+factors"). Concrete rule for the next gradients: **screen for condition/age/food
+confounding (and prefer exposure-based pressure) before trusting tissue burden as the
+pressure axis.** This does not overturn Widdows; it bounds it.
+
+**Across-species capacity test:** still NOT testable. We now have 2 of the ~8–10 species'
+gradients, but Widdows (+0.41) and Albentosa (−0.11) are not a clean capacity contrast —
+the pressure proxy means different things in each (exposure vs confounded burden). The
+capacity test needs gradients where burden→exposure holds across species. This survey is
+**tissue-only** (no water/sediment concentrations), so it cannot be re-analysed on an
+exposure basis to escape the confound.
+
 ---
 
 # Design, feasibility (retained for reference)
@@ -88,8 +138,10 @@ paywalled). This is the "literature-assembly step" flagged in the scouting note.
 1. **Widdows et al. 1995, *MEPS* 127:131–148** — North Sea / Langesundfjord transect,
    *Mytilus edulis* (in AmP), per-site SFG + PAH/PCB/metal tissue loads. The canonical
    gradient study. *(Open-access abstract; PDF access-gated here.)*
-2. **Beiras et al. 2003 (Spanish coast, ~41 stations)** — large-scale SFG + contaminants
-   in wild *M. galloprovincialis*. Best n if obtainable.
+2. **Albentosa et al. 2012, *STOTEN* 435–436:430–445 (Spanish coast, 41 stations)** —
+   large-scale SFG + contaminants in wild *M. galloprovincialis*. **DONE** (see the ⚠️
+   RESULTS section above): condition/age-confounded, does not replicate. *(Previously
+   mislabelled "Beiras et al. 2003" here.)*
 3. **Widdows & Page / Hamilton Harbour transplant** — *Mytilus*, TBT/PAH/PCB gradient.
 
 A turnkey extraction template is committed at
@@ -131,5 +183,5 @@ than against a single-load proxy that would test nothing.
 
 ## Sources
 - [Widdows et al. 1995, MEPS 127:131 (abstract)](https://www.int-res.com/abstracts/meps/v127/p131-148/) · ICES [TIMES 40 — SFG methods](https://repository.oceanbestpractices.org/handle/11329/667)
-- [Beiras et al. — SFG large-scale Spanish coast survey](https://pubmed.ncbi.nlm.nih.gov/22885349/)
+- [Albentosa et al. 2012, STOTEN 435–436:430–445 — SFG large-scale Spanish coast survey](https://doi.org/10.1016/j.scitotenv.2012.07.025)
 - EPA ECOTOX (in-repo `data/ecotox/`); AmP project.

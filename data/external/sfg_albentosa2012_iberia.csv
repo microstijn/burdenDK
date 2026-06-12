@@ -1,0 +1,58 @@
+# Scope for Growth, Iberian Mytilus galloprovincialis. Transcribed from:
+#   Albentosa M., Vinas L., Besada V., Franco A., Gonzalez-Quijano A. (2012). First
+#   measurements of the scope for growth (SFG) in mussels from a large scale survey in the
+#   North-Atlantic Spanish coast. Sci. Total Environ. 435-436:430-445.
+#   doi:10.1016/j.scitotenv.2012.07.025
+# Spanish Marine Pollution monitoring programme (SMP); 2007 & 2008 surveys, Atlantic +
+# Cantabrian coast of Spain. SFG values from Table 3 (mean of replicates). This is the
+# OUTCOME (energetic margin) side of the margin validation; the per-site contaminant
+# (PRESSURE) table is sfg_albentosa2012_contaminants.csv, and the biometric confounders
+# (CI, age) for the 16 repeated-site records are in sfg_albentosa2012_biometric_repeated.csv.
+# Second species in the across-species SFG programme (first = M. edulis, Widdows et al. 1995).
+#
+# Site key = "<code-name>_<year>" so that sites resampled in both surveys stay distinct.
+# Rates as published: CR_wstd = weight-standardised clearance rate (1 g dry meat) l/g/h;
+# IR ingestion J/g/h; AE_pct absorption efficiency %; AR absorption rate J/g/h;
+# RR respiration rate J/g/h; sfg_J_g_h = scope for growth J/g/h (the outcome).
+# NOTE: 17-Mera_2008 AR printed as 59.7 in the source table; AR = IR*AE gives 29.7, so
+#       the 59.7 is a typo and AR is recorded here as 29.7. (AR is not used downstream.)
+site,survey,species,CR_wstd_l_g_h,IR_J_g_h,AE_pct,AR_J_g_h,RR_J_g_h,sfg_J_g_h
+02-Oia_2007,2007,Mytilus_galloprovincialis,6.79,85.9,55.0,47.2,10.0,37.1
+03-VigoSamil_2007,2007,Mytilus_galloprovincialis,5.81,73.5,53.4,38.7,7.0,31.7
+06-Pont.Loira_2007,2007,Mytilus_galloprovincialis,2.58,32.6,59.7,19.4,5.8,13.6
+07-Pont.Raxo_2007,2007,Mytilus_galloprovincialis,4.37,55.3,53.1,29.5,10.3,19.2
+08-Arosa_2007,2007,Mytilus_galloprovincialis,5.59,70.7,58.3,41.2,8.8,32.4
+09-Corrubedo_2007,2007,Mytilus_galloprovincialis,6.18,78.2,59.2,46.2,8.7,37.5
+11-MurosSA_2007,2007,Mytilus_galloprovincialis,3.65,46.2,53.1,24.7,8.0,16.7
+14-Corme_2007,2007,Mytilus_galloprovincialis,5.75,72.8,50.9,37.1,8.0,29.1
+16-CoruñaTC_2007,2007,Mytilus_galloprovincialis,4.25,53.8,55.9,30.1,7.1,23.0
+18-Ares_2007,2007,Mytilus_galloprovincialis,4.16,52.7,57.0,29.9,6.4,23.5
+20-FerrolPías_2007,2007,Mytilus_galloprovincialis,6.11,77.3,46.5,35.8,9.8,26.0
+21-Cedeira_2007,2007,Mytilus_galloprovincialis,4.35,55.1,54.8,30.3,8.1,22.2
+24-Ribadeo_2007,2007,Mytilus_galloprovincialis,3.84,48.6,55.2,26.8,7.1,19.8
+27-Pravia_2007,2007,Mytilus_galloprovincialis,5.20,65.8,53.3,35.2,7.7,27.5
+28-Avilés_2007,2007,Mytilus_galloprovincialis,5.37,68.0,60.4,40.8,8.2,32.7
+31-S.Vicente_2007,2007,Mytilus_galloprovincialis,4.90,62.0,61.8,38.4,9.5,28.9
+33-Sant.Pantalán_2007,2007,Mytilus_galloprovincialis,4.69,59.4,58.9,35.0,8.4,26.6
+36-CastroUrdiales_2007,2007,Mytilus_galloprovincialis,5.38,68.1,57.8,39.3,10.0,29.3
+37-Bilbao_2007,2007,Mytilus_galloprovincialis,5.51,69.7,49.8,34.1,9.1,25.0
+40-Igueldo_2007,2007,Mytilus_galloprovincialis,4.66,59.0,53.2,34.1,8.6,22.8
+01-AGuarda_2008,2008,Mytilus_galloprovincialis,4.23,53.5,40.8,21.7,7.7,13.9
+03-VigoSamil_2008,2008,Mytilus_galloprovincialis,3.99,50.5,45.8,23.2,7.4,15.1
+05-CaboHome_2008,2008,Mytilus_galloprovincialis,4.53,57.3,55.1,31.4,8.1,23.3
+07-Pont.Raxo_2008,2008,Mytilus_galloprovincialis,2.76,34.9,50.1,17.5,7.9,9.6
+08-Arosa_2008,2008,Mytilus_galloprovincialis,2.65,33.5,52.8,17.7,8.5,9.3
+10-MurosF_2008,2008,Mytilus_galloprovincialis,4.22,53.4,58.5,31.3,8.8,22.5
+13-Muxía_2008,2008,Mytilus_galloprovincialis,3.49,44.1,57.7,25.3,6.5,18.8
+16-CoruñaTC_2008,2008,Mytilus_galloprovincialis,2.81,35.5,58.2,21.0,6.2,14.8
+17-Mera_2008,2008,Mytilus_galloprovincialis,4.51,57.1,52.1,29.7,6.7,22.9
+20-FerrolPías_2008,2008,Mytilus_galloprovincialis,5.50,69.6,43.3,30.1,9.1,21.0
+23-Viveiro_2008,2008,Mytilus_galloprovincialis,4.07,51.5,61.8,31.8,8.1,23.8
+26-Luarca_2008,2008,Mytilus_galloprovincialis,4.53,57.3,59.0,33.8,8.6,25.2
+28-Avilés_2008,2008,Mytilus_galloprovincialis,4.67,59.1,44.4,26.3,7.8,18.5
+30-Ribadesella_2008,2008,Mytilus_galloprovincialis,4.94,62.5,53.3,33.3,8.2,25.3
+33-Sant.Pantalán_2008,2008,Mytilus_galloprovincialis,4.32,54.6,51.8,28.3,7.1,21.2
+34-Sant.Pedreña_2008,2008,Mytilus_galloprovincialis,5.35,67.7,55.6,37.6,8.9,28.6
+35-Santoña_2008,2008,Mytilus_galloprovincialis,5.04,63.8,58.9,37.6,8.7,28.9
+37-Bilbao_2008,2008,Mytilus_galloprovincialis,4.40,55.7,65.8,36.7,7.0,29.7
+39-Orio_2008,2008,Mytilus_galloprovincialis,6.83,86.4,55.6,46.2,9.0,37.3

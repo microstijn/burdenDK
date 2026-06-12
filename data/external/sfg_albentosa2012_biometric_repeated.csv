@@ -1,0 +1,25 @@
+# Biometric confounders for the 8 stations sampled in BOTH surveys (16 records).
+# Transcribed from Albentosa et al. 2012, STOTEN 435-436:430-445, Table 5.
+# CI = condition index; ST = shell thickness (g/cm^2, an age proxy). These are the two
+# CONFOUNDERS the authors show dominate SFG (SFG~CI r=-0.617***, R^2=51.7%; SFG~ST
+# r=-0.465**, R^2=26.4%; chemicals contribute only 16.95%). Used here to ask whether
+# controlling the authors' confounders rescues the margin~SFG relationship. SFG/CPI
+# repeated for cross-checking against the main files (they match).
+# Site key matches sfg_albentosa2012_iberia.csv.
+site,CI,ST_g_cm2,sfg_J_g_h,CPI
+03-VigoSamil_2007,9.15,0.156,31.7,31.5
+03-VigoSamil_2008,12.39,0.202,15.1,29.9
+07-Pont.Raxo_2007,12.40,0.185,19.2,18.1
+07-Pont.Raxo_2008,18.24,0.198,9.6,23.1
+08-Arosa_2007,6.83,0.190,32.4,9.2
+08-Arosa_2008,16.55,0.201,9.3,13.1
+16-CoruñaTC_2007,11.33,0.167,23.0,25.9
+16-CoruñaTC_2008,14.67,0.207,14.8,30.2
+20-FerrolPías_2007,7.74,0.152,26.0,46.3
+20-FerrolPías_2008,9.40,0.186,21.0,64.3
+28-Avilés_2007,12.77,0.147,32.7,50.8
+28-Avilés_2008,12.39,0.201,18.5,39.5
+33-Sant.Pantalán_2007,9.07,0.187,26.6,84.0
+33-Sant.Pantalán_2008,8.13,0.239,21.2,80.3
+37-Bilbao_2007,8.77,0.157,25.0,80.3
+37-Bilbao_2008,8.05,0.209,29.7,80.9
