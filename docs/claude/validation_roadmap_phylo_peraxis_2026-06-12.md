@@ -76,7 +76,7 @@ project (`UndefVarError: StaticData`). See `CLAUDE.md`.
 
 ## Part 1 — Idea A: real phylogeny + PGLS
 
-### ⏳ STATUS (2026-06-12): all-taxa OTL pass DONE; dated tree still TODO
+### ⏳ STATUS (2026-06-12): all-taxa OTL pass DONE; dated-tree pipeline READY (1 manual download)
 First pass implemented and run (`scripts/export_comadre_matched_table.jl` →
 `scripts/fetch_comadre_tree.jl` → `scripts/comadre_pgls.jl`; writeup in
 `docs/notes/comadre_pgls_validation.md`). OTL placed 197/197 species (188 re-joined
@@ -88,8 +88,14 @@ optional, test. (2) `k_M` predicts recovery alone (β\*=0.30, p=0.013) but **not
 log-linear generation-time control** (β\*≈0) — a **rank-vs-linear** effect (rank partial
 0.264 vs log-linear 0.04), *not* phylogeny and *not* collinearity. The headline `k_M`
 result is therefore **specification-sensitive** and must be reported as such.
-**Remaining TODO:** the dated vertebrate tree (VertLife/TimeTree, manual download) for
-a real phylogenetic test, and characterising the rank-vs-linear gap.
+**Dated-tree pipeline READY:** `scripts/comadre_pgls_dated.jl` consumes a dated Newick
+(real branch lengths → VCV; Pagel's λ by ML), smoke-tested end-to-end. 190/198 matched
+species are vertebrates, so a VertLife/TimeTree vertebrate timetree covers ~everything.
+**The single remaining manual step in the whole programme:** a human downloads one
+dated Newick (no reliable public dated-tree API — datelife unreachable, VertLife/
+TimeTree behind UIs) to `data/external/comadre_amp_dated_tree.nwk`; the PGLS then runs
+unattended. The rank-vs-linear gap is characterised below (Part 3 effect sizes show
+the rank signal is robust with CIs; the linear-specification fragility stands).
 
 ### Why
 Related species are not statistically independent: a correlation across species can be
@@ -200,9 +206,13 @@ demography, not an abstract "margin"; frame accordingly. **Robustness DONE
 (2026-06-12):** the map is *not* reducible to raw fecundity — mass-specific fecundity
 `R_i/Ww_i` (+0.63\*\*) and reproduction *timing* `a_p` (+0.44\*\*, non-mechanical, survives
 controlling `R_i`) each independently predict compensation; `kap_R` is uninformative
-(AmP default 0.95 for 97%). One pre-reg deviation: `a_p`→compensation came out
-*positive* not negative (logged in the note). **TODO:** carry the dated tree (Idea A)
-through to this matrix; resolve the positive-`a_p` interpretation.
+(AmP default 0.95 for 97%). **Positive-`a_p` RESOLVED (2026-06-12,
+`scripts/comadre_ap_diagnostic.jl`):** `a_p` is pace-loaded (ρ(`a_p`,gen)=0.50, where
+the naive negative intuition lives); the residual-after-pace signal is genuinely
+positive, is *not* a fecundity proxy (ρ(`a_p`,`R_i`)=−0.13) and *not* a matrix-dimension
+artifact (ρ(dim,comp)≈0; survives a dimension control) — within a pace class delayed
+maturity independently predicts greater compensation (a reproduction-*timing* axis).
+**TODO:** carry the dated tree (Idea A) through to this matrix.
 
 ### Why
 The whole point of the margin-first reframe is that the **per-axis** margin state
@@ -306,15 +316,19 @@ look for the diagonal being strongest.
   larger sample (within-Order partial 0.190* vs 0.200*). The 89 still-unresolved are
   genuinely absent from AmP (≈39 congeners, ≈50 whole genera/clades — corals,
   sponges, molluscs). **The name map is the prerequisite for tree matching (Part 1).**
-- **Matrix-quality filter sensitivity.** Re-run with stricter/looser filters (composite
-  vs individual matrices, min study duration, primitivity tolerance) and confirm the
-  `k_M` signal is robust.
-- **Scale-bridge formalisation.** State the individual-DEB → population-matrix link
-  explicitly (DEB-IPM / DEB-structured population models; Smallegange, de Roos). The
-  damping ratio is a population quantity; `k_M` an individual rate. The bridge is
-  defensible but should be argued, not assumed, in the manuscript.
-- **Effect sizes & multiple testing.** Report confidence intervals (bootstrap over
-  species) and correct for the several model quantities tested.
+- **Matrix-quality filter sensitivity. ✅ DONE (2026-06-12).**
+  `scripts/comadre_filter_sensitivity.jl` re-derives ρ(`k_M`, recovery | gen) under 6
+  filter variants (individual vs composite, dimension ≥3 / ==2, all-captivity). Stable
+  0.18–0.33, same sign → not a filter artifact. See `comadre_robustness_effectsizes.md`.
+- **Scale-bridge formalisation. ✅ DONE (2026-06-12).** `docs/notes/comadre_scale_bridge.md`
+  argues the individual-DEB → population-matrix link via DEB-IPM (Smallegange/Caswell)
+  and PSPM (de Roos/Persson): the bridge licenses a *monotone* (rank-correlational)
+  association, which is why every test here is rank-based and gen-controlled.
+- **Effect sizes & multiple testing. ✅ DONE (2026-06-12).**
+  `examples/comadre_bootstrap_effectsizes.jl` reports bootstrap (resample-over-species)
+  95% CIs and a Benjamini-Hochberg correction across the 7 headline tests. Every
+  positive finding survives BH with a CI excluding 0; the amplification scalar `g` is
+  the lone null (CI spans 0) — the margin-first prediction.
 
 ---
 

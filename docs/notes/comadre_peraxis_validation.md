@@ -87,12 +87,25 @@ correspondence is a real, multi-faceted reproduction-strategy signal, not reduci
 to the single `R_i`↔reactivity fecundity-count identity — though that strongest cell
 retains a mechanical component.
 
-**Pre-registration deviation (logged honestly):** I pre-registered `a_p`→compensation
-as *negative* (later puberty → less compensation). It is **positive** (+0.36). The
-interpretation is non-trivial: within a fixed generation time, `a_p` co-varies
-positively with fecundity, and the suppression pattern (the `a_p` effect *grows* to
-+0.44 when `R_i` is controlled) indicates joint reproduction-strategy structure
-rather than a simple timing axis. Not over-interpreted; flagged for follow-up.
+**Pre-registration deviation — RESOLVED (2026-06-12).** I pre-registered
+`a_p`→compensation as *negative* (later puberty → less compensation); it came out
+**positive** (+0.36). A dedicated diagnostic (`scripts/comadre_ap_diagnostic.jl`,
+controlling for pace, fecundity, body mass, and matrix dimension) explains it:
+- `a_p` is strongly **pace-loaded** (ρ(`a_p`, gen) = +0.50). The negative intuition
+  lives entirely in pace (slow species compensate less) and is removed by the gen control.
+- `a_p` is **not** a fecundity proxy (ρ(`a_p`, `R_i`) = −0.13, mildly inverse), so it
+  is not re-testing `R_i`; the suppression (effect grows to +0.44 controlling `R_i`)
+  follows from that mild negative `a_p`–`R_i` correlation.
+- It is **not a matrix-dimension artifact**: ρ(dimension, compensation) = +0.001, and
+  the partial barely moves under a dimension control (+0.443 → +0.411).
+- The effect survives controlling pace, fecundity, mass, *and* dimension (+0.43).
+
+So within a pace class, **delayed maturity independently predicts greater demographic
+compensation** — a genuine reproduction-*timing* axis distinct from fecundity
+magnitude. The pre-registered sign was wrong because it conflated pace with strategy;
+the residual-after-pace signal is robustly positive. Net: the reproduction *axis* maps
+to the compensation *component* through two independent facets (magnitude `R_i` and
+timing `a_p`), strengthening the per-axis result.
 
 ## Verdict
 **The pre-registered core passed: the reproduction axis specifically and robustly

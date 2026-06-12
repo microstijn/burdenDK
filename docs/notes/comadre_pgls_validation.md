@@ -71,8 +71,31 @@ phylogenetic test; (ii) characterise the rank-vs-linear gap (influential species
 nonlinearity?); (iii) the per-axis metric (Idea B), which may be less
 specification-fragile than the scalar.
 
+## Dated-tree follow-up — pipeline READY, blocked on one manual download
+The all-taxa OTL+Grafen pass could not adjudicate phylogeny (Pagel λ≈0: the undated
+topology carries no informative covariance). The genuine test needs a **dated** tree.
+Status (2026-06-12):
+- **Coverage is excellent for a vertebrate tree:** 190/198 matched species are
+  vertebrates (Mammalia 75, Aves 47, Actinopterygii 42, Reptilia 18, Amphibia 7,
+  + shark/lamprey); only 8 are non-vertebrates. A VertLife/TimeTree vertebrate
+  timetree therefore covers essentially the whole set.
+- **Pipeline built and smoke-tested:** `scripts/comadre_pgls_dated.jl` parses a dated
+  Newick (real `:branch-length`s), builds the phylogenetic VCV from those lengths
+  (not Grafen), estimates Pagel's λ by ML, and runs `comadre_log_damping ~ k_M
+  (+ gen)` (and `λ(A0)`, `g`). Verified end-to-end on a synthetic dated tree.
+- **The one blocker:** there is no reliable public *dated-tree* API (datelife's service
+  was unreachable; VertLife/TimeTree sit behind download UIs; guessing megatree URLs
+  risks fetching unverified data). A human downloads a dated Newick **once** — the
+  script prints the species list to paste into VertLife/TimeTree and the save path
+  `data/external/comadre_amp_dated_tree.nwk` — after which the PGLS runs unattended.
+  **This is the single remaining manual step in the whole validation programme.**
+- **What it decides:** compare the dated Pagel λ against the Grafen ≈0. A non-trivial λ
+  means the dated tree carries real phylogenetic signal; then whether `k_M`'s
+  gen-controlled signal survives a real phylogeny is finally testable.
+
 ## Sources
 
 - Open Tree of Life synthetic tree / induced subtree API — [opentreeoflife.org](https://opentreeoflife.org), [api.opentreeoflife.org/v3](https://github.com/OpenTreeOfLife/germinator/wiki/Synthetic-tree-API-v3)
+- Dated trees — VertLife [vertlife.org](http://vertlife.org) (Upham et al. 2019 mammals; Jetz et al. 2012 birds); TimeTree [timetree.org](http://timetree.org).
 - Grafen, A. (1989) The phylogenetic regression. *Phil. Trans. R. Soc. B* 326:119–157.
 - Pagel, M. (1999) Inferring the historical patterns of biological evolution. *Nature* 401:877–884.
