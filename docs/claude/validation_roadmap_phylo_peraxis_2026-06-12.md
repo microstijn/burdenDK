@@ -196,9 +196,13 @@ sit at the resistance/recovery (persistence) pole; resistance↔compensation is 
 strong trade-off axis with recovery more orthogonal. **Honest caveat:** the
 `R_i`↔compensation cell is *partly mechanical* (reactivity is fertility-driven, `R_i`
 is fecundity) — it validates DEB-predicted reproduction against independent field
-demography, not an abstract "margin"; frame accordingly. **TODO:** a less
-fecundity-mechanical reproduction predictor (`kap_R`/`a_p`); carry the dated tree
-(Idea A) through to this matrix.
+demography, not an abstract "margin"; frame accordingly. **Robustness DONE
+(2026-06-12):** the map is *not* reducible to raw fecundity — mass-specific fecundity
+`R_i/Ww_i` (+0.63\*\*) and reproduction *timing* `a_p` (+0.44\*\*, non-mechanical, survives
+controlling `R_i`) each independently predict compensation; `kap_R` is uninformative
+(AmP default 0.95 for 97%). One pre-reg deviation: `a_p`→compensation came out
+*positive* not negative (logged in the note). **TODO:** carry the dated tree (Idea A)
+through to this matrix; resolve the positive-`a_p` interpretation.
 
 ### Why
 The whole point of the margin-first reframe is that the **per-axis** margin state

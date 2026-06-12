@@ -44,12 +44,12 @@ read_namemap() = (m = Dict{String, String}();
         f = split(line, ","); length(f) >= 2 && f[2] != "" && (m[String(f[1])] = String(f[2]))
     end; m)
 
-# AmP rates: amp_key => (kM, Ri, rB, Wwi)
+# AmP rates: amp_key => (kM, Ri, rB, Wwi, a_p)
 function read_rates()
-    d = Dict{String, NTuple{4, Float64}}()
+    d = Dict{String, NTuple{5, Float64}}()
     for line in Iterators.drop(eachline(joinpath(DIR, "amp_reproduction_rates.csv")), 1)
-        f = split(line, ","); length(f) >= 7 || continue
-        d[String(f[1])] = (pf(f[2]), pf(f[3]), pf(f[4]), pf(f[7]))
+        f = split(line, ","); length(f) >= 8 || continue
+        d[String(f[1])] = (pf(f[2]), pf(f[3]), pf(f[4]), pf(f[7]), pf(f[8]))
     end
     return d
 end
@@ -65,14 +65,14 @@ function main()
     end
 
     keys_used = String[]
-    kM = Float64[]; Ri = Float64[]; rB = Float64[]; Wwi = Float64[]
+    kM = Float64[]; Ri = Float64[]; rB = Float64[]; Wwi = Float64[]; ap = Float64[]
     recov = Float64[]; comp = Float64[]; resist = Float64[]; gen = Float64[]
     for (key, vs) in grouped
         haskey(rates, key) || continue
         r = rates[key]
         all(isfinite, (r[1], r[2], r[3])) || continue
         push!(keys_used, key)
-        push!(kM, r[1]); push!(Ri, r[2]); push!(rB, r[3]); push!(Wwi, r[4])
+        push!(kM, r[1]); push!(Ri, r[2]); push!(rB, r[3]); push!(Wwi, r[4]); push!(ap, r[5])
         push!(recov, mean(v[1] for v in vs))
         push!(gen, mean(x for x in (v[2] for v in vs)))   # may be NaN if all missing
         push!(comp, mean(v[3] for v in vs))
@@ -143,6 +143,30 @@ function main()
         rr = cor(resid_on(ordinalrank(ri_), ge_, ww_), resid_on(ordinalrank(co_), ge_, ww_))
         @printf("partial rank rho(R_i, compensation | gen, Ww_i) = %+.3f %s  (n=%d)\n",
                 rr, sig(rr, count(m) - 4), count(m))
+    end
+
+    # === Robustness: is reproduction->compensation MORE than raw fecundity? ===
+    # R_i (fecundity count) <-> reactivity (fertility-driven) is partly mechanical.
+    # Test reproduction predictors that are NOT fecundity magnitude:
+    #   a_p  = age at puberty (reproduction TIMING; expect - : later puberty, less comp)
+    #   R_i/Ww_i = mass-specific fecundity (removes absolute body-size magnitude)
+    # and cross-control R_i vs a_p to see if each survives the other.
+    # rank partial of (x,y) controlling any number of covariates:
+    function prank(x, y, ctrls...)
+        m = [all(isfinite, t) for t in zip(x, y, ctrls...)]
+        Z = hcat(ones(count(m)), (ordinalrank(c[m]) for c in ctrls)...)
+        res(v) = (vr = ordinalrank(v[m]); vr .- Z * (Z \ vr))
+        return cor(res(x), res(y)), count(m)
+    end
+    println("\n=== Robustness: reproduction -> compensation beyond raw fecundity ===")
+    println("(kap_R is NOT tested: AmP default 0.95 for ~97% of species, no variance.)")
+    for (lab, x, ctrls, note) in (
+            ("a_p (timing)     | gen",            log.(ap),        (gen,),      "expect - (late puberty -> less compensation)"),
+            ("R_i/Ww (mass-sp) | gen",            log.(Ri ./ Wwi), (gen,),      "expect + (size-free fecundity)"),
+            ("R_i (fecundity)  | gen, a_p",       log.(Ri),        (gen, log.(ap)), "does fecundity magnitude survive timing?"),
+            ("a_p (timing)     | gen, R_i",       log.(ap),        (gen, log.(Ri)), "does timing survive fecundity magnitude?"))
+        r, nn = prank(x, comp, ctrls...)
+        @printf("  %-28s rho = %+.3f %-2s (n=%d)  %s\n", lab, r, sig(r, nn - 1 - length(ctrls)), nn, note)
     end
 
     println("\n* p<0.05, ** p<0.01. compensation=reactivity, resistance=attenuation,")
