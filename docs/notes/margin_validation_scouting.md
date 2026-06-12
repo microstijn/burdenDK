@@ -53,7 +53,14 @@ life-history outcome. openGUTS ships example datasets in a documented format.
   response* data is empirical and independent of the AmP **capacity** fit, and our
   margin is a *reduced form*, not full DEBtox. A defensible, accessible second test.
 
-### 3. GlobTherm thermal tolerance — *cheap, but tests a different facet*
+### 3. GlobTherm thermal tolerance — *cheap, but tests a different facet* — ✅ DONE (2026-06-13)
+**Run** (`globtherm_validation.md`, n=664): the AmP capacity axis is strongly,
+coherently related to independent thermal data (|ρ| up to 0.45 — *not noise*), but the
+pre-registered general-resilience hypothesis is **refuted** — recovery capacity does
+not predict broader thermal tolerance (sign is opposite/weak). **Bounding result:** the
+capacity axis is recovery-*specific*, not a universal resilience currency; thermal
+tolerance is a separate axis. Confirms GlobTherm doesn't validate the margin — on to SFG.
+
 2,133 species CTmax/CTmin, one CSV download (Dryad doi:10.5061/dryad.1cv08), broad taxa
 overlapping AmP. AmP `allStat` carries Arrhenius thermal parameters, so DEB predicts a
 thermal window.
