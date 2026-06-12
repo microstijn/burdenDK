@@ -49,6 +49,7 @@ function generation_time(Uraw, Fraw, Araw)
 end
 
 rows = Dict{String, Vector{NTuple{2, Float64}}}(); kept = 0
+taxo = Dict{String, NTuple{3, String}}()   # species => (class, order, family)
 for i in 1:nrow(md)
     sp = getcol(:SpeciesAccepted, i)
     (sp == "" || occursin(" sp", sp) || occursin("_sp", sp)) && continue
@@ -57,14 +58,18 @@ for i in 1:nrow(md)
     dr = damping_ratio(mats[i]["matA"]); isfinite(dr) || continue
     gt = generation_time(mats[i]["matU"], mats[i]["matF"], mats[i]["matA"])
     push!(get!(rows, sp, NTuple{2, Float64}[]), (log10(dr), gt)); global kept += 1
+    haskey(taxo, sp) || (taxo[sp] = (getcol(:Class, i), getcol(:Order, i), getcol(:Family, i)))
 end
 
+clean_field(s) = replace(s, "," => " ")
 open(OUT, "w") do io
-    println(io, "species,n_matrices,mean_log_damping,mean_generation_time")
+    println(io, "species,n_matrices,mean_log_damping,mean_generation_time,class,order,family")
     for (sp, vs) in sort(collect(rows); by = first)
         dvals = [v[1] for v in vs]; gvals = [v[2] for v in vs if isfinite(v[2])]
         gt = isempty(gvals) ? "" : string(round(mean(gvals); digits = 4))
-        println(io, replace(sp, "," => " "), ",", length(vs), ",", round(mean(dvals); digits = 5), ",", gt)
+        cl, or, fa = get(taxo, sp, ("", "", ""))
+        println(io, clean_field(sp), ",", length(vs), ",", round(mean(dvals); digits = 5), ",", gt,
+                ",", clean_field(cl), ",", clean_field(or), ",", clean_field(fa))
     end
 end
 println("kept $kept matrices across ", length(rows), " species -> ", OUT)
