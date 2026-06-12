@@ -61,8 +61,10 @@ defaults, but they carry real weight and must stay visible in any results:
 | --- | --- | --- |
 | `A0` | AmP (`E_m = p_Am/v`) | baseline adaptive margin (reserve density) |
 | `alpha_axes` | AmP (`1/E_m`, `1/L_m`, `κ`, `1−κ`) | per-axis sensitivities |
-| `λ_min`, `λ_max` | AmP (`p_M/A0`, `v/L_m`) | slow/fast recovery-rate bounds |
-| `KA` | `0.3·A0` (offline) | restoring-force half-saturation |
+| `λ_max` | AmP (`v/L_m`) | fast recovery-rate bound |
+| `λ_min` | AmP (`min(k_M, λ_max)`, `k_M = [p_M]/[E_G]`) | slow recovery floor = somatic maintenance rate constant ([why](Limitations-and-Open-Questions.md)) |
+| `k_M`, `E_G`, `g` | AmP (`auxiliary_metrics`) | maintenance rate constant, cost of structure, energy investment ratio |
+| `KA` | `0.3·A0` (offline) | restoring-force half-saturation (still an unjustified constant) |
 | `ρ`, `K` | `Compound_Memory_Library.csv` | memory kinetics |
 | `NOEC`, `EC50` | ECOTOX | stress anchors |
 | effect code | ECOTOX | axis routing (pMoA proxy) |

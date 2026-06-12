@@ -9,17 +9,21 @@ All symbols in one place. Source of truth: [`src/deb_axes.jl`](../../src/deb_axe
 
 ## 1. Capacity mapping (offline, AmP → parameters)
 
-From AmP compound parameters `{p_Am, p_M, κ, v}`:
+From AmP compound parameters `{p_Am, p_M, κ, v, k_M, E_G}`:
 
 $$ E_m = \frac{p_{Am}}{v}, \qquad A_0 = E_m, \qquad L_m = \frac{\kappa\,p_{Am}}{p_M} $$
 
 $$ \alpha_A = \frac{1}{E_m},\quad \alpha_M = \frac{p_M}{\kappa\,p_{Am}}=\frac{1}{L_m},\quad \alpha_G = \kappa,\quad \alpha_R = 1-\kappa $$
 
-$$ \lambda_{\max} = \frac{v}{L_m}, \qquad \lambda_{\min} = \frac{p_M}{A_0}, \qquad K_A = 0.3\,A_0 $$
+$$ \lambda_{\max} = \frac{v}{L_m}, \qquad \lambda_{\min} = \min\!\left(k_M,\ \lambda_{\max}\right),\quad k_M = \frac{[p_M]}{[E_G]}, \qquad K_A = 0.3\,A_0 $$
 
-> Two known issues live here: the exact identity $\lambda_{\max}/\lambda_{\min} = 1/\kappa$,
-> and the unjustified constant `0.3` in `K_A`. Together they make the amplification
-> ceiling a function of κ alone. See [Limitations](Limitations-and-Open-Questions.md).
+> **`λ_min` was re-anchored** to the DEB somatic maintenance rate constant `k_M`
+> (it used to be `p_M/A_0 = [p_M]/[E_m]`). The timescale ratio is now the energy
+> investment ratio $\lambda_{\max}/\lambda_{\min} = g = [E_G]/(\kappa[E_m])$ instead of
+> the artifact $1/\kappa$, so amplification tracks `g`, not κ. The `0.3` in `K_A`
+> remains an unjustified constant. Full story:
+> [the tex note](../notes/lambda_min_maintenance_rate.tex) ·
+> [Limitations §1](Limitations-and-Open-Questions.md).
 
 ## 2. Memory (chemical burden `B_t`)
 

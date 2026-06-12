@@ -32,7 +32,7 @@ using TwoTimescaleResilience
         @test params.alpha_axes[2] ≈ 0.4250074376301585
         @test params.alpha_axes[3] ≈ 0.77712
         @test params.alpha_axes[4] ≈ 0.22287999999999997
-        @test params.lambda_min ≈ 0.00899027004972587
+        @test params.lambda_min ≈ 0.005783592166791565   # = k_M (somatic maintenance rate constant)
         @test params.lambda_max ≈ 0.011568702452292915
         @test params.KA ≈ 461.99613326705867
     end
@@ -52,7 +52,7 @@ using TwoTimescaleResilience
     @testset "Restoring force sanity check" begin
         library = load_amp_species_library(library_path)
         params = amp_species_deb_params(library, "Abatus_cordatus")
-        @test restoring_force_from_margin(params.A0, params) ≈ 0.01097 atol=1e-4
+        @test restoring_force_from_margin(params.A0, params) ≈ 0.01023 atol=1e-4
     end
 
     @testset "Invalid record tests" begin

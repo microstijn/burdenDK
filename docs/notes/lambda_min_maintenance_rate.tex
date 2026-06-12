@@ -1,0 +1,171 @@
+\documentclass[11pt]{article}
+\usepackage[a4paper,margin=2.5cm]{geometry}
+\usepackage{amsmath,amssymb,bm}
+\usepackage{booktabs}
+\usepackage{xcolor}
+\usepackage{enumitem}
+\usepackage{hyperref}
+
+\title{Breaking the $\kappa$-collapse: re-anchoring the slow recovery floor to the
+DEB maintenance rate constant\\
+\large Technical note on the \texttt{lambda\_min} mapping in TwoTimescaleResilience}
+\author{Working note}
+\date{\today}
+
+\newcommand{\Em}{[E_m]}
+\newcommand{\EG}{[E_G]}
+\newcommand{\pM}{[p_M]}
+
+\begin{document}
+\maketitle
+
+\section{Summary}
+The amplification factor $F$ produced by the framework was, under the original
+parameterization, numerically a function of the Dynamic Energy Budget (DEB)
+\emph{allocation fraction} $\kappa$ \emph{alone}: across the whole AmP library
+(7{,}335 species) $\mathrm{Spearman}(F,\kappa)=-1.000$ to machine precision, and the
+baseline capacity $A_0$ -- spanning six orders of magnitude -- contributed nothing.
+This note shows that the cause is a single mis-normalized parameter: the slow
+recovery floor $\lambda_{\min}$ was defined as maintenance power divided by
+\emph{reserve density} rather than by the \emph{cost of structure}. Replacing it with
+the textbook DEB somatic maintenance rate constant $k_M=\pM/\EG$ both corrects the
+quantity and dissolves the collapse: the timescale-separation ratio becomes the
+energy investment ratio $g$, and $F$ now tracks $g$ rather than $\kappa$.
+
+\section{The mechanism and the collapse}
+The fast (acute) response obeys $\dot y = -\lambda(A)\,y + \beta C_{\mathrm{event}}$,
+and a Fubini argument over the event gives the burden $\propto 1/\lambda(A)$, so the
+amplification of a chronically-stressed organism relative to a pristine one is
+\begin{equation}
+F = \frac{\lambda(A_0)}{\lambda(A_t)},
+\qquad
+\lambda(A) = \lambda_{\min} + (\lambda_{\max}-\lambda_{\min})\,\frac{A_+}{K_A+A_+}.
+\label{eq:F}
+\end{equation}
+$F$ genuinely depends on the current margin $A_t$: this is the model mechanism and is
+not in question. The problem is what happens \emph{across species}. The framework
+erodes the margin proportionally, $A_t=A_0(1-Q)$ with $Q\in[0,1]$ the fractional
+load, and sets $K_A=0.3\,A_0$. Substituting into~\eqref{eq:F}, every factor of $A_0$
+cancels:
+\begin{equation}
+\lambda(A_t)=\lambda_{\min}+(\lambda_{\max}-\lambda_{\min})\frac{1-Q}{1.3-Q},
+\qquad
+\lambda(A_0)=\lambda_{\min}+\frac{\lambda_{\max}-\lambda_{\min}}{1.3},
+\end{equation}
+so, with $r\equiv\lambda_{\max}/\lambda_{\min}$,
+\begin{equation}
+F(Q)=\frac{1+(r-1)/1.3}{\,1+(r-1)\dfrac{1-Q}{1.3-Q}\,}.
+\label{eq:FQ}
+\end{equation}
+$F$ is a function of $(r,Q)$ only. The capacity scale $A_0$ has vanished. Everything
+therefore hinges on the ratio $r$.
+
+\subsection{Why $r=1/\kappa$ in the original mapping}
+The offline mapping (\texttt{src/AmP\_Translator.jl}) set
+\begin{equation}
+\lambda_{\max}=\frac{v}{L_m},
+\qquad
+\lambda_{\min}=\frac{\pM}{A_0}=\frac{\pM}{\Em},
+\end{equation}
+with $A_0=\Em=p_{Am}/v$ and $L_m=\kappa\,p_{Am}/\pM$. Then
+\begin{equation}
+r=\frac{\lambda_{\max}}{\lambda_{\min}}
+ =\frac{v/L_m}{\pM/\Em}
+ =\frac{v\,\pM/(\kappa\,p_{Am})}{\pM\,v/p_{Am}}
+ =\frac{1}{\kappa}.
+\end{equation}
+The cancellation of $p_{Am}$, $\pM$ and $v$ is complete; only the allocation fraction
+survives. Combined with~\eqref{eq:FQ} this makes $F$ a one-parameter family in
+$\kappa$. The capacity signal the framework advertises ($A_0$, the ``evolutionary
+buffer'') is inert.
+
+\section{Diagnosis: $\lambda_{\min}$ is not the maintenance rate constant}
+$\lambda_{\min}=\pM/\Em$ is maintenance power normalized by \emph{reserve density}.
+That is not a standard DEB quantity. The canonical \emph{somatic maintenance rate
+constant} is maintenance power normalized by the \emph{volume-specific cost of
+structure},
+\begin{equation}
+k_M=\frac{\pM}{\EG},
+\end{equation}
+which is the fundamental slow rate constant of DEB theory (it sets the von Bertalanffy
+and maturation timescales). Normalizing by $\Em$ rather than $\EG$ drags $p_{Am}$ and
+$v$ into $\lambda_{\min}$ in precisely the way that forces $r=1/\kappa$.
+
+\section{The fix}
+Keep $\lambda_{\max}=v/L_m$ and set the floor to the maintenance rate constant, with a
+clamp to preserve $\lambda_{\min}\le\lambda_{\max}$:
+\begin{equation}
+\boxed{\;\lambda_{\min}=\min\!\bigl(k_M,\;\lambda_{\max}\bigr),\qquad k_M=\frac{\pM}{\EG}.\;}
+\end{equation}
+Using the standard DEB identity $L_m=v/(g\,k_M)$, the timescale-separation ratio for
+unclamped species becomes the \emph{energy investment ratio}
+\begin{equation}
+r=\frac{\lambda_{\max}}{\lambda_{\min}}=\frac{v/L_m}{k_M}=g=\frac{\EG}{\kappa\,\Em},
+\end{equation}
+a primary DEB parameter that varies across species by the reserve/structure economy,
+not merely by allocation. With $\lambda_{\min}=k_M$ and $\lambda_{\max}=g\,k_M$ the two
+rates share the metabolic tempo $k_M$, which \emph{cancels} in~\eqref{eq:F}: $k_M$ sets
+how \emph{fast} recovery is, $g$ sets how \emph{much} amplification there is.
+
+The clamp encodes a deliberate modelling choice: reserve-rich species ($g<1$, hence
+$k_M>v/L_m$) receive no timescale separation, so $\lambda$ is constant and $F\equiv1$.
+Such species are resilient to chronic-then-acute stress by construction.
+
+Both $k_M$, $\EG$ and $g$ are read directly from AmP (\texttt{allStat.mat}); the change
+is otherwise local to \texttt{AmP\_Translator.jl}, and the species library JSON is
+regenerated from it.
+
+\section{Empirical result}
+Re-running over the regenerated library (7{,}335 species;
+\texttt{examples/amp\_lambda\_min\_validation.jl}):
+
+\begin{center}
+\begin{tabular}{lcc}
+\toprule
+quantity & before fix & after fix \\
+\midrule
+$\mathrm{Spearman}(F,\kappa)$ & $-1.000$ & $-0.107$ \\
+$\mathrm{Spearman}(F,g)$      & ---      & $+0.725$ \\
+$\mathrm{Spearman}(g,\kappa)$ & ---      & $-0.244$ \\
+$\max|\,\lambda_{\max}/\lambda_{\min}-g\,|$ (unclamped) & --- & $2\times10^{-13}$ \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+The collapse is broken: $F$ is no longer a $\kappa$ ranking, it tracks $g$, and $g$ is
+only weakly correlated with $\kappa$ ($-0.244$) so the change genuinely adds
+physiological information. The identity $r=g$ holds to machine precision.
+
+\section{Newly exposed question: the range of $g$}
+The fix is directionally correct but reveals the next design problem. Because $g$ in
+AmP spans roughly $10^{-3}$ to $\sim\!10^{2}$:
+\begin{itemize}[nosep]
+  \item $65\%$ of species have $g\le1$ and are clamped to $F\equiv1$ (binary resilience);
+  \item at full margin collapse ($Q\to1$) the ceiling $F_{\max}=1+(g-1)/1.3$ reaches
+        $\sim\!559$ for extreme-$g$ species.
+\end{itemize}
+At moderate erosion the picture is tame ($F\le1.23$ at $Q=0.5$): the explosion is only
+the $A_t\to0$ limit. Still, mapping the recovery-rate ratio to $g$ \emph{raw} is
+probably too literal. Open options, to be weighed with DEB domain input:
+\begin{enumerate}[nosep]
+  \item accept the clamp ($g<1\Rightarrow$ resilient) and bound the upper tail with a
+        saturating transform of $g$;
+  \item reconsider $\lambda_{\max}=v/L_m$ (the slowest reserve turnover, evaluated at
+        $L_m$) as the fast reference rate;
+  \item treat $A_0$ as an absolute (not relative) margin scale by breaking
+        $K_A\propto A_0$ -- a separate and, per the structure diagnostic, weaker lever.
+\end{enumerate}
+
+\section{Status}
+This change is committed on the branch
+\texttt{fix/lambda-min-maintenance-rate}. It is a principled correction (the previous
+$\lambda_{\min}$ was the wrong rate constant) rather than a tuning choice, and the
+$\kappa$-collapse dissolving is the signal that the original normalization was wrong.
+Whether $g$-driven vulnerability (reserve-poor, structure-expensive species amplify
+more) is biologically correct, and how to tame the range of $g$, are the questions for
+empirical validation and DEB expert review. Companion material:
+\texttt{docs/wiki/Limitations-and-Open-Questions.md},
+\texttt{examples/amp\_kappa\_collapse\_diagnostic.jl},
+\texttt{examples/amp\_lambda\_structure\_comparison.jl}.
+
+\end{document}

@@ -54,7 +54,7 @@ These pre-existing topic docs are the authoritative detail for each component:
 | Stable real-raster ingestion | partial (mostly example scripts) |
 | DEBtox scaled damage `D_t`, synergism/antagonism | not implemented (by design) |
 
-See [Limitations & open questions](Limitations-and-Open-Questions.md) for the important caveats — in particular, the current amplification factor is **functionally determined by the DEB allocation fraction κ alone**, which is an open scientific question, not a settled result.
+See [Limitations & open questions](Limitations-and-Open-Questions.md) for the important caveats — in particular, the amplification factor is a **one-dimensional index** (it was the allocation fraction κ; after re-anchoring the recovery floor to the DEB maintenance rate constant it now tracks the energy investment ratio `g`) and is **not yet validated against external data**.
 
 ---
 

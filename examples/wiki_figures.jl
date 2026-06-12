@@ -106,12 +106,16 @@ function figure_two_timescale()
 end
 
 # --------------------------------------------------------------------------
-# Figure 3: amplification is a function of kappa alone (real library)
+# Figure 3: after re-anchoring lambda_min to k_M, amplification tracks the
+# energy investment ratio g, not the allocation fraction kappa.
+# (Pre-fix, F lay on a single kappa curve; see docs/notes/lambda_min_maintenance_rate.tex
+#  and examples/amp_kappa_collapse_diagnostic.jl for that original collapse.)
 # --------------------------------------------------------------------------
-function figure_kappa_collapse()
+function figure_kappa_to_g()
     lib = load_amp_species_library()
-    kappa = Float64[]; Fhalf = Float64[]; logA0 = Float64[]
+    kappa = Float64[]; gval = Float64[]; Fhalf = Float64[]
     for (_k, rec) in lib
+        haskey(rec, "auxiliary_metrics") && haskey(rec["auxiliary_metrics"], "g") || continue
         local p
         try
             p = amp_record_to_deb_params(rec)
@@ -119,29 +123,39 @@ function figure_kappa_collapse()
             continue
         end
         a = p.alpha_axes
-        (all(isfinite, a) && p.A0 > 0 && 0 < a[3] < 1 && 0 < p.lambda_min < p.lambda_max) || continue
+        (all(isfinite, a) && p.A0 > 0 && 0 < a[3] < 1 && 0 < p.lambda_min <= p.lambda_max) || continue
         push!(kappa, a[3])
+        push!(gval, Float64(rec["auxiliary_metrics"]["g"]))
         push!(Fhalf, amplification_from_margin(0.5 * p.A0, p))   # F at 50% erosion
-        push!(logA0, log10(p.A0))
     end
 
-    fig = Figure(size = (760, 480))
-    ax = Axis(fig[1, 1];
-        title = "Amplification at 50% erosion is a function of κ alone",
+    fig = Figure(size = (940, 420))
+
+    ax1 = Axis(fig[1, 1];
+        title = "F vs κ — no longer a single curve",
         xlabel = "DEB allocation fraction κ", ylabel = "F  (A_t = 0.5 · A₀)")
-    sc = scatter!(ax, kappa, Fhalf; color = logA0, colormap = :viridis, markersize = 5)
-    Colorbar(fig[1, 2], sc; label = "log₁₀ A₀  (6 orders of magnitude — yet F doesn't move)")
-    text!(ax, 0.5, maximum(Fhalf) * 0.9;
-        text = "every species lies on one κ curve\n(Spearman(F, κ) = −1.000)",
+    scatter!(ax1, kappa, Fhalf; color = log10.(gval), colormap = :viridis, markersize = 4)
+    text!(ax1, 0.5, maximum(Fhalf) * 0.92;
+        text = "Spearman(F, κ) = −0.11\n(was −1.000 before the λ_min fix)",
         align = (:center, :center))
 
-    save(joinpath(FIG_DIR, "kappa_collapse.png"), fig; px_per_unit = 2)
-    println("wrote kappa_collapse.png")
+    ax2 = Axis(fig[1, 2];
+        title = "F vs g — amplification now tracks the energy investment ratio",
+        xlabel = "energy investment ratio g  (log scale)", ylabel = "F",
+        xscale = log10)
+    sc = scatter!(ax2, gval, Fhalf; color = log10.(gval), colormap = :viridis, markersize = 4)
+    vlines!(ax2, [1.0]; color = :gray, linestyle = :dash)
+    text!(ax2, 1.0, maximum(Fhalf) * 0.92;
+        text = " g ≤ 1: reserve-rich,\n clamped to F = 1", align = (:left, :center), color = :gray)
+    Colorbar(fig[1, 3], sc; label = "log₁₀ g")
+
+    save(joinpath(FIG_DIR, "amplification_vs_kappa_and_g.png"), fig; px_per_unit = 2)
+    println("wrote amplification_vs_kappa_and_g.png")
 end
 
 if abspath(PROGRAM_FILE) == @__FILE__
     figure_restoring_force()
     figure_two_timescale()
-    figure_kappa_collapse()
+    figure_kappa_to_g()
     println("\nFigures written to ", FIG_DIR)
 end

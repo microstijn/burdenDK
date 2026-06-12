@@ -5,17 +5,19 @@ using TwoTimescaleResilience
 # Characterization (regression) tests pinning the AS-BUILT AmP -> capacity
 # mapping produced by src/AmP_Translator.jl and consumed via src/amp_library.jl.
 #
-# These document the current behavior so the planned margin-equation refactor
-# (see docs/claude/TwoTimescaleResilience_source_audit_2026-06-11.md) is
-# auditable. They are EXPECTED to fail once the hidden `KA = 0.3*A0` knob is
-# removed and the Fmax-kappa collapse is broken -- that failure is the signal
-# that as-built behavior changed, and these assertions should be updated then.
+# The slow recovery floor is the DEB somatic maintenance rate constant
+#   lambda_min = min(k_M, lambda_max),   k_M = [p_M]/[E_G]
+# (clamped so reserve-rich species, g < 1, get no timescale separation). This
+# replaced the earlier lambda_min = p_M/A0, which forced lambda_max/lambda_min
+# == 1/kappa and made amplification a function of kappa alone (the kappa-collapse).
+# See docs/notes/lambda_min_maintenance_rate.tex.
 #
-# Identities pinned (derived in the audit note):
-#   - kappa == alpha_axes[3]            (alpha_G = kap in AmP_Translator.jl)
-#   - KA == 0.3 * A0                    (the hidden gain constant)
-#   - lambda_max / lambda_min == 1/kappa
-#   - Fmax := lambda(A0)/lambda(0) == 1 + (1/kappa - 1)/1.3
+# Identities pinned:
+#   - KA == 0.3 * A0
+#   - lambda_min == min(k_M, lambda_max)            (k_M from auxiliary_metrics)
+#   - unclamped species: lambda_max/lambda_min == g (energy investment ratio)
+#                        and Fmax == 1 + (g - 1)/1.3
+#   - clamped species (g <= 1): lambda_min == lambda_max, Fmax == 1 (resilient)
 # ---------------------------------------------------------------------------
 
 @testset "AmP_Translator as-built identities (characterization)" begin
@@ -25,8 +27,11 @@ using TwoTimescaleResilience
     # ---- Library-wide identities across every shipped species ----
     @testset "Library-wide identities" begin
         checked = 0
-        for (species_key, record) in library
-            # Only consider records the adapter accepts.
+        clamped = 0
+        for (_species, record) in library
+            haskey(record, "auxiliary_metrics") || continue
+            aux = record["auxiliary_metrics"]
+            (haskey(aux, "k_M") && haskey(aux, "g")) || continue
             local params
             try
                 params = amp_record_to_deb_params(record)
@@ -35,38 +40,42 @@ using TwoTimescaleResilience
             end
             checked += 1
 
-            kappa = params.alpha_axes[3]   # alpha_G == kap
+            k_M = Float64(aux["k_M"])
+            g   = Float64(aux["g"])
 
-            # KA is the hidden 0.3*A0 gain.
+            # KA is the (still-present) 0.3*A0 shape constant.
             @test params.KA ≈ 0.3 * params.A0
 
-            # 1/kappa identity for the lambda bounds.
-            @test params.lambda_max / params.lambda_min ≈ 1.0 / kappa
+            # Slow floor is the clamped maintenance rate constant.
+            @test params.lambda_min ≈ min(k_M, params.lambda_max)
 
-            # Fmax collapses to a pure function of kappa.
-            Fmax_via_model = amplification_from_margin(0.0, params)          # lambda(A0)/lambda(0)
-            Fmax_closed    = 1.0 + (1.0 / kappa - 1.0) / 1.3
-            @test Fmax_via_model ≈ Fmax_closed
-
-            # restoring force at A0 is lambda_min + (lambda_max-lambda_min)/1.3.
-            lambda0_closed = params.lambda_min + (params.lambda_max - params.lambda_min) / 1.3
-            @test restoring_force_from_margin(params.A0, params) ≈ lambda0_closed
+            if params.lambda_min < params.lambda_max - 1e-12
+                # Unclamped: the timescale-separation ratio is the energy investment ratio g.
+                @test params.lambda_max / params.lambda_min ≈ g rtol = 1e-6
+                @test amplification_from_margin(0.0, params) ≈ 1 + (g - 1) / 1.3 rtol = 1e-6
+            else
+                # Clamped (g <= 1): no separation, no amplification.
+                clamped += 1
+                @test amplification_from_margin(0.0, params) ≈ 1.0
+            end
         end
-        @test checked > 0   # guard: the library actually yielded usable records
+        @test checked > 0
+        @test clamped > 0   # a substantial fraction of AmP species are reserve-rich (g <= 1)
     end
 
-    # ---- Pinned exact values for one species (Abatus_cordatus) ----
+    # ---- Pinned exact values for one species (Abatus_cordatus, unclamped, g ~ 2) ----
     @testset "Pinned: Abatus_cordatus" begin
         params = amp_species_deb_params(library, "Abatus_cordatus")
-        kappa = params.alpha_axes[3]
+        aux = library["Abatus_cordatus"]["auxiliary_metrics"]
 
-        @test kappa ≈ 0.77712
+        @test params.lambda_min ≈ 0.005783592166791565
+        @test params.lambda_min ≈ Float64(aux["k_M"])
         @test params.KA ≈ 0.3 * params.A0
-        @test params.KA ≈ 461.99613326705867
-        @test params.lambda_max / params.lambda_min ≈ 1.0 / 0.77712
+        @test Float64(aux["g"]) ≈ 2.0002624871647248
+        @test params.lambda_max / params.lambda_min ≈ 2.0002624871647248
 
-        # Fmax for this species, closed form and pinned numeric value.
-        @test amplification_from_margin(0.0, params) ≈ 1.0 + (1.0 / 0.77712 - 1.0) / 1.3
-        @test amplification_from_margin(0.0, params) ≈ 1.22062 atol = 1e-4
+        # Fmax = 1 + (g - 1)/1.3, closed form and pinned numeric value.
+        @test amplification_from_margin(0.0, params) ≈ 1 + (2.0002624871647248 - 1) / 1.3
+        @test amplification_from_margin(0.0, params) ≈ 1.7694326824344038 atol = 1e-10
     end
 end
