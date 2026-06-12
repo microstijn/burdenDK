@@ -76,6 +76,21 @@ project (`UndefVarError: StaticData`). See `CLAUDE.md`.
 
 ## Part 1 — Idea A: real phylogeny + PGLS
 
+### ⏳ STATUS (2026-06-12): all-taxa OTL pass DONE; dated tree still TODO
+First pass implemented and run (`scripts/export_comadre_matched_table.jl` →
+`scripts/fetch_comadre_tree.jl` → `scripts/comadre_pgls.jl`; writeup in
+`docs/notes/comadre_pgls_validation.md`). OTL placed 197/197 species (188 re-joined
+to the model table); pure-Julia PGLS with Grafen branch lengths + Pagel's λ (ML).
+**Two findings:** (1) **the undated OTL+Grafen tree carries ~no phylogenetic signal**
+— ML λ≈0, logL peaks at λ≈0.1 and falls monotonically to BM(λ=1), so this PGLS ≈ OLS
+and **cannot adjudicate phylogeny**; a *dated* tree (below) is now the necessary, not
+optional, test. (2) `k_M` predicts recovery alone (β\*=0.30, p=0.013) but **not under a
+log-linear generation-time control** (β\*≈0) — a **rank-vs-linear** effect (rank partial
+0.264 vs log-linear 0.04), *not* phylogeny and *not* collinearity. The headline `k_M`
+result is therefore **specification-sensitive** and must be reported as such.
+**Remaining TODO:** the dated vertebrate tree (VertLife/TimeTree, manual download) for
+a real phylogenetic test, and characterising the rank-vs-linear gap.
+
 ### Why
 Related species are not statistically independent: a correlation across species can be
 driven entirely by a few clades. The current Order group-mean-centering removes

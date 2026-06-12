@@ -68,6 +68,11 @@ which species happened to match by exact string.
   (defensible via DEB, not 1:1).
 - **Modest magnitudes.** Partial ρ ≈ 0.17–0.26 — significant at n=193 but a small
   effect; this is corroboration, not strong prediction.
+- **Specification-sensitive (important).** The gen-controlled `k_M` signal is
+  **rank-based**: partial *Spearman* `k_M~recovery|gen` = +0.264, but the
+  log-linear (Pearson) partial is only +0.04. So it is monotone-but-not-log-linear
+  — a real result under rank assumptions, but it does not survive a linear
+  PGLS/OLS regression control. See `comadre_pgls_validation.md` (Idea A).
 - **Matrix-quality filtering** (wild, unmanipulated, primitive matrices) introduces
   noise. Species matching is now GBIF-harmonised (197/286 matched). The remaining
   89 unresolved are species genuinely absent from AmP, not name mismatches: ~39 are
