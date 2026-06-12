@@ -4,7 +4,10 @@
 #
 # READ-ONLY. Reads the COMADRE-derived recovery table
 # (data/external/comadre_recovery.csv, produced by
-# scripts/extract_comadre_recovery.jl), matches species to AmP, and reports:
+# scripts/extract_comadre_recovery.jl), matches species to AmP via the
+# harmonised name map (data/external/comadre_amp_namemap.csv, produced by
+# scripts/resolve_comadre_amp_names.jl — recovers synonyms/typos beyond exact
+# string match), and reports:
 #   - raw rank correlation,
 #   - partial controlling COMADRE generation time (pace-of-life),
 #   - Order-controlled partial: within-clade, group-mean-centered, ALSO
@@ -19,6 +22,7 @@ using Statistics
 using Printf
 
 const CSV = joinpath(@__DIR__, "..", "data", "external", "comadre_recovery.csv")
+const MAP = joinpath(@__DIR__, "..", "data", "external", "comadre_amp_namemap.csv")
 
 function read_comadre(path)
     sp = String[]; logdamp = Float64[]; gen = Float64[]; order = String[]
@@ -29,6 +33,17 @@ function read_comadre(path)
         push!(gen, f[4] == "" ? NaN : parse(Float64, f[4])); push!(order, f[6])
     end
     return sp, logdamp, gen, order
+end
+
+# comadre_species => amp_key, resolved rows only (empty amp_key skipped).
+function read_namemap(path)
+    m = Dict{String, String}()
+    for (i, line) in enumerate(eachline(path))
+        i == 1 && continue
+        f = split(line, ","); length(f) >= 2 || continue
+        f[2] == "" || (m[String(f[1])] = String(f[2]))
+    end
+    return m
 end
 
 ordinalrank(v) = (p = sortperm(v); r = similar(p); r[p] = 1:length(v); Float64.(r))
@@ -52,19 +67,32 @@ end
 
 function main()
     sp, logdamp, gen, order = read_comadre(CSV)
+    namemap = read_namemap(MAP)
     lib = load_amp_species_library()
+
+    # Group COMADRE rows by their resolved AmP key. Multiple COMADRE species can
+    # resolve to one AmP species (e.g. "Chen caerulescens" + "Anser caerulescens"
+    # snow goose); averaging their COMADRE quantities avoids pseudoreplication.
+    grouped = Dict{String, Vector{Tuple{Float64, Float64, String}}}()
+    for k in eachindex(sp)
+        key = get(namemap, sp[k], nothing)
+        key === nothing && continue
+        push!(get!(grouped, key, Tuple{Float64, Float64, String}[]),
+              (logdamp[k], gen[k], order[k]))
+    end
 
     lamA0 = Float64[]; lammin = Float64[]; gval = Float64[]
     rec = Float64[]; cgen = Float64[]; ord = String[]
-    for k in eachindex(sp)
-        key = replace(sp[k], " " => "_")
+    for (key, rows) in grouped
         haskey(lib, key) || continue
         local p
         try; p = amp_species_deb_params(lib, key); catch; continue; end
         (0 < p.lambda_min <= p.lambda_max && isfinite(p.A0)) || continue
+        gens = [r[2] for r in rows if isfinite(r[2])]
         push!(lamA0, restoring_force_from_margin(p.A0, p))
         push!(lammin, p.lambda_min); push!(gval, p.lambda_max / p.lambda_min)
-        push!(rec, logdamp[k]); push!(cgen, gen[k]); push!(ord, order[k])
+        push!(rec, mean(r[1] for r in rows))
+        push!(cgen, isempty(gens) ? NaN : mean(gens)); push!(ord, rows[1][3])
     end
     m = isfinite.(cgen); n = count(m)
     @printf("AmP-COMADRE matched species: %d  (with generation time: %d)\n\n", length(rec), n)

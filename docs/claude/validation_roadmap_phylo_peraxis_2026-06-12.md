@@ -25,14 +25,17 @@ accident"**; (4) added capacity-aware margin features + a margin-first clusterin
 standardiser; and (5) ran the **first external validation** against COMADRE.
 
 ### The headline external result (the thing to build on)
-Matching 183 AmP species to the COMADRE animal matrix database and predicting
-demographic recovery (log damping ratio `|λ1|/|λ2|`):
+Matching AmP species to the COMADRE animal matrix database (now **197 species**
+after GBIF name harmonisation — see Part 3, ✅) and predicting demographic recovery
+(log damping ratio `|λ1|/|λ2|`):
 
 | model quantity | raw ρ | \| gen. time | \| gen. time + Order |
 | --- | --- | --- | --- |
-| `λ(A0)` recovery rate | +0.358 ** | +0.168 * | +0.095 (n.s.) |
-| **`λ_min = k_M`** | +0.398 ** | +0.256 ** | **+0.200 \*** |
-| `g` (amplification) | −0.031 | −0.115 | −0.093 (n.s.) |
+| `λ(A0)` recovery rate | +0.362 ** | +0.173 * | +0.089 (n.s.) |
+| **`λ_min = k_M`** | +0.406 ** | +0.264 ** | **+0.190 \*** |
+| `g` (amplification) | −0.109 | −0.128 | −0.055 (n.s.) |
+
+*(n=197, 193 with gen. time; was 183/179 — the signal is stable under harmonisation.)*
 
 **`k_M` (the DEB maintenance rate constant) predicts demographic recovery beyond
 both pace-of-life and coarse phylogeny.** The amplification scalar does not. This is
@@ -253,10 +256,16 @@ look for the diagonal being strongest.
 
 ## Part 3 — Residual refinements (smaller, do alongside)
 
-- **Species name harmonisation.** AmP↔COMADRE matching is currently exact string
-  (space→underscore). Use a synonym resolver (GBIF Backbone, Catalogue of Life, or
-  OTL TNRS) to recover matches lost to synonymy/spelling. Likely recovers 10–30 more
-  species and is essential before tree matching (Part 1).
+- **Species name harmonisation. ✅ DONE (2026-06-12).** `scripts/resolve_comadre_amp_names.jl`
+  (standalone, throwaway HTTP+JSON env) harmonises COMADRE→AmP names: exact →
+  duplicated-genus-typo fix → trinomial→binomial → GBIF Backbone synonym/accepted
+  resolution. Writes the committed map `data/external/comadre_amp_namemap.csv`
+  (`comadre_species,amp_key,method`), which `comadre_partial_validation.jl` now reads
+  (collapsing pseudoreplicated AmP keys by averaging). Recovered **15 species
+  (183→197 matched, 193 with gen. time)**; the `k_M` signal is **stable** under the
+  larger sample (within-Order partial 0.190* vs 0.200*). The 89 still-unresolved are
+  genuinely absent from AmP (≈39 congeners, ≈50 whole genera/clades — corals,
+  sponges, molluscs). **The name map is the prerequisite for tree matching (Part 1).**
 - **Matrix-quality filter sensitivity.** Re-run with stricter/looser filters (composite
   vs individual matrices, min study duration, primitivity tolerance) and confirm the
   `k_M` signal is robust.
