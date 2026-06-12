@@ -1,0 +1,44 @@
+# Scope for Growth, North Sea Mytilus edulis. Transcribed from Widdows et al. 1995,
+# Mar. Ecol. Prog. Ser. 127:131-148, Table 2 (mean values). SFG = [(clearance x 9.2 J/l
+# x absorption_eff) - (respiration x 0.456 J/pmol O2)]. This is the OUTCOME (energetic
+# margin) side of the margin validation; the per-site contaminant (PRESSURE) table from
+# the same paper is still needed to run the model prediction.
+# type: coastal = wild coastal sites (north->south); transplant = mussels transplanted
+#       to offshore light vessels (clean-reference end). species = Mytilus_edulis.
+site,type,clearance_l_g_h,absorption_eff,respiration_pmolO2_g_h,sfg_J_g_h,sfg_tempcorr_J_g_h,species
+Gluss Voe,coastal,6.17,0.46,20.6,16.41,,Mytilus_edulis
+Voxter Voe,coastal,6.74,0.51,23.3,20.94,,Mytilus_edulis
+Orkney,coastal,7.65,0.38,15.9,19.63,,Mytilus_edulis
+Ythan Estuary,coastal,3.00,0.33,18.8,-1.08,,Mytilus_edulis
+Montrose,coastal,5.04,0.33,18.9,9.75,,Mytilus_edulis
+Lucky Beacon,coastal,8.19,0.43,18.1,21.11,,Mytilus_edulis
+Musselburgh,coastal,7.79,0.46,21.3,23.07,,Mytilus_edulis
+Berwick upon Tweed,coastal,6.75,0.44,21.6,17.19,,Mytilus_edulis
+Holy Island,coastal,6.95,0.51,22.9,22.08,,Mytilus_edulis
+Coquet Estuary,coastal,5.17,0.43,19.5,11.49,,Mytilus_edulis
+Cresswell,coastal,4.07,0.57,21.2,11.89,,Mytilus_edulis
+Blyth,coastal,5.03,0.30,20.4,4.35,,Mytilus_edulis
+Trow Rocks,coastal,5.68,0.60,23.3,20.62,,Mytilus_edulis
+Teesmouth,coastal,3.68,0.45,22.8,4.82,,Mytilus_edulis
+Whitby Harbour,coastal,4.60,0.42,20.3,8.33,,Mytilus_edulis
+Filey Brigg,coastal,3.42,0.47,17.4,6.77,,Mytilus_edulis
+Humber Bull Fort,coastal,5.41,0.30,27.2,2.73,,Mytilus_edulis
+Cleethorpes,coastal,2.60,0.43,20.3,0.98,1.44,Mytilus_edulis
+Gat Sand - Wash,coastal,3.36,0.59,20.3,9.23,11.63,Mytilus_edulis
+Hunstanton,coastal,2.15,0.56,17.8,3.05,4.10,Mytilus_edulis
+Walberswick,coastal,4.59,0.35,16.6,7.22,8.96,Mytilus_edulis
+Harwich,coastal,4.49,0.25,16.5,2.95,3.95,Mytilus_edulis
+Creeksea,coastal,3.84,0.32,15.1,4.41,5.68,Mytilus_edulis
+Southend,coastal,3.07,0.31,15.8,1.49,2.16,Mytilus_edulis
+Swale,coastal,3.09,0.25,17.9,-1.02,-0.82,Mytilus_edulis
+Whitstable,coastal,4.38,0.32,19.0,4.20,5.51,Mytilus_edulis
+Dowsing,transplant,3.30,0.60,8.71,14.08,,Mytilus_edulis
+Dudgeon,transplant,3.36,0.62,10.0,14.91,,Mytilus_edulis
+Newarp,transplant,3.28,0.54,8.9,12.22,,Mytilus_edulis
+Smiths Knoll,transplant,3.08,0.53,10.2,10.29,,Mytilus_edulis
+Sunk,transplant,3.89,0.50,10.6,13.15,,Mytilus_edulis
+Falls,transplant,3.14,0.46,9.8,8.87,,Mytilus_edulis
+East Goodwin,transplant,3.65,0.54,10.6,13.11,,Mytilus_edulis
+Sandettie,transplant,2.82,0.63,9.3,12.22,,Mytilus_edulis
+South Goodwin,transplant,3.50,0.57,10.7,13.61,,Mytilus_edulis
+Exmouth - source,transplant,3.00,0.51,11.7,8.55,,Mytilus_edulis
