@@ -6,6 +6,7 @@ independent demographic recovery from the COMADRE animal matrix database, **beyo
 raw pace-of-life** — the generation-time-controlled partial correlation that
 `external_anchor_scouting.md` identified as the only clean test. Reproduce:
 `scripts/extract_comadre_recovery.jl` (extraction) →
+`scripts/resolve_comadre_amp_names.jl` (name harmonisation) →
 `examples/comadre_partial_validation.jl` (analysis).*
 
 ## Method
@@ -16,23 +17,31 @@ raw pace-of-life** — the generation-time-controlled partial correlation that
   matrices (so the control is independent of AmP).
 - **Model quantities** (from AmP): `λ(A0)` pristine recovery rate, `λ_min = k_M`
   (maintenance rate constant), and `g = λ_max/λ_min` (the amplification axis).
-- Species matched by name (AmP key = COMADRE `SpeciesAccepted`). **183 species
-  matched; 179 with generation time.**
+- Species matched via the **harmonised name map** (`scripts/resolve_comadre_amp_names.jl`:
+  exact → COMADRE duplicated-genus-typo fix → trinomial→binomial → GBIF Backbone
+  synonym/accepted-name resolution). This recovers 15 species lost to exact-string
+  matching (synonyms like *Rana*→*Lithobates*, reclassifications, spelling). Multiple
+  COMADRE names resolving to one AmP species are collapsed (their COMADRE quantities
+  averaged) to avoid pseudoreplication. **197 species matched; 193 with generation
+  time** (was 183/179 under exact matching).
 - Three nested controls: raw Spearman; partial controlling generation time
   (pace-of-life); and **Order-controlled** — within taxonomic Orders
   (group-mean-centered) *and* controlling generation time, a tree-free proxy for
-  PGLS (158 species across 27 multi-species Orders).
+  PGLS (174 species across 30 multi-species Orders).
 
 ## Result
 
 | model quantity | raw ρ | \| gen. time | \| gen. time **+ Order** |
 | --- | --- | --- | --- |
-| `λ(A0)` recovery rate | +0.358 ** | +0.168 * | +0.095 (n.s.) |
-| `λ_min = k_M` | +0.398 ** | +0.256 ** | **+0.200 \*** |
-| `g` (amplification axis) | −0.031 | −0.115 | −0.093 (n.s.) |
+| `λ(A0)` recovery rate | +0.362 ** | +0.173 * | +0.089 (n.s.) |
+| `λ_min = k_M` | +0.406 ** | +0.264 ** | **+0.190 \*** |
+| `g` (amplification axis) | −0.109 | −0.128 | −0.055 (n.s.) |
 
-(*p<0.05, **p<0.01.) References: ρ(COMADRE recovery, generation time) = −0.402;
-ρ(`k_M`, generation time) = −0.557.
+(*p<0.05, **p<0.01; n=197, 193 with generation time.) Reference:
+ρ(COMADRE recovery, generation time) = −0.399. The result is **stable under name
+harmonisation** — the larger, synonym-corrected sample reproduces the n=183 finding
+(`k_M` within-Order partial 0.190* vs 0.200*), so the signal is not an artifact of
+which species happened to match by exact string.
 
 ## What it means
 
@@ -57,10 +66,18 @@ raw pace-of-life** — the generation-time-controlled partial correlation that
   projection interval); the model's `λ` is *individual-energetic* (per day). Rank
   correlation is unit-invariant, but the individual→population bridge is assumed
   (defensible via DEB, not 1:1).
-- **Modest magnitudes.** Partial ρ ≈ 0.17–0.26 — significant at n=179 but a small
+- **Modest magnitudes.** Partial ρ ≈ 0.17–0.26 — significant at n=193 but a small
   effect; this is corroboration, not strong prediction.
-- **Matrix-quality filtering** (wild, unmanipulated, primitive matrices) and
-  name-only species matching introduce noise; ~183/286 COMADRE species matched AmP.
+- **Specification-sensitive (important).** The gen-controlled `k_M` signal is
+  **rank-based**: partial *Spearman* `k_M~recovery|gen` = +0.264, but the
+  log-linear (Pearson) partial is only +0.04. So it is monotone-but-not-log-linear
+  — a real result under rank assumptions, but it does not survive a linear
+  PGLS/OLS regression control. See `comadre_pgls_validation.md` (Idea A).
+- **Matrix-quality filtering** (wild, unmanipulated, primitive matrices) introduces
+  noise. Species matching is now GBIF-harmonised (197/286 matched). The remaining
+  89 unresolved are species genuinely absent from AmP, not name mismatches: ~39 are
+  congeners (AmP has the genus but a different species), ~50 are whole genera/clades
+  absent from AmP (corals, sponges, some molluscs/polychaetes).
 
 ## Verdict
 
