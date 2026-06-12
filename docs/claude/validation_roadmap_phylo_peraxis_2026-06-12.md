@@ -335,16 +335,20 @@ look for the diagonal being strongest.
 ## Part 4 — The big modelling questions still open (not validation, but adjacent)
 
 These are unresolved and will recur; a fresh session should know them:
-0. **Validate the adaptive margin itself (the next frontier).** COMADRE validated the
-   margin curve's *rate endpoints* (`k_M`, `R_i`), **not** the margin *state* or its
-   erosion under chronic pressure (COMADRE has no pressure axis). Scouting in
-   `docs/notes/margin_validation_scouting.md`: the recommended anchor is **Scope for
-   Growth** along contamination gradients (mussels, in AmP) — same organisational level
-   (no scale bridge), an independent energetic measurement, tests the erosion claim
-   directly; needs a small literature-assembly step. DEBtox/GUTS (downloadable, partly
-   circular) and GlobTherm (cheap capacity check) are secondary. **Pending a PI decision
-   on the anchor before building a harness** (per the project norm in
-   `external_anchor_scouting.md`).
+0. **Validate the adaptive margin itself.** COMADRE validated the margin curve's *rate
+   endpoints* (`k_M`, `R_i`), not the margin *state*. Two external checks now run
+   (`docs/notes/margin_validation_scouting.md`):
+   - **Scope for Growth ✅ (2026-06-13)** — the real test. Modeled adaptive margin tracks
+     measured SFG across 36 North Sea *Mytilus edulis* sites (Widdows et al. 1995),
+     ρ=+0.405\*; **first direct, same-level (no scale bridge) corroboration of the margin
+     itself**. MoA-routed margin beats naive aggregation (0.41 vs 0.22) but not the single
+     best contaminant (0.47) — expected, as one species fixes the capacity weighting.
+     `sfg_validation_status.md`, `examples/sfg_margin_validation.jl`.
+   - **GlobTherm ✅** — capacity is recovery-*specific*, not general thermal resilience
+     (`globtherm_validation.md`).
+   - **TODO:** an **across-species** SFG set (or a second gradient) to test the capacity
+     weighting the single-species design holds constant; DEBtox/GUTS as a downloadable
+     (partly circular) secondary.
 1. **`KA = 0.3·A0`** — ✅ RESOLVED (2026-06-12): recovery curve is now linear in `A/A0`
    (no half-saturation knob); see `comadre_pgls_validation.md` / wiki Limitations §2.
 2. **Should `F` exist at all?** ✅ DEMOTED (2026-06-12, docs/framing): the margin state

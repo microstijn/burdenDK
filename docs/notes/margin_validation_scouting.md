@@ -28,12 +28,13 @@ cross-species baseline demography COMADRE provides.
 
 ## Candidate anchors (verified reachable), ranked
 
-### 1. Scope for Growth (SFG) along contamination gradients — *best concept match* — ⏳ IN PROGRESS (2026-06-13)
-Design + feasibility in `sfg_validation_status.md`. **Model side is READY** (Mytilus in
-AmP; full ECOTOX in-repo; margin-first point API exists). **One blocker:** the per-site
-SFG+contaminant table is behind publisher access controls here (manual extraction, ~30
-min with institutional access). Pinned dataset: Widdows et al. 1995 MEPS 127. Turnkey
-template: `data/external/sfg_gradient_TEMPLATE.csv`.
+### 1. Scope for Growth (SFG) along contamination gradients — *best concept match* — ✅ DONE (2026-06-13)
+**Run** (`sfg_validation_status.md`, Widdows et al. 1995, 36 North Sea *Mytilus edulis*
+sites). The **modeled adaptive margin tracks measured SFG** (ρ=+0.405\*) — the first
+direct, same-level (no scale bridge) external corroboration of the *margin itself*. The
+MoA-routed margin beats naive aggregation (0.41 vs 0.22) but not the single best
+contaminant (0.47) — expected, since one species holds the capacity weighting constant.
+Erosion mechanism corroborated; capacity dimension needs an across-species SFG set next.
 
 SFG = energy absorbed − energy respired = net energy available for growth/reproduction
 (Widdows). **This is, almost literally, an energetic adaptive margin** — capacity
