@@ -56,6 +56,14 @@ species happened to match exactly.
   **rank-based**: partial *Spearman* = +0.264, but the log-linear (Pearson) partial is
   only +0.04. Monotone-but-not-log-linear — see [Phylogenetic PGLS](Phylogenetic-PGLS.md).
 
+## Robustness (effect sizes, multiplicity, filters)
+The rank result is robust where it matters: bootstrap (resample-over-species) gives
+`k_M`→recovery ρ = +0.264, **95% CI [+0.14, +0.38]**, surviving Benjamini-Hochberg
+across the 7 headline tests; the amplification scalar `g` is the **only** test whose CI
+spans 0 (the margin-first prediction). Re-running under six COMADRE matrix-quality
+filters (individual vs composite, dimension cuts, all-captivity) keeps the partial ρ at
+0.18–0.33, same sign — not a filter artifact. Details: `comadre_robustness_effectsizes.md`.
+
 ## Verdict
 The recovery-capacity framing has its first independent validation that survives both
 pace-of-life and coarse-phylogeny controls, carried specifically by the DEB maintenance
