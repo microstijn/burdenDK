@@ -1,0 +1,18 @@
+# SFG gradient extraction template (roadmap: validate the adaptive margin via Scope for Growth).
+# Fill ONE ROW PER SITE from a published SFG-along-contamination-gradient study
+# (pinned candidate: Widdows et al. 1995, MEPS 127:131-148, Mytilus edulis). Then the
+# ECOTOX-anchored margin-vs-SFG harness can run (see docs/notes/sfg_validation_status.md).
+#
+# Columns:
+#   site            site/station name
+#   species         AmP key (underscored), e.g. Mytilus_edulis
+#   sfg             measured scope for growth (positive=growth; declines with stress)
+#   sfg_units       e.g. J/g/h  (record exactly as published)
+#   body_size_g     soft-tissue dry weight used for standardisation (blank if standardised)
+#   conc_*          per-contaminant TISSUE concentration columns; add as many as the study
+#                   reports. Name them conc_<contaminant>_<units>, e.g. conc_PAH_ug_g,
+#                   conc_PCB_ng_g, conc_Cu_ug_g, conc_TBT_ng_g. Leave blank if not measured.
+# Delete these comment lines and the EXAMPLE row before use.
+site,species,sfg,sfg_units,body_size_g,conc_PAH_ug_g,conc_PCB_ng_g,conc_Cu_ug_g,conc_TBT_ng_g
+EXAMPLE_clean_reference_site,Mytilus_edulis,35.0,J/g/h,1.0,0.2,5,8,2
+EXAMPLE_polluted_site,Mytilus_edulis,5.0,J/g/h,1.0,12.0,180,45,90
