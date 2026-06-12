@@ -30,16 +30,23 @@ speeds, and separating them is what makes the model tractable.
    margin. A depleted margin means a weaker restoring force and a larger,
    longer-lasting burden from the same event.
 
-Because the slow variable is approximately constant during a fast event, the
-burden of an acute perturbation works out to be proportional to `1/λ` (a Fubini
-argument over the event; see [Model equations](Equations.md)). The headline
-output is the **amplification factor**
+**The product is the adaptive-margin state itself** — *how much* of a species'
+margin chronic pressure has spent, *on which physiological axes*, and *in what
+absolute (capacity-weighted) terms*. That state is the vulnerability signal.
+
+The amplification factor is a **derived readout** of it. Because the slow variable
+is approximately constant during a fast event, the acute burden works out to be
+proportional to `1/λ` (a Fubini argument over the event; see
+[Model equations](Equations.md)), so a clean closed form
 
 $$ F = \frac{\lambda(A_0)}{\lambda(A_t)} $$
 
-— how much larger the acute burden is for a chronically-stressed organism
-(margin `A_t`) than for a pristine one (margin `A_0`). `F = 1` means no
-amplification; `F > 1` means chronic pressure has made the same shock worse.
+falls out — how much larger the acute burden is for a chronically-stressed
+organism (margin `A_t`) than for a pristine one (`A_0`). It is a *happy analytical
+accident*: convenient, but a lossy one-number summary of the margin state (it is
+capacity-blind and, as currently parameterized, one-dimensional — see
+[Limitations](Limitations-and-Open-Questions.md)). **Treat the margin state as
+primary and `F` as one convenient scalar derived from it.**
 
 This two-timescale separation is also what lets the framework scale to large
 spatial rasters without integrating full ecosystem Jacobian matrices per cell.
