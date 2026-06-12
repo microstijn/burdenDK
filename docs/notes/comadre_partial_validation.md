@@ -17,32 +17,39 @@ raw pace-of-life** — the generation-time-controlled partial correlation that
 - **Model quantities** (from AmP): `λ(A0)` pristine recovery rate, `λ_min = k_M`
   (maintenance rate constant), and `g = λ_max/λ_min` (the amplification axis).
 - Species matched by name (AmP key = COMADRE `SpeciesAccepted`). **183 species
-  matched; 179 with generation time.** Partial Spearman controlling generation time.
+  matched; 179 with generation time.**
+- Three nested controls: raw Spearman; partial controlling generation time
+  (pace-of-life); and **Order-controlled** — within taxonomic Orders
+  (group-mean-centered) *and* controlling generation time, a tree-free proxy for
+  PGLS (158 species across 27 multi-species Orders).
 
 ## Result
 
-| model quantity | raw ρ | partial ρ (\| gen. time) |
-| --- | --- | --- |
-| `λ(A0)` recovery rate | +0.358 ** | **+0.168 \*** |
-| `λ_min = k_M` | +0.398 ** | **+0.256 \*\*** |
-| `g` (amplification axis) | −0.031 | −0.115 (n.s.) |
+| model quantity | raw ρ | \| gen. time | \| gen. time **+ Order** |
+| --- | --- | --- | --- |
+| `λ(A0)` recovery rate | +0.358 ** | +0.168 * | +0.095 (n.s.) |
+| `λ_min = k_M` | +0.398 ** | +0.256 ** | **+0.200 \*** |
+| `g` (amplification axis) | −0.031 | −0.115 | −0.093 (n.s.) |
 
-(*p<0.05, **p<0.01, n=179/183.) References: ρ(COMADRE recovery, generation time)
-= −0.402; ρ(`k_M`, generation time) = −0.557.
+(*p<0.05, **p<0.01.) References: ρ(COMADRE recovery, generation time) = −0.402;
+ρ(`k_M`, generation time) = −0.557.
 
 ## What it means
 
 1. **First external corroboration — and it's positive.** Species the model says
    recover faster (higher `λ(A0)`, higher `k_M`) genuinely have faster demographic
    return-to-equilibrium in COMADRE (raw ρ ≈ 0.36–0.40).
-2. **The signal survives the circularity control.** After removing generation time,
-   the partial correlations stay positive and significant (`k_M` ρ=0.256**, `λ(A0)`
-   ρ=0.168*). So **the recovery/margin machinery predicts demographic recovery
-   *beyond* what pace-of-life alone explains** — modest but real.
-3. **The `g` amplification axis is *not* corroborated** (partial ρ=−0.115, n.s.) —
-   orthogonal to demographic recovery, echoing the life-history check. The external
-   data validates the **recovery/margin** half of the model, not the **`F`/`g`
-   amplification scalar** — direct support for the margin-first reframe.
+2. **The phylogenetic control sharpens, rather than kills, the signal.** The
+   maintenance rate constant **`k_M` survives the strongest test** — within
+   taxonomic Order *and* controlling generation time (ρ=0.200*). So `k_M` predicts
+   demographic recovery **beyond both pace-of-life and coarse phylogeny**. `λ(A0)`'s
+   broader signal was largely *between*-clade (it drops to a non-significant 0.095
+   under the Order control), i.e. mostly phylogenetic.
+3. **The `g` amplification axis is *not* corroborated at any control level**
+   (partial ρ ≈ −0.1, n.s.) — orthogonal to demographic recovery, echoing the
+   life-history check. The external data validates the **recovery/margin** half of
+   the model — specifically the DEB maintenance rate constant — not the **`F`/`g`
+   amplification scalar**. Direct support for the margin-first reframe.
 
 ## Caveats (honest)
 
@@ -57,10 +64,15 @@ raw pace-of-life** — the generation-time-controlled partial correlation that
 
 ## Verdict
 
-The recovery-capacity framing has its **first independent, generation-time-robust
-validation signal**; the amplification scalar does not. Next refinements if pursued:
-(a) phylogenetic / taxonomic-rank controls, (b) a per-axis margin recovery metric
-rather than `λ(A0)`, (c) sensitivity to the matrix-quality filters.
+The recovery-capacity framing has its **first independent validation signal that
+survives both pace-of-life and coarse-phylogeny controls** — carried specifically
+by the DEB maintenance rate constant `k_M` (within-Order partial ρ=0.20*). The
+amplification scalar `g`/`F` does not. This is corroboration, not strong
+prediction, but it is the cleanest external evidence to date and it points squarely
+at the margin/recovery layer rather than the amplification readout. Next refinements
+if pursued: (a) a real phylogeny (Open Tree of Life) + PGLS instead of the
+taxonomic-rank proxy, (b) a per-axis margin recovery metric rather than `λ(A0)`,
+(c) sensitivity to the matrix-quality filters.
 
 ## Sources
 
