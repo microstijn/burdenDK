@@ -179,6 +179,27 @@ check. Report both.
 
 ## Part 2 — Idea B: per-axis margin recovery metric
 
+### ✅ STATUS (2026-06-12): B3 first pass DONE — pre-registered core CONFIRMED
+Implemented the recommended **B3** (process-specific DEB rates ↔ demographic
+components). Pre-registration frozen in `docs/notes/comadre_peraxis_prereg.md`;
+analysis `examples/comadre_peraxis_validation.jl`; writeup
+`docs/notes/comadre_peraxis_validation.md`. Pipeline: extended
+`extract_comadre_recovery.jl` (now also reactivity=compensation + attenuation=
+resistance, Stott et al. 2011) → new `extract_amp_reproduction_rates.jl`
+(side-extraction of `R_i`,`r_B`,`kap_R`,`k_J`,`Ww_i` from allStat.mat — does NOT
+touch the committed library JSON) → per-axis analysis (n=197).
+**Result:** the reproduction rate `R_i` specifically and robustly predicts the
+**compensation** component (gen-controlled partial rank ρ = **+0.773\*\***, +0.775
+controlling pace AND body mass) — the strongest association in the whole COMADRE
+validation, and the first genuinely *multi-dimensional* external result. `k_M`/`r_B`
+sit at the resistance/recovery (persistence) pole; resistance↔compensation is a
+strong trade-off axis with recovery more orthogonal. **Honest caveat:** the
+`R_i`↔compensation cell is *partly mechanical* (reactivity is fertility-driven, `R_i`
+is fecundity) — it validates DEB-predicted reproduction against independent field
+demography, not an abstract "margin"; frame accordingly. **TODO:** a less
+fecundity-mechanical reproduction predictor (`kap_R`/`a_p`); carry the dated tree
+(Idea A) through to this matrix.
+
 ### Why
 The whole point of the margin-first reframe is that the **per-axis** margin state
 (which DEB process is impaired — assimilation / maintenance / growth / reproduction)
