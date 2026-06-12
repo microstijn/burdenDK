@@ -52,9 +52,19 @@ descriptors that are *not* fecundity magnitude (gen-controlled, n=193):
 (`kap_R` not usable: AmP default 0.95 for ~97% of species.) **This substantially allays
 the mechanical concern** — size-free fecundity and (non-mechanical) reproduction timing
 *each independently* predict compensation. The map is a real, multi-faceted
-reproduction-strategy signal, not reducible to the `R_i`↔reactivity identity. *Logged
-pre-reg deviation:* `a_p`→compensation came out positive (+0.36), not the predicted
-negative — interpretation flagged for follow-up.
+reproduction-strategy signal, not reducible to the `R_i`↔reactivity identity.
+
+**Positive-`a_p` deviation — resolved.** I pre-registered `a_p`→compensation as
+*negative*; it is positive (+0.36). A dedicated diagnostic shows why: `a_p` is strongly
+pace-loaded (ρ(`a_p`,gen)=+0.50 — the negative intuition lives in pace, removed by the
+gen control); it is *not* a fecundity proxy (ρ(`a_p`,`R_i`)=−0.13) and *not* a
+matrix-dimension artifact (ρ(dimension,compensation)≈0; survives a dimension control).
+So within a pace class, **delayed maturity independently predicts greater compensation**
+— a reproduction-*timing* axis, not a fishing error.
+
+**Effect sizes.** Bootstrap 95% CIs (resample over species) put `R_i`→compensation at
+[+0.70, +0.83] and `a_p`→compensation (\| gen, `R_i`) at [+0.34, +0.54]; both survive
+Benjamini-Hochberg across the headline family. See `comadre_robustness_effectsizes.md`.
 
 ## The honest framing
 `R_i` is predicted from the DEB **energy budget** (lab/reference) while COMADRE

@@ -53,6 +53,17 @@ regression); both hold under their own functional-form assumption, but this boun
 strongly a single number can be leaned on. Repo notes:
 `docs/notes/comadre_pgls_validation.md`.
 
+## Dated-tree follow-up — pipeline ready, one manual step
+The genuine phylogenetic test needs a **dated** tree (the OTL+Grafen one was too weak).
+**190/198 matched species are vertebrates**, so a VertLife/TimeTree vertebrate timetree
+covers essentially the whole set. `scripts/comadre_pgls_dated.jl` is built and
+smoke-tested: it parses a dated Newick (real branch lengths → VCV), estimates Pagel's λ
+by ML, and re-runs the models. The one blocker is that there is **no reliable public
+dated-tree API** (datelife unreachable; VertLife/TimeTree behind download UIs), so a
+human downloads one Newick to `data/external/comadre_amp_dated_tree.nwk` (the script
+prints the species list + path) — after which the PGLS runs unattended. **This is the
+single remaining manual step in the whole validation programme.**
+
 ## Sources
 - Open Tree of Life synthetic tree / induced-subtree API.
 - Grafen (1989) *Phil. Trans. R. Soc. B* 326:119–157; Pagel (1999) *Nature* 401:877–884.
