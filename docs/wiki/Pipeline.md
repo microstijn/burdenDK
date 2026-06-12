@@ -10,7 +10,7 @@ vulnerability field. Each stage is a small, testable component. The slow
 flowchart LR
     %% Capacity
     AMP[AmP_Species_Library.json] --> AMPL[load_amp_species_library]
-    AMPL --> CAP[DEBAxisParams: A0, alpha-axes, lambda-bounds, KA]
+    AMPL --> CAP[DEBAxisParams: A0, alpha-axes, lambda-bounds]
 
     %% Pressure + memory
     C["Concentration C_j,t"] --> BU[update_internal_burden!]
@@ -51,8 +51,7 @@ AmP Dynamic Energy Budget parameters `{p_Am, p_M, κ, v}`:
 
 - `A0` — baseline adaptive margin (maximum reserve density `E_m = p_Am / v`).
 - `alpha_axes` — per-axis sensitivities `(α_A, α_M, α_G, α_R)`.
-- `lambda_min`, `lambda_max` — slow/fast recovery-rate bounds.
-- `KA` — half-saturation of the restoring-force curve.
+- `lambda_min`, `lambda_max` — slow/fast recovery-rate bounds (`λ_min = k_M`, `λ_max = v/L_m`).
 
 These are precomputed by **`src/AmP_Translator.jl`** (a standalone script — *not*
 part of the module) and stored in `data/AmP_Species_Library.json`. At runtime,
@@ -112,9 +111,10 @@ readout** (see [Overview](Overview.md)):
    mode — see note below). **This margin state — relative depletion `Q_t`, the
    absolute margin `A_t` (carrying capacity `A_0`), and the axis composition — is
    the vulnerability signal.**
-3. *(derived)* **Reduce the restoring force.** $\lambda(A_t) = \lambda_{\min} + (\lambda_{\max}-\lambda_{\min})\dfrac{A_t}{K_A + A_t}$.
-4. *(derived)* **Amplify.** $F_t = \lambda(A_0)/\lambda(A_t)$ — a convenient scalar,
-   but capacity-blind and one-dimensional ([Limitations](Limitations-and-Open-Questions.md)).
+3. *(derived)* **Reduce the restoring force.** $\lambda(A_t) = \lambda_{\min} + (\lambda_{\max}-\lambda_{\min})\,\operatorname{clamp}(A_t/A_0,\,0,\,1)$ — linear in the relative margin (no half-saturation knob).
+4. *(derived, diagnostic only)* **Amplify.** $F_t = \lambda(A_0)/\lambda(A_t)$ — a convenient scalar,
+   but capacity-blind, one-dimensional, and **null in external validation**; reported
+   as a diagnostic, not the headline ([Limitations](Limitations-and-Open-Questions.md)).
 
 ![Restoring force and amplification](figures/restoring_force_amplification.png)
 

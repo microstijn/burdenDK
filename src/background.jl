@@ -9,7 +9,6 @@ Base.@kwdef struct BackgroundParams
 
     lambda_min::Float64 = 0.04
     lambda_max::Float64 = 1.0
-    KA::Float64 = 0.30
 end
 
 positive_part(x::Real) = max(float(x), 0.0)
@@ -32,9 +31,11 @@ function restoring_force(B::Real, params::BackgroundParams)
     A_val = adaptive_margin(B, params)
     A_pos = positive_part(A_val)
 
-    # lambda(B) = lambda_min + (lambda_max - lambda_min) * [A(B)]_+ / (K_A + [A(B)]_+)
+    # Linear recovery curve (see deb_axes.jl): the restoring force scales with the
+    # fraction of pristine margin retained, between the two rate bounds.
+    #   lambda(B) = lambda_min + (lambda_max - lambda_min) * clamp(A(B)/A0, 0, 1)
     diff = params.lambda_max - params.lambda_min
-    return params.lambda_min + diff * A_pos / (params.KA + A_pos)
+    return params.lambda_min + diff * clamp(A_pos / params.A0, 0.0, 1.0)
 end
 
 function amplification_factor(B::Real, params::BackgroundParams)

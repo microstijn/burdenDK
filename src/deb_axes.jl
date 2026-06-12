@@ -10,7 +10,6 @@ Base.@kwdef struct DEBAxisParams
     alpha_axes::NTuple{4, Float64} = (0.30, 0.35, 0.20, 0.15)
     lambda_min::Float64 = 0.04
     lambda_max::Float64 = 1.0
-    KA::Float64 = 0.30
 
     recovery_axes::NTuple{4, Float64} = (0.10, 0.80, 0.10, 0.05)
     use_axis_recovery_penalty::Bool = false
@@ -94,9 +93,16 @@ function deb_adaptive_margin(axes, params::DEBAxisParams)
     return params.A0 - sum(alpha .* s)
 end
 
+# Linear recovery curve: the restoring force scales with the fraction of the
+# pristine adaptive margin that remains, between the two DEB-derived rates.
+#   lambda(A) = lambda_min + (lambda_max - lambda_min) * clamp(A/A0, 0, 1)
+# Pristine margin (A = A0) gives lambda_max; a fully eroded margin gives lambda_min.
+# This replaces the old Michaelis-Menten form with KA = 0.3*A0 (an arbitrary
+# half-saturation constant that violated the no-knob invariant and meant lambda
+# never reached lambda_max at finite margin). Fmax = lambda(A0)/lambda_min = g.
 function restoring_force_from_margin(A::Real, params::DEBAxisParams)
-    Ap = max(A, 0.0)
-    return params.lambda_min + (params.lambda_max - params.lambda_min) * Ap / (params.KA + Ap)
+    frac = clamp(A / params.A0, 0.0, 1.0)
+    return params.lambda_min + (params.lambda_max - params.lambda_min) * frac
 end
 
 function restoring_force_from_margin_and_axes(A::Real, axes, params::DEBAxisParams; Z=nothing)
@@ -104,7 +110,7 @@ function restoring_force_from_margin_and_axes(A::Real, axes, params::DEBAxisPara
 
     base_lambda =
         params.lambda_min +
-        (params.lambda_max - params.lambda_min) * Ap / (params.KA + Ap)
+        (params.lambda_max - params.lambda_min) * clamp(Ap / params.A0, 0.0, 1.0)
 
     penalty = 1.0
 

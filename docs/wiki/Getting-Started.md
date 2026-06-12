@@ -97,8 +97,8 @@ These invariants are enforced by review and partly by code; don't violate them
 without explicit sign-off (full list in [`CLAUDE.md`](../../CLAUDE.md)):
 
 - **No arbitrary tuning knobs** (`gain`, `response_scale`, `burden_to_margin_*`,
-  or κ used as a free knob). *(The existing `KA = 0.3·A0` is a known violation
-  flagged for removal — see [Limitations](Limitations-and-Open-Questions.md).)*
+  or κ used as a free knob). *(The `KA = 0.3·A0` knob has been removed — the recovery
+  curve is now linear; see [Limitations §2](Limitations-and-Open-Questions.md).)*
 - **No thresholds** in threshold-free spatial features (`_gt_`, `exceedance`, …).
 - **Keep memory layers distinct:** `B_t` (chemical), `Z_t` (condition, opt-in),
   `D_t` (DEBtox, unimplemented).

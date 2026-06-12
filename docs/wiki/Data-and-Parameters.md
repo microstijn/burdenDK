@@ -11,7 +11,7 @@ carry weight on thin evidence.
 
 | File | Role |
 | --- | --- |
-| `AmP_Species_Library.json` | **Capacity.** Per-species `A0`, `alpha_axes`, `lambda_bounds` (`λ_min`, `λ_max`, `KA`), plus auxiliary `L_m`, `p_Am`, `p_M`. Derived offline from AmP. |
+| `AmP_Species_Library.json` | **Capacity.** Per-species `A0`, `alpha_axes`, `lambda_bounds` (`λ_min`, `λ_max`), plus auxiliary `L_m`, `p_Am`, `p_M`, `k_M`, `E_G`, `g`. Derived offline from AmP. (Legacy records may carry a now-ignored `KA` field.) |
 | `ECOTOX_Toxicity_Library.json` | **Pressure.** Parsed ECOTOX records (NOEC/EC50, effect codes, taxa). Built from raw ASCII by [`ECOTOXParser.jl`](../../src/ECOTOXParser.jl). |
 | `Compound_Memory_Library.csv` | **Memory.** Per-compound retention `ρ` and bioaccumulation `K`. |
 | `AmP_Species_Archetypes.csv` / `.json` | **Derived.** Response-capacity archetype labels (see [Species archetypes](../species_archetypes.md)). Built from AmP diagnostics; does not modify AmP. |
@@ -31,7 +31,7 @@ This is the most load-bearing step and a frequent source of confusion:
 
 **Therefore:** to change how capacity is derived (e.g. to address the κ-collapse),
 edit `AmP_Translator.jl` and **regenerate the JSON** — editing `amp_library.jl`
-does nothing to the mapping. The α-axes and `KA` reaching the model are frozen
+does nothing to the mapping. The α-axes and λ-bounds reaching the model are frozen
 artifacts in the JSON.
 
 ```powershell
@@ -52,8 +52,9 @@ defaults, but they carry real weight and must stay visible in any results:
   axis is a physiological-mode-of-action (pMoA) assignment proxy. This is a known,
   formalised problem in the DEBtox literature; the routing is defensible but
   approximate.
-- **`KA = 0.3·A0`.** The `0.3` is an undocumented constant with no derivation in
-  the manuscripts — see [Limitations](Limitations-and-Open-Questions.md).
+- **Recovery-curve shape.** The restoring force is now **linear** in the relative
+  margin `A/A0` (no half-saturation constant); the old `KA = 0.3·A0` knob was removed
+  — see [Limitations §2](Limitations-and-Open-Questions.md).
 
 ## Parameter reference
 
@@ -64,7 +65,7 @@ defaults, but they carry real weight and must stay visible in any results:
 | `λ_max` | AmP (`v/L_m`) | fast recovery-rate bound |
 | `λ_min` | AmP (`min(k_M, λ_max)`, `k_M = [p_M]/[E_G]`) | slow recovery floor = somatic maintenance rate constant ([why](Limitations-and-Open-Questions.md)) |
 | `k_M`, `E_G`, `g` | AmP (`auxiliary_metrics`) | maintenance rate constant, cost of structure, energy investment ratio |
-| `KA` | `0.3·A0` (offline) | restoring-force half-saturation (still an unjustified constant) |
+| *(KA removed)* | — | the recovery curve is now linear in `A/A0`; no half-saturation constant |
 | `ρ`, `K` | `Compound_Memory_Library.csv` | memory kinetics |
 | `NOEC`, `EC50` | ECOTOX | stress anchors |
 | effect code | ECOTOX | axis routing (pMoA proxy) |

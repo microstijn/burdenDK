@@ -86,7 +86,7 @@ using JSON
     @test length(unique(df.species_key)) == nrow(df)
 
     # 13. All numeric required fields are finite where expected
-    finite_numeric_cols = ["A0", "lambda_min", "lambda_max", "KA", "Fmax"]
+    finite_numeric_cols = ["A0", "lambda_min", "lambda_max", "Fmax"]
     for col in finite_numeric_cols
         @test all(x -> ismissing(x) || isnan(x) || isfinite(x), df[!, col])
     end

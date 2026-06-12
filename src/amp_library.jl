@@ -53,13 +53,11 @@ function validate_amp_record(record)::Bool
     end
     lambda_bounds = record["lambda_bounds"]
 
-    if !haskey(lambda_bounds, "KA") || !haskey(lambda_bounds, "lambda_min") || !haskey(lambda_bounds, "lambda_max")
-        throw(ArgumentError("'lambda_bounds' must contain 'KA', 'lambda_min', and 'lambda_max'"))
-    end
-
-    KA = Float64(lambda_bounds["KA"])
-    if !isfinite(KA) || KA <= 0
-        throw(ArgumentError("'KA' must be finite and > 0"))
+    # NOTE: the recovery curve is now linear in margin (no half-saturation
+    # constant), so a "KA" field is no longer required or read. Any "KA" present
+    # in a legacy JSON record is ignored. See src/deb_axes.jl.
+    if !haskey(lambda_bounds, "lambda_min") || !haskey(lambda_bounds, "lambda_max")
+        throw(ArgumentError("'lambda_bounds' must contain 'lambda_min' and 'lambda_max'"))
     end
 
     lambda_min = Float64(lambda_bounds["lambda_min"])
@@ -92,8 +90,7 @@ function amp_record_to_deb_params(record)::DEBAxisParams
             Float64(record["alpha_axes"][4])
         )),
         lambda_min = Float64(record["lambda_bounds"]["lambda_min"]),
-        lambda_max = Float64(record["lambda_bounds"]["lambda_max"]),
-        KA = Float64(record["lambda_bounds"]["KA"])
+        lambda_max = Float64(record["lambda_bounds"]["lambda_max"])
     )
 end
 

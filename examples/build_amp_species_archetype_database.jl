@@ -79,7 +79,6 @@ function main()
                 A0 = params.A0
                 lambda_min = params.lambda_min
                 lambda_max = params.lambda_max
-                KA = params.KA
                 lambda0 = TwoTimescaleResilience.restoring_force_from_margin(A0, params)
 
                 Fmax = get_Fmax(lambda0, lambda_min)
@@ -107,11 +106,9 @@ function main()
                     A0 = A0,
                     lambda_min = lambda_min,
                     lambda_max = lambda_max,
-                    KA = KA,
                     lambda0 = lambda0,
                     Fmax = Fmax,
                     lambda0_relative_position = (lambda0 - lambda_min) / (lambda_max - lambda_min),
-                    A0_over_KA = A0 / KA,
                     alpha_assimilation = params.alpha_axes[1],
                     alpha_maintenance = params.alpha_axes[2],
                     alpha_growth = params.alpha_axes[3],
@@ -170,11 +167,9 @@ function main()
     archetypes.A0 = metrics_df.A0
     archetypes.lambda_min = metrics_df.lambda_min
     archetypes.lambda_max = metrics_df.lambda_max
-    archetypes.KA = metrics_df.KA
     archetypes.lambda0 = metrics_df.lambda0
     archetypes.Fmax = metrics_df.Fmax
     archetypes.lambda0_relative_position = metrics_df.lambda0_relative_position
-    archetypes.A0_over_KA = metrics_df.A0_over_KA
     archetypes.alpha_assimilation = metrics_df.alpha_assimilation
     archetypes.alpha_maintenance = metrics_df.alpha_maintenance
     archetypes.alpha_growth = metrics_df.alpha_growth
@@ -333,7 +328,7 @@ function main()
 
     # Order columns
     cols = ["species_key", "species_name", "archetype_labels",
-            "A0", "lambda_min", "lambda_max", "KA", "lambda0", "Fmax", "lambda0_relative_position", "A0_over_KA",
+            "A0", "lambda_min", "lambda_max", "lambda0", "Fmax", "lambda0_relative_position",
             "alpha_assimilation", "alpha_maintenance", "alpha_growth", "alpha_reproduction",
             "alpha_fraction_assimilation", "alpha_fraction_maintenance", "alpha_fraction_growth", "alpha_fraction_reproduction",
             "x_collapse_assimilation", "x_collapse_maintenance", "x_collapse_growth", "x_collapse_reproduction",
@@ -361,7 +356,6 @@ function main()
                 "A0" => row.A0,
                 "lambda_min" => row.lambda_min,
                 "lambda_max" => row.lambda_max,
-                "KA" => row.KA,
                 "lambda0" => row.lambda0,
                 "Fmax" => row.Fmax,
                 "min_x_collapse" => row.min_x_collapse,

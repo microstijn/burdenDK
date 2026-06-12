@@ -48,8 +48,10 @@ see the `StaticData` precompile error, you are on the wrong Julia — switch to
 
 - **No arbitrary tuning knobs.** Do not add parameters named/behaving like
   `kappa`/`κ` (as a free knob), `gain`, `response_scale`, or
-  `burden_to_margin_multiplier`. (Note: the existing `KA = 0.3·A0` in
-  `AmP_Translator.jl` is a known violation flagged for removal — see the audit.)
+  `burden_to_margin_multiplier`. (The former `KA = 0.3·A0` half-saturation knob was
+  **removed** 2026-06-12: the recovery curve `λ(A)` is now linear in `A/A0`, so
+  pristine margin → `λ_max` and `Fmax = g`. Don't reintroduce a half-saturation
+  constant.)
 - **No thresholds in threshold-free features.** Avoid `_gt_`, `_lt_`, `threshold`,
   `exceedance`, `above`, `below` in spatial feature/regime code.
 - **Keep memory layers distinct:** chemical memory `B_t`, physiological condition
