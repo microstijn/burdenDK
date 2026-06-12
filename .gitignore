@@ -58,3 +58,6 @@ docs/tex/twotimescales_rewritten_full.log
 docs/tex/twotimescales_rewritten_full.out
 docs/tex/twotimescales_rewritten_full.pdf
 docs/tex/twotimescales_rewritten_full.synctex.gz
+
+# COMADRE raw download (derived CSV is committed; re-fetch via scripts/extract_comadre_recovery.jl)
+data/external/*.RData
