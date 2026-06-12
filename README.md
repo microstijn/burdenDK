@@ -55,11 +55,14 @@ println("Amplification  F_t  : ", response.amplification)
 
 ## The core chain
 
-$$ C_{j,t} \;\rightarrow\; B_{j,t} \;\rightarrow\; x_{j,t} \;\rightarrow\; E_{\text{axis}} \;\rightarrow\; Q_t \;\rightarrow\; A_t \;\rightarrow\; \lambda(A_t) \;\rightarrow\; F_t $$
+$$ C_{j,t} \;\rightarrow\; B_{j,t} \;\rightarrow\; x_{j,t} \;\rightarrow\; E_{\text{axis}} \;\rightarrow\; Q_t \;\rightarrow\; \boxed{A_t} \;\rightarrow\; \lambda(A_t) \;\rightarrow\; F_t $$
 
 concentration → memory → active stress → per-axis impairment → scalar load →
-adaptive margin → restoring force → amplification. Full detail in
-[How it works](docs/wiki/Pipeline.md).
+**adaptive margin (the product)** → restoring force → amplification. The
+**adaptive-margin state** — relative depletion, the capacity-aware absolute margin,
+and the axis composition — is the vulnerability signal; the amplification factor
+`F` is a convenient *derived* scalar that falls out of the two-timescale algebra.
+Full detail in [How it works](docs/wiki/Pipeline.md).
 
 ## Status
 

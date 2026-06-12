@@ -100,14 +100,21 @@ See [`mixture_aggregation.jl`](../../src/mixture_aggregation.jl) and
 
 ## Stage 5 — Response (`E_axis → Q → A → λ → F`)
 
-This is the fast half, in [`deb_axes.jl`](../../src/deb_axes.jl):
+This is the fast half, in [`deb_axes.jl`](../../src/deb_axes.jl). Steps 1–2 produce
+**the product — the adaptive-margin state**; steps 3–4 are the **derived `F`
+readout** (see [Overview](Overview.md)):
 
 1. **Aggregate to a scalar load.** $Q_t = \sum_a w_a E_a$, with dimensionless
    κ-rule weights $w = [\tfrac12,\ \tfrac{\kappa}{4},\ \tfrac{\kappa}{4},\ \tfrac{1-\kappa}{2}]$.
+   *(The per-axis vector `E_a` — which processes are hit — is itself a primary
+   output, not just its sum.)*
 2. **Narrow the margin.** $A_t = A_0\,(1 - Q_t)$ (the canonical, nondimensional
-   mode — see note below).
-3. **Reduce the restoring force.** $\lambda(A_t) = \lambda_{\min} + (\lambda_{\max}-\lambda_{\min})\dfrac{A_t}{K_A + A_t}$.
-4. **Amplify.** $F_t = \lambda(A_0)/\lambda(A_t)$.
+   mode — see note below). **This margin state — relative depletion `Q_t`, the
+   absolute margin `A_t` (carrying capacity `A_0`), and the axis composition — is
+   the vulnerability signal.**
+3. *(derived)* **Reduce the restoring force.** $\lambda(A_t) = \lambda_{\min} + (\lambda_{\max}-\lambda_{\min})\dfrac{A_t}{K_A + A_t}$.
+4. *(derived)* **Amplify.** $F_t = \lambda(A_0)/\lambda(A_t)$ — a convenient scalar,
+   but capacity-blind and one-dimensional ([Limitations](Limitations-and-Open-Questions.md)).
 
 ![Restoring force and amplification](figures/restoring_force_amplification.png)
 
@@ -125,9 +132,15 @@ The math for every stage is collected in [Model equations](Equations.md).
 
 ## Stage 6 — Spatial vulnerability regimes (optional)
 
-Given grids of response metrics (`Q_t`, `A_t`, `F_t`), the spatial layer builds
-continuous **threshold-free** features, standardises them, clusters them into
-**vulnerability regimes**, and writes maps/NetCDF/CSV:
+Given grids of response metrics (`Q_t`, `A_t`, `E_a`, `F_t`), the spatial layer
+builds continuous **threshold-free** features, standardises them, clusters them
+into **vulnerability regimes**, and writes maps/NetCDF/CSV. Consistent with the
+margin-first framing, the feature set leads with the **margin state**: relative
+margin remaining, the **capacity-aware absolute-margin** features
+(`*_log_absolute_margin_*`, `*_baseline_capacity` — which keep the `A_0` scale the
+`F`-ratio discards), and the **axis-composition** fingerprint (`mean_E_*`,
+`axis_entropy`, `dominant_axis_code`). `F`-derived features are retained but are a
+secondary, derived summary.
 
 - [`vulnerability_feature_vectors.jl`](../../src/vulnerability_feature_vectors.jl) → [Feature vectors](../vulnerability_feature_vectors.md)
 - [`vulnerability_regime_clustering.jl`](../../src/vulnerability_regime_clustering.jl)

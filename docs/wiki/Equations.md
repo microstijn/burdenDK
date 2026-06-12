@@ -105,6 +105,13 @@ conditions yields the amplification factor in §7 as a pure ratio of restoring
 forces — independent of the event's shape. This separation (slow `A`, fast `y`)
 is what avoids per-cell ecosystem Jacobians over large rasters.
 
+> **`F` is a derived readout, not the primary output.** The closed form above is a
+> *happy analytical accident* of the two-timescale separation. The product is the
+> **adaptive-margin state** (§5–§6): relative depletion `Q_t`, absolute margin `A_t`
+> (which carries capacity `A_0`), and the axis composition `E_a`. `F` collapses all
+> of that into one scalar that is capacity-blind and one-dimensional — useful, but
+> secondary. See [Limitations §1](Limitations-and-Open-Questions.md).
+
 ## 9. Optional layers
 
 - **Physiological condition memory `Z_t`** (opt-in, off by default):

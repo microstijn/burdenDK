@@ -46,7 +46,10 @@ and *reserve-poor (`g > 1`) → amplification graded by `g`*. (Status: on branch
 1. **One-dimensionality is structural.** F-as-a-ratio can express only one
    physiological number per species. If capacity, allocation *and* economy should all
    matter, the single-ratio F is the wrong vehicle — that needs a richer response
-   model, not another re-anchoring.
+   model, not another re-anchoring. **This is why the framework treats the
+   adaptive-margin state — relative depletion `Q_t`, the capacity-aware absolute
+   margin, and the axis composition — as the primary output, and `F` as a derived
+   readout** ([Overview](Overview.md), [Pipeline §5](Pipeline.md)).
 2. **The range of `g`.** `g` spans ~`10⁻³`–`10²`, so 65% of species clamp to `F = 1`
    and the `Q→1` ceiling reaches ~559 for extreme `g` (though at `Q = 0.5` it is tame,
    `F ≤ 1.23`). Mapping the rate ratio to `g` *raw* is likely too literal; how to tame
