@@ -61,3 +61,6 @@ docs/tex/twotimescales_rewritten_full.synctex.gz
 
 # COMADRE raw download (derived CSV is committed; re-fetch via scripts/extract_comadre_recovery.jl)
 data/external/*.RData
+
+# GlobTherm raw download (derived globtherm_amp_matched.csv is committed; re-fetch via scripts/extract_amp_for_globtherm.jl)
+data/external/GlobalTherm.csv
