@@ -1,4 +1,52 @@
-# Scope for Growth — the real margin test: design, feasibility, blocker
+# Scope for Growth — the real margin test: RESULTS + design
+
+## ✅ RESULTS (2026-06-13) — the adaptive margin tracks measured SFG
+Data blocker resolved (the Widdows et al. 1995 SFG and contaminant tables were
+provided manually and committed: `sfg_widdows1995_northsea.csv`,
+`sfg_widdows1995_contaminants.csv`). Test run via `examples/sfg_margin_validation.jl`,
+36 North Sea *Mytilus edulis* sites.
+
+**Empirical (replicates Widdows):** SFG declines with hydrocarbon body burden —
+`SFG ~ total_toxic_HC` Spearman ρ = **−0.467 \*\*** (PAH −0.467\*\*, THC −0.427\*\*); metals
+mostly weak (Cu −0.33\*), organotins/organochlorines n.s. The gradient is real and
+hydrocarbon-driven, exactly Widdows' finding.
+
+**Model:** the **modeled adaptive margin tracks the measured energetic margin**,
+`SFG ~ A_t` ρ = **+0.405 \*** (n=36). Comparison:
+
+| predictor of SFG | \|ρ\| |
+| --- | --- |
+| best single contaminant (total hydrocarbons) | 0.467 |
+| **model adaptive margin `A_t`** (MoA-routed) | **0.405** |
+| naive equal-weight mean toxic-unit | 0.221 |
+
+**Reading (honest):**
+- **First external evidence for the adaptive margin *itself*** — not its rate endpoints
+  (COMADRE) or a tangential capacity facet (GlobTherm). The modeled margin tracks an
+  *independent, same-level* (individual-energetic) measurement along a *real pressure
+  gradient*, with **no scale bridge**. The erosion mechanism (pressure → margin ↓ →
+  energetic outcome ↓) is corroborated.
+- **The model's structure earns its keep over naive aggregation** (0.41 vs 0.22): the
+  mode-of-action routing sends hydrocarbons to the assimilation/feeding axis rather than
+  diluting them with background metals — recovering the true signal.
+- **It does not beat the single best contaminant (0.47)** — and shouldn't be expected
+  to: with **one species** the AmP capacity weighting is constant across sites, so the
+  model can at best *recover* the dominant-hydrocarbon signal, not exceed it. Testing the
+  capacity dimension (the model's distinctive content) needs **across-species** SFG.
+
+**Caveats (carried):** single-species → capacity weighting untested; tissue body burden
+vs exposure-based potency (critical-body-residue mismatch) → a threshold-free
+median-normalised relative-burden pressure was used, so per-contaminant potency is not
+encoded; the contaminant→axis routing is a documented, approximate pMoA assignment.
+
+**Verdict:** the adaptive margin has its first direct, same-level external corroboration.
+Modest (ρ≈0.4) and single-species, but it validates the *thing we want to use* — the
+margin state under pressure — not just adjacent rates. Next: an across-species SFG set
+(or a second gradient) to test the capacity weighting the single-species design holds fixed.
+
+---
+
+# Design, feasibility (retained for reference)
 
 *Working note, 2026-06-13. The "then SFG" step from `margin_validation_scouting.md`.
 SFG is the **right** external anchor for the adaptive margin: SFG = energy absorbed −
