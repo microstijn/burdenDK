@@ -94,6 +94,34 @@ capacity test needs gradients where burden→exposure holds across species. This
 **tissue-only** (no water/sediment concentrations), so it cannot be re-analysed on an
 exposure basis to escape the confound.
 
+## ✗ DATA-SOURCE PROBE (2026-06-13) — is there an SFG *database*? (ICES DOME: dead end)
+Asked whether SFG is held in a queryable database rather than per-paper tables. Conclusion:
+**no usable SFG database exists.** SFG is a *recognised* ICES biological-effects technique
+(method spec: TIMES 40, Widdows & Staff 2006) and was *introduced* as a DOME biota
+biological-effect in the 2015 OSPAR assessment — but it has since been **dropped from active
+OSPAR/DOME monitoring.** Checked the full 2024 OSPAR CEMP assessment bundle (ICES figshare
+article 27211422, CC BY 4.0): downloaded both the assessed `biota_results.csv` and the raw
+cleaned `biota_data.csv` (186 MB) and searched the determinand vocabulary. **No SFG record
+in either** (the only `scope` hits were the false positive station-type "ScOpenSea"). The
+biological-effect determinands actually maintained in 2024 CEMP biota are **EROD, GST,
+AChE, ALAD, NRR (neutral-red), %DNATAIL (comet), MNC (micronucleus), SURVT (stress-on-
+stress), VDS (imposex)** — SFG is *not* among them. (cf. the figshare report "Whither
+biological effects monitoring?", which documents the decline of these whole-organism
+methods.) Downloads were inspected then deleted (not committed). **Implication:** SFG
+remains a per-paper literature-extraction problem (Widdows 1995, Albentosa 2012, and
+similar) — there is no multi-station SFG download to shortcut it, in DOME or elsewhere.
+
+## Capacity-route scouting (2026-06-13) — non-mussel SFG is temperature-, not contaminant-, driven
+Parallel scout for the across-species capacity contrast (SFG gradients in *non-Mytilus* AmP
+bivalves: oysters *Magallana/Ostrea*, clams *Ruditapes/Mya/Cerastoderma*, *Perna*). Finding:
+non-mussel bivalve SFG/physiological-energetics work is **abundant but dominated by
+temperature / pCO₂ / acidification *laboratory* studies**, not *contamination field
+gradients*. So the **chemical** capacity route (route a) is genuinely data-poor outside
+Mytilus; the **temperature** route (route b) is the more feasible capacity contrast, though
+it tests the thermal/energetic facet and partly overlaps GlobTherm. This corroborates, at
+the data level, that the mussel-dominance of the SFG corpus is the binding constraint on
+the capacity test — not a search-effort problem.
+
 ---
 
 # Design, feasibility (retained for reference)
@@ -134,15 +162,30 @@ environment cannot fetch (int-res.com returns 401 to automated access; ScienceDi
 paywalled). This is the "literature-assembly step" flagged in the scouting note. It is a
 ~30-minute manual extraction with institutional access, not a research problem.
 
-**Pinned candidate datasets (best first):**
-1. **Widdows et al. 1995, *MEPS* 127:131–148** — North Sea / Langesundfjord transect,
-   *Mytilus edulis* (in AmP), per-site SFG + PAH/PCB/metal tissue loads. The canonical
-   gradient study. *(Open-access abstract; PDF access-gated here.)*
-2. **Albentosa et al. 2012, *STOTEN* 435–436:430–445 (Spanish coast, 41 stations)** —
-   large-scale SFG + contaminants in wild *M. galloprovincialis*. **DONE** (see the ⚠️
-   RESULTS section above): condition/age-confounded, does not replicate. *(Previously
-   mislabelled "Beiras et al. 2003" here.)*
-3. **Widdows & Page / Hamilton Harbour transplant** — *Mytilus*, TBT/PAH/PCB gradient.
+**Pinned candidate datasets (✅ done / ▶ next / ○ later):**
+1. ✅ **Widdows et al. 1995, *MEPS* 127:131–148** — North Sea transect, *Mytilus edulis*,
+   per-site SFG + PAH/PCB/metal tissue loads. **DONE — validated (+0.41).** The canonical
+   gradient study; hydrocarbon-dominated (low food-confound).
+2. ✅ **Albentosa et al. 2012, *STOTEN* 435–436:430–445** (Spanish coast, 41 stations,
+   *M. galloprovincialis*). **DONE — bounding negative (−0.11):** condition/age-confounded,
+   does not replicate. *(Previously mislabelled "Beiras et al. 2003".)*
+3. ▶ **Widdows et al. 2002b, *Mar. Environ. Res.* 53(4):327–356** — **THE NEXT TARGET.**
+   SFG + tissue contaminants in *M. edulis* at **38 Irish Sea coastal sites** (1996 & 1997).
+   Same group/method/species as #1 (so `examples/sfg_margin_validation.jl` runs almost
+   as-is), but ~larger n; Liverpool/Morecambe Bay industrial gradient ⇒ likely
+   exposure-driven (lower food-confound than #2). **Pull: per-site SFG (+ its CR/AE/resp
+   components) and per-site tissue contaminants; ALSO condition index / shell length if
+   reported, to screen the Albentosa confound.** doi:10.1016/S0141-1136(01)00120-9.
+4. ○ **Halldórsson et al. 2005, *Mar. Environ. Res.*** — "Effect of pollution on SFG of
+   *Mytilus edulis* in Iceland" (PMID 15325135). Second mussel gradient, different region.
+5. ○ **Norwegian Sea integrated assessment, 2023, *STOTEN*** — biological responses in wild
+   *M. edulis*, subarctic/arctic; check whether SFG + condition are tabulated.
+6. ○ **Widdows & Page / Hamilton Harbour transplant** — *Mytilus*, TBT/PAH/PCB gradient.
+
+**Screening rule (post-Albentosa):** for each new gradient, prefer studies that (a) report
+condition index / age so the confound can be partialled, and (b) are exposure-driven
+(industrial/hydrocarbon) rather than productivity/eutrophication gradients where tissue
+burden tracks food. Record CI/age as a companion `*_biometric.csv` when available.
 
 A turnkey extraction template is committed at
 `data/external/sfg_gradient_TEMPLATE.csv` (fill one row per site).
