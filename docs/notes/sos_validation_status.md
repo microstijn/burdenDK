@@ -142,6 +142,23 @@ shows time-integration is sufficient). Verdict: the dynamics produce the **right
 behaviour the static map cannot**, with the model's own (unfitted) timescale — encouraging
 first evidence, to be firmed up by a denser, single-contaminant exposure time series.
 
+**FIRM-UP (2026-06-13) — Veldhuizen-Tsoerkan et al. 1991, *ACET* 20:259–265 (single contaminant).**
+The companion controlled/semi-field study exposed *M. edulis* to Cd **or** PCB **separately** and
+measured anoxic-survival LT50 at multiple exposure times
+(`data/external/sos_veldhuizen1991_singlecontaminant.csv`;
+`examples/sos_dynamic_firmup_veldhuizen_singlecontaminant.jl`). **Cd alone erodes SoS
+progressively** — lab (0/2/4 wk) LT50 10.7→9.5→7.6 d as burden accumulates 0.59→21.1→40.3 µg/g;
+semi-field (3/6 mo) 9.3→8.6 d — and **modelled margin tracks it, ρ(margin,LT50)=+0.90** (n=5
+Cd points). **PCB alone** also erodes SoS but with a **delayed onset** (no effect at 3 mo /
+burden 3.0, effect at 6 mo / 7.0). **What this firms up:** the transplant's continued 2.5→5 mo
+erosion is **not an artifact of the co-accumulating PCB** — a single toxicant suffices to erode
+acute-stress resilience time-/dose-dependently. **What it does NOT add:** a clean
+*constant-burden* continued-erosion test — burden rises through every measured point here (no
+plateau), and the near-plateau 10-month LT50 is figure-only (not numerically reported). So the
+dynamic claim is now **de-confounded and reinforced**, but still short of a *powered* test; the
+ideal remaining design is a single-contaminant exposure with a burden plateau and dense
+post-plateau sampling.
+
 ## ✅ CONTROLLED dose-response + mixture (2026-06-13) — Viarengo 1995: impairment curve + mixture model
 The first **controlled-exposure** test of the model's **impairment curve** and **mixture
 aggregation** — things the observational field tests cannot isolate. Data: **Viarengo et al.

@@ -38,7 +38,7 @@ organisational level (**no scale bridge**).
 | 3 | **Scope for Growth** (3 studies) | individual energetics | the margin **state** under pressure | **+0.41** (estuary) → +0.12 (basin) → −0.11 (confounded) | ✅ / ◐ scale-dependent |
 | 4 | **Stress-on-Stress** (ICES DOME) | individual energetics | the margin **function** (acute resilience), static | **+0.39 → +0.45** (confound-controlled), +0.62 QC-cleaned | ✅ static map |
 | 4b | **Viarengo 1995** (controlled SoS) | individual, controlled dose | the **impairment curve + mixture model** | monotone dose-response (potency Cu>PAH>PCB); mixture additive, no antagonism (TU/IA bracket) | ✅ controlled |
-| 5 | **Transplant time-course** (Veldhuizen 1991) | individual, *over time* | the margin **dynamics** (sustained-burden erosion) | dynamics reproduce continued erosion the static map can't (n=4) | ◑ proof-of-concept |
+| 5 | **Transplant + single-contaminant time-courses** (Veldhuizen 1991) | individual, *over time* | the margin **dynamics** (sustained-burden erosion) | dynamics reproduce continued erosion the static map can't (n=4); Cd-alone erodes SoS progressively, ρ(margin,LT50)=+0.90 (PCB confound removed) | ◑ proof-of-concept, de-confounded |
 | — | **amplification scalar `g`/`F`** | — | the 1-D readout | **null everywhere** (−0.05…−0.13) | ✅ (margin-first prediction) |
 
 *\* p<0.05, ** p<0.01, partial/within-Order where noted. Magnitudes are modest and rank-based
@@ -186,9 +186,17 @@ gives ~0 extra erosion and **cannot** reproduce it. Cross-sectionally ρ(erosion
 *uniform fractional* continued-erosion (cost≪A0 ⇒ `λ≈λ_max`) where the observed absolute drops are
 similar; and **PCB roughly doubles 2.5→5 mo**, so reality cannot fully exclude a PCB (vs
 time-integration) cause — only the *model* shows time-integration suffices. A **proof-of-concept**,
-not a powered validation. *Firm-up in progress:* a denser **single-contaminant** exposure time
-series (Veldhuizen-Tsoerkan et al. 1991, ACET 20:259–265 — controlled Cd-only / PCB-only, SoS +
-energy reserves over time) removes the PCB confound. *Detail:* `sos_validation_status.md` (dynamic).
+not a powered validation.
+
+**Firm-up (Veldhuizen-Tsoerkan et al. 1991, ACET 20:259–265) — PCB confound removed.** The
+companion study exposed *M. edulis* to Cd **or** PCB **separately**: **Cd alone erodes SoS
+progressively** (lab LT50 10.7→9.5→7.6 over 0/2/4 wk; semi-field 9.3→8.6 over 3/6 mo), and
+**modelled margin tracks it ρ=+0.90** (n=5); **PCB alone** also erodes SoS, with a **delayed
+onset** (no effect at 3 mo, effect at 6 mo). So the transplant's continued erosion is **not** a
+PCB artifact — a single toxicant suffices, time-/dose-dependently. It does **not** add a clean
+*constant-burden* continued-erosion test (burden rises through every measured point). The dynamic
+claim is thus **de-confounded and reinforced**, still short of a *powered* test. *Detail:*
+`sos_validation_status.md` (dynamic).
 
 ---
 
@@ -253,6 +261,7 @@ exist); and a **powered dynamic test** (a denser single-contaminant time series,
 | SoS temporal | `sos_dome_ukcemp_yearly.csv` | `scripts/extract_dome_sos_yearly.jl`, `examples/sos_temporal_validation_dome.jl` |
 | SoS controlled (Viarengo) | `sos_viarengo1995_doseresponse.csv` | `examples/sos_mixture_validation_viarengo.jl` |
 | Dynamics (transplant) | `sos_veldhuizen1991_transplant.csv` (digitised) | `examples/sos_dynamic_validation_veldhuizen.jl` |
+| Dynamics firm-up (single-contaminant) | `sos_veldhuizen1991_singlecontaminant.csv` | `examples/sos_dynamic_firmup_veldhuizen_singlecontaminant.jl` |
 
 All rank statistics; pre-registered signs; raw downloads gitignored, derived CSVs committed.
 Run via `julia +release --project=. <harness>` (Julia 1.12.6).
