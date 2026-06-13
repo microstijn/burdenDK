@@ -10,9 +10,24 @@ organisational level (**individual energetics → no scale bridge**, unlike COMA
 1. **GlobTherm** (thermal tolerance) — a *coherence/bounding* probe of the capacity axis.
 2. **Scope for Growth (SFG)** — the margin **state**: does the modelled margin track an
    *independent, same-level* energetic outcome along real contaminant gradients?
-3. **Stress on Stress (SoS)** — the margin **function**, and the strongest result: does an
-   eroded margin reduce resilience to an *acute perturbation*? This is the framework's core
-   two-timescale claim tested directly.
+3. **Stress on Stress (SoS)** — the margin **function**, and the strongest result: does the
+   modelled margin track resilience to an *acute perturbation*? The closest cross-sectional
+   shadow of the framework's two-timescale claim.
+
+> ### What these tests exercise — and what they don't
+> **All three are *static, cross-sectional* maps, not simulations of the dynamics.** Each takes
+> the *already-accumulated* field tissue burden, passes it through the **instantaneous** point
+> API (`compute_adaptive_margin_response`: burden → bounded per-axis impairment `E=x/(1+x)` →
+> `Q` → margin `A_t = A0·(1−Q)`), and rank-correlates `A_t` with the measured outcome across
+> sites. They therefore validate the **pressure→margin→outcome mapping** — the *response-curve
+> shape, the mode-of-action axis routing, and the AmP capacity weighting*. They do **not** run
+> the model's dynamic machinery: the `B_t` chemical-accumulation memory, the slow-timescale
+> **erosion ODE**, and the **amplification of an acute pulse** are not invoked (those functions
+> exist in the package but the validation harnesses never call them). So "erosion" and
+> "amplification" here are the *cross-sectional consequence* of the static map, **not** the
+> simulated accumulate→erode→amplify *sequence over time*. The dynamics are tested only by the
+> within-station temporal pass (§3, underpowered) and a first transplant proof-of-concept (§4)
+> — encouraging but not yet a powered validation.
 
 ---
 
@@ -91,13 +106,16 @@ Detail + reproducibility: `docs/notes/sfg_validation_status.md`.
 
 ---
 
-## 3. Stress on Stress — the margin's *function* (the strongest, most on-thesis result)
+## 3. Stress on Stress — the margin's *function* (the strongest result)
 
-SFG validates the margin *state* (the energetic budget). The framework's *core* claim,
-though, is not "the margin is low" — it is that **an eroded margin amplifies the response to a
-later acute perturbation** (the whole two-timescale point). **Stress-on-stress (SoS)** tests
-exactly that: survival-in-air (days) under emersion/anoxia is a direct field proxy for the
-capacity to withstand an acute hit. Chronic burden → eroded margin → shorter SoS survival.
+SFG validates the margin *state* (the energetic budget). The framework's *core* claim is
+about something more: that **an eroded margin amplifies the response to a later acute
+perturbation** (the two-timescale point). **Stress-on-stress (SoS)** — survival-in-air (days)
+under emersion/anoxia — is the closest available *outcome* to that claim: it measures the
+capacity to withstand an acute hit. The test correlates the **static** modelled margin (from
+accumulated burden) with measured survival across sites — the cross-sectional shadow of
+"chronic burden → eroded margin → shorter survival", **not** a simulation of that sequence
+(see the scope box above).
 
 **Data** (the multi-station, exposure-paired, QA'd dataset SFG lacked): ICES DOME 2024 OSPAR
 CEMP (open, CC BY 4.0), *Mytilus edulis*, **17 UK stations**, 2012–2022, with co-located
@@ -127,11 +145,32 @@ Why this is the **strongest** margin evidence:
   Widdows hydrocarbon mechanism); routed margin (0.39) beats naive load (0.32).
 
 **Honest caveat:** at n=17 the two-sided test is n.s. (p≈0.1); under the pre-registered
-*one-sided* prediction the confound-controlled result is marginally significant (p≈0.04).
-Positive, confound-robust, mechanistically coherent — suggestive-to-moderate, not yet a slam
-dunk. The data are multi-year, so a **within-station temporal** analysis (does survival track
-contaminant change at the *same* station over 2012–2022?) is the natural power-boosting
-follow-up — and would test erosion *over time* directly. Detail: `docs/notes/sos_validation_status.md`.
+*one-sided* prediction the confound-controlled result is marginally significant (p≈0.04). The
+cross-sectional result is robustly positive across aggregations (+0.39 raw → +0.62 QC-cleaned/
+nearest-year), sign-stable but magnitude-sensitive. A **within-station temporal** analysis
+(station-year panel, fixed effects) was run to test erosion *over time*: it is **positive but
+underpowered** (ρ=+0.15, n.s.) — the panel is thin (mostly 2 yr/station) and within-station
+burden is too stable to drive a year-to-year signal, so the *dynamic* claim is directionally
+consistent but not established; the *static* margin→acute-resilience link is the solid result.
+Detail: `docs/notes/sos_validation_status.md`.
+
+---
+
+## 4. Dynamics — a first transplant proof-of-concept (the only test that runs the model's dynamics)
+
+§§1–3 are static maps. This one exercises the **erosion dynamics** (`simulate_deb_axis_response`).
+Data: **Veldhuizen-Tsoerkan et al. 1991** — clean *M. edulis* transplanted to a Western Scheldt
+contamination gradient, stress indices at **2½ and 5 months**. The discriminating feature: **Cd
+accumulates fast and plateaus by 2½ mo, yet SoS survival keeps dropping** 2½→5 mo (Terneuzen
+5.7→2.2 d). A static burden→margin map predicts ~no further erosion once burden plateaus; a
+dynamic model that integrates erosion under *sustained* burden predicts continued erosion **iff**
+its timescale `1/λ` ≈ months — and for *M. edulis* `λ_min=k_M=0.00113/day ⇒ 1/λ ≈ 68–887 d ≈
+months`, **unfitted**. Result: the dynamic erosion state rises **~33% from 2½→5 mo** (matching
+the continued SoS decline), while the static map gives ~0 extra erosion and **cannot** reproduce
+it. So the model's *dynamics*, on their own intrinsic timescale, produce the behaviour the static
+surface can't. **Honest scope:** n=4 sites × 2 times, figure-digitized, ρ=−1 trivial at n=4, and
+PCB roughly doubles 2½→5 mo so reality cannot fully exclude a PCB (vs time-integration) cause —
+a proof-of-concept, not a powered validation. Detail: `docs/notes/sos_validation_status.md`.
 
 ---
 
@@ -139,16 +178,20 @@ follow-up — and would test erosion *over time* directly. Detail: `docs/notes/s
 
 The **margin/recovery layer** now has external support at three levels: its *rate endpoints*
 (COMADRE: `k_M`, `R_i`), the *margin state under pressure* (SFG, ρ=+0.41 where tissue burden
-indexes exposure, scale-attenuating and confound-bounded), and — most on-thesis — the *margin
-function*, i.e. resilience to an acute perturbation (**Stress-on-Stress, ρ=+0.39, rising to
-+0.45 under body-size/condition control**). The SoS result is the first direct external
-support for the framework's **two-timescale amplification claim** (chronic pressure → eroded
-margin → reduced acute-stress survival), and the only margin test where controlling the
-condition confound *strengthens* rather than kills the signal. It validates *the thing the
-framework is for* — not just the margin state but its consequence for surviving acute events.
-Modest in n (17 stations; one-sided p≈0.04 controlled) but mechanistically coherent. The
-amplification *scalar* `g`/`F` remains null throughout — the support is for the margin **state
-and function**, consistent with the [margin-first reframe](Limitations-and-Open-Questions.md).
+indexes exposure, scale-attenuating and confound-bounded), and the *margin function* —
+resilience to an acute perturbation (**Stress-on-Stress, ρ=+0.39, rising to +0.45 under
+body-size/condition control**, the only margin test where controlling the condition confound
+*strengthens* rather than kills the signal). All three are **static cross-sectional maps** of
+the pressure→margin→outcome relationship — they validate the model's *response curve, MoA
+routing, and capacity weighting*, and the SoS result is the closest cross-sectional shadow of
+the two-timescale **amplification** story. The model's *dynamics* — `B_t`
+accumulation, the slow erosion ODE — are touched only by the within-station temporal pass
+(underpowered) and a **first transplant proof-of-concept (§4)**: there the dynamics, on the
+model's own unfitted `k_M` timescale, reproduce the continued multi-month erosion that the
+static map cannot — encouraging, but n=4 and qualitative. The amplification *scalar* `g`/`F`
+remains null throughout. Net: solid support for the margin **state and (static) function**; the
+**dynamics have their first positive (if small) sign** and need a denser time series to firm up,
+consistent with the [margin-first reframe](Limitations-and-Open-Questions.md).
 
 ## Caveats (carried)
 - **Capacity weighting untested.** Single-species designs hold the AmP capacity constant;

@@ -35,13 +35,16 @@ predict independent demographic data from the COMADRE matrix database?
 | [COMADRE external validation](COMADRE-External-Validation.md) | The scalar result: the DEB maintenance rate `k_M` predicts demographic recovery beyond pace-of-life + coarse phylogeny; GBIF species-name harmonisation. |
 | [Phylogenetic PGLS](Phylogenetic-PGLS.md) (Idea A) | A real Open-Tree-of-Life phylogeny + PGLS; the `k_M` signal is rank-robust but log-linear-fragile, and the undated tree is too weak to test phylogeny. |
 | [Per-axis resilience](Per-Axis-Resilience.md) (Idea B) | The multi-dimensional test: the DEB reproduction rate `R_i` specifically predicts demographic *compensation* (ρ=0.77) — the strongest external result. |
-| [Margin validation](Margin-Validation.md) (SFG + SoS + GlobTherm) | The **margin state** (Scope for Growth, ρ=+0.41 estuary-scale, *no scale bridge*) **and its function** (Stress-on-Stress survival, ρ=+0.39→+0.45 under confound control — the first direct test of the two-timescale **amplification** claim). GlobTherm bounds the capacity axis (recovery-specific, not general resilience). |
+| [Margin validation](Margin-Validation.md) (SFG + SoS + GlobTherm) | The **margin state** (Scope for Growth, ρ=+0.41 estuary-scale, *no scale bridge*) **and its (static) function** (Stress-on-Stress survival, ρ=+0.39→+0.45 under confound control — the closest cross-sectional shadow of the two-timescale **amplification** claim; the *dynamics* themselves stay untested). GlobTherm bounds the capacity axis (recovery-specific, not general resilience). |
 | [Reproducibility](Reproducibility.md) | Exact commands + data provenance for the validation pipeline (extractors, resolvers, analyses). |
 
 **Bottom line:** external support lands on the **recovery/margin layer** — its *rate
-endpoints* (`k_M`, `R_i` vs COMADRE) **and the margin state under pressure itself** (vs
-Scope for Growth, where tissue burden indexes exposure); the amplification scalar `g`/`F`
+endpoints* (`k_M`, `R_i` vs COMADRE), its *state* (Scope for Growth), its *function* (Stress-
+on-Stress), and a *first sign of its dynamics* (transplant); the amplification scalar `g`/`F`
 predicts nothing — consistent with the margin-first reframe.
+
+> **One consolidated, manuscript-ready account of every external validation (with the honest
+> scope of each):** [External validation synthesis](../notes/external_validation_synthesis.md).
 
 ### Component reference (deeper dives)
 
@@ -73,7 +76,7 @@ These pre-existing topic docs are the authoritative detail for each component:
 | DEBtox scaled damage `D_t`, synergism/antagonism | not implemented (by design) |
 | External validation vs COMADRE | **recovery/margin layer corroborated** (`k_M`, `R_i`); amplification scalar null |
 | External validation vs Scope for Growth | **margin state corroborated** where burden indexes exposure (ρ=+0.41; scale-attenuated, confound-bounded) — see [Margin validation](Margin-Validation.md) |
-| External validation vs Stress-on-Stress | **margin function / amplification corroborated** — eroded margin → reduced acute-stress survival (ρ=+0.39→+0.45 confound-controlled, n=17) — see [Margin validation](Margin-Validation.md) |
+| External validation vs Stress-on-Stress | **static margin↔acute-resilience map corroborated** — modelled margin → acute-stress survival (ρ=+0.39→+0.45 confound-controlled, n=17); the *dynamics* (accumulate→erode→amplify) stay **untested** — see [Margin validation](Margin-Validation.md) |
 
 See [Limitations & open questions](Limitations-and-Open-Questions.md) for the important caveats — in particular, the amplification factor is a **one-dimensional index** (it was the allocation fraction κ; after re-anchoring the recovery floor to the DEB maintenance rate constant it now tracks the energy investment ratio `g`). As of 2026-06-12 the framework has its **first external validation** against COMADRE (see [External validation](#external-validation-vs-comadre) above): the **recovery/margin layer is corroborated** (the DEB rates `k_M`↔recovery and `R_i`↔compensation), while the **amplification scalar `g`/`F` remains null** — direct support for the margin-first reframe.
 

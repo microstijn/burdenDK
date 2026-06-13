@@ -1,12 +1,24 @@
-# Stress-on-Stress (survival-in-air) — the DIRECT amplification test: RESULTS
+# Stress-on-Stress (survival-in-air) — the margin↔acute-resilience map: RESULTS
 
-## ✅ RESULTS (2026-06-13) — chronic burden → eroded margin → reduced acute-stress survival
-The strongest, most *on-thesis* external support for the adaptive margin so far. Where Scope
-for Growth validated the margin **state** (the energetic budget), **stress-on-stress (SoS)**
-validates what the margin is **for**: the capacity to withstand an **acute perturbation**.
-SoS = survival-in-air (days) under emersion/anoxia — a direct field proxy for the framework's
-core two-timescale claim (chronic pressure erodes the margin → less able to survive an acute
-hit).
+## ✅ RESULTS (2026-06-13) — accumulated burden → (static) modeled margin → acute-stress survival
+The strongest external support for the adaptive margin so far, and the closest to the
+framework's *acute-resilience* claim. Where Scope for Growth validated the margin **state**
+(the energetic budget), **stress-on-stress (SoS)** probes what the margin is **for**: the
+capacity to withstand an **acute perturbation**. SoS = survival-in-air (days) under
+emersion/anoxia.
+
+> **Scope of the test — read this.** This is a **static, cross-sectional map**, not a
+> simulation of the two-timescale dynamics. We take the *already-accumulated* field tissue
+> burden and pass it through the instantaneous point API
+> (`compute_adaptive_margin_response`: burden → per-axis impairment → `A_t = A0·(1−Q)`), then
+> correlate `A_t` with measured survival across sites. It does **not** run the dynamics: the
+> `B_t` accumulation memory, the slow-timescale erosion ODE, and the amplification of an acute
+> pulse are **not** invoked (those functions exist —`simulate_deb_axis_response`,
+> `pulse_deb_axes_timeseries`— but the harness never calls them). So this validates the
+> **pressure→margin→outcome mapping** (response-curve shape, MoA routing, AmP capacity
+> weighting) — the *cross-sectional shadow* of the two-timescale story — **not** the
+> accumulate→erode→amplify *sequence*. The dynamic claim is tested only weakly by the
+> within-station temporal pass below, and remains essentially unvalidated (see end).
 
 **Data — the multi-station, exposure-paired, QA'd dataset SFG never had.** ICES DOME 2024
 OSPAR CEMP (figshare 27211422, CC BY 4.0), *Mytilus edulis*, **17 UK stations** (one SURVT
@@ -40,8 +52,10 @@ Baselines: best single axis (PAH) |ρ|=0.43; **naive mean toxic-unit |ρ|=0.32**
 `Zn` +0.25 — the familiar weak metal positive-confound).
 
 ### Reading — why this is *stronger* than the SFG line
-1. **On-thesis.** It tests the amplification claim (resilience to an acute perturbation)
-   directly, not the margin state. This is the thing the framework is *for*.
+1. **Closest to the acute-resilience claim.** The outcome *is* resilience to an acute
+   perturbation (not the energetic budget SFG measures) — so the static margin→survival map is
+   the cross-sectional shadow of the amplification story. (It does not *simulate* the
+   accumulate→erode→amplify sequence — see the scope note above.)
 2. **Confound control STRENGTHENS it (0.39 → 0.45).** The decisive contrast with Albentosa:
    there, controlling condition could not rescue the margin (the confound *was* the signal);
    here, partialling size + condition makes the margin signal *stronger* — strong evidence
@@ -64,13 +78,69 @@ Baselines: best single axis (PAH) |ρ|=0.43; **naive mean toxic-unit |ρ|=0.32**
   (untestable without across-species data; see `sfg_validation_status.md`).
 - PCB axis rests partly on a sparse `SCB7` (nd→neutral); the PAH/metal axes are fully populated.
 
-### The obvious power-boosting follow-up (not yet done)
-The data are **multi-year**. A **within-station temporal** analysis — does SoS survival track
-contaminant *change* at the *same* station across 2012–2022? — would (a) add real statistical
-power and (b) test the erosion mechanism **over time** directly (the dynamic claim), not just
-cross-sectionally. Needs SURVT-year ↔ contaminant-year matching and repeated-measures handling
-(mixed model or within-station rank methods). This is the natural next step to turn a
-suggestive cross-sectional result into a powered one.
+### Temporal analysis (2026-06-13) — DONE: static claim robust, dynamic claim underpowered
+Built a station-YEAR panel (`scripts/extract_dome_sos_yearly.jl` → `sos_dome_ukcemp_yearly.csv`,
+nearest-year ±2 contaminant matching since burden changes slowly; one Cu≈1046 mg/kg outlier
+station-year QC-dropped) → `examples/sos_temporal_validation_dome.jl`. 36 usable station-years.
+Three readouts:
+
+| readout | ρ | note |
+| --- | --- | --- |
+| **(A) within-station fixed effects** (de-mean by station; the clean dynamic test) | **+0.15** | n.s. (11 stations, 30 st-yr, df=19) — erosion *over time* underpowered |
+| **(B) pooled station-years** (n=36; pseudoreplicated) | **+0.28** | PAH axis −0.33\*, PCB axis −0.34\* (toxic axes significant) |
+| **(C) station-level, QC-cleaned** (n=17) | **+0.62 \*\*** | nearest-year + outlier-drop *strengthens* vs the +0.39 raw-median |
+
+**Honest reading.** The **within-station** design — which removes *every* fixed between-station
+confound (size regime, population, hydrography), the cleanest control possible — is **positive
+but not significant** (+0.15). The panel is too thin for the dynamic test: 11 multi-year
+stations, mostly 2-year spans, and tissue burden is fairly stable within a station over these
+windows, so there is little within-station pressure variation to drive a year-to-year signal.
+So the **dynamic erosion-over-time claim is not established with power** here — directionally
+consistent, no more.
+
+What the temporal pass *did* establish: (i) the **cross-sectional** margin↔acute-resilience
+link is **robustly positive across aggregations** (+0.39 raw-median → +0.62 QC-cleaned/
+nearest-year), magnitude specification-sensitive but sign-stable (the programme's recurring
+"rank-robust, magnitude-sensitive" pattern, cf. COMADRE `k_M`); and (ii) in the larger panel
+the **toxic axes (PAH, PCB) carry significant signal** (−0.33\*, −0.34\*) while metals remain
+the weak positive confound. Net: the **static** margin→acute-resilience result is solid; the
+**dynamic** (temporal erosion) claim needs longer station time series than DOME currently
+offers (and ideally stations with a real within-station contaminant trend).
+
+## ◑ DYNAMIC test (2026-06-13) — Veldhuizen-Tsoerkan transplant: proof-of-concept, positive
+The **first** test that exercises the model's **dynamics** (the `B_t`/erosion machinery), not
+the static point map. Data: **Veldhuizen-Tsoerkan et al. 1991**, *Arch. Environ. Contam.
+Toxicol.* 21:497–504 — clean *M. edulis* transplanted to a Western Scheldt contamination
+gradient (4 sites), stress indices at **2.5 and 5 months**
+(`data/external/sos_veldhuizen1991_transplant.csv`; harness
+`examples/sos_dynamic_validation_veldhuizen.jl`).
+
+**The discriminating feature.** Cd accumulates fast and **plateaus by 2.5 mo**, yet SoS
+survival keeps **dropping** 2.5→5 mo at the contaminated sites (Terneuzen 5.7→2.2 d,
+Walsoorden 5.1→1.4 d). A **static** burden→margin map predicts ~no further erosion once burden
+plateaus; a **dynamic** model that integrates erosion under *sustained* burden predicts
+continued erosion if its timescale `1/λ` ~ the experiment length.
+
+**It does.** For *M. edulis*, `λ_min = k_M = 0.00113/day` → `1/λ ≈ 68–887 days ≈ months` — **not
+fitted**, it falls out of the maintenance rate. Running `simulate_deb_axis_response` under the
+sustained (Cd-dominated) cost:
+- **Cross-sectional (n=4):** ρ(dynamic erosion `y(5mo)`, SoS(5mo)) = **−1.0** (monotone; right
+  direction, but trivially perfect at n=4).
+- **Temporal (the point):** the dynamic erosion state rises **~33% from 2.5→5 mo** (continued
+  erosion), matching the observed continued SoS decline; the **static** map gives ~0 extra
+  erosion (+0.12–0.19) and **cannot** reproduce the drop. In the *model* this continued erosion
+  is pure time-integration (its PCB cost-weight is negligible), so it is a genuine dynamics
+  signal, not a relabelled burden effect.
+
+**Honest scope — proof-of-concept, not a powered validation.** n=4 sites × 2 times;
+burden/CI/AEC figure-digitized (SoS LT50 + PCB from text); ρ=−1 is trivial at n=4; the model
+predicts a *uniform* fractional continued-erosion (because cost≪A0 ⇒ `λ≈λ_max` for all sites)
+whereas the observed absolute SoS drops are similar across sites — a shape mismatch in detail.
+**Crucial real-world confound:** PCB *does* roughly double 2.5→5 mo, so biologically the extra
+drop could be PCB rather than time-integration — the data cannot exclude that (only the *model*
+shows time-integration is sufficient). Verdict: the dynamics produce the **right qualitative
+behaviour the static map cannot**, with the model's own (unfitted) timescale — encouraging
+first evidence, to be firmed up by a denser, single-contaminant exposure time series.
 
 ## Where SoS sits in the validation programme
 | layer | anchor | result |
@@ -78,9 +148,12 @@ suggestive cross-sectional result into a powered one.
 | recovery rate endpoints | COMADRE (`k_M`, `R_i`) | corroborated |
 | capacity coherence (bounding) | GlobTherm | recovery-specific, not general resilience |
 | margin **state** | Scope for Growth | +0.41 (estuary) → +0.12 (basin) → −0.11 (confounded) |
-| margin **function (acute resilience)** | **Stress-on-Stress** | **+0.39 / +0.45 controlled — the amplification claim, direct** |
+| margin **function (acute resilience), static map** | **Stress-on-Stress** | **+0.39 / +0.45 controlled — burden→margin→acute-survival (not the dynamics)** |
+| margin **dynamics** (accumulate→erode) | DOME within-station temporal (proxy) | +0.15 n.s. — underpowered |
+| margin **dynamics** (sustained-burden erosion) | Veldhuizen 1991 transplant (2.5 & 5 mo) | **◑ proof-of-concept: dynamics reproduce continued erosion the static map can't (n=4, qual.)** |
 
 ## Sources
 - ICES DOME 2024 OSPAR CEMP biota (figshare [27211422](https://ices-library.figshare.com/articles/dataset/Data_and_results_for_the_2024_OSPAR_CEMP_assessment/27211422), CC BY 4.0); SURVT = stress-on-stress survival.
 - SoS method/biomarker background: Viarengo et al.; Eertman et al. 1993; ICES biological-effects monitoring.
+- Dynamic transplant time-course: Veldhuizen-Tsoerkan M.B. et al. (1991), *Arch. Environ. Contam. Toxicol.* 21:497–504 (DOI 10.1007/BF01183870).
 - Mechanism (hydrocarbon narcosis on feeding/energetics): Widdows et al. 1995, 2002.
