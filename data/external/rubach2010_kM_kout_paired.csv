@@ -1,0 +1,8 @@
+species,amp_k_M_perday,rubach_kout_perday,rubach_freshweight_mg,amp_L_m_cm,rubach_EC50_48h_ugL,match_tier
+Asellus_aquaticus,0.11903,0.185,11.5,0.15173,6.16,species
+Cloeon_dipterum,0.030835,0.196,7.7,0.29154,0.763,species
+Culex_pipiens,0.70975,0.024,3.4,0.016333,,species
+Daphnia_magna,0.27273,0.546,13.5,0.1516,0.484,species
+Gammarus_pulex,0.072624,0.398,19.1,0.1114,0.379,species
+Notonecta_maculata,0.078092,0.152,133.0,0.36275,9.07,species
+Procambarus_clarkii,1.0419,0.086,2794.2,1.0486,1.7,genus-proxy
