@@ -74,6 +74,7 @@
 \usepackage[hidelinks]{hyperref}
 \usepackage{microtype}
 \usepackage{booktabs}
+\usepackage{graphicx}
 \usepackage{enumitem}
 
 \title{External validation of a two-timescale adaptive-margin model of\\
@@ -240,12 +241,25 @@ amplification $g/\mathcal{F}$ & --- & null everywhere & margin-first \\ \bottomr
 \end{tabular}
 \end{table}
 
+\begin{figure}[t]\centering
+\includegraphics[width=\linewidth]{validation_forest.pdf}
+\caption{External-validation forest plot. Per-anchor Spearman $\rho$ (point) with Fisher-$z$
+approximate 95\% confidence intervals (bars), grouped by organisational level. Positive $\rho$ indicates
+the model quantity tracks the independently measured outcome in the pre-registered direction. The
+positive cluster (recovery endpoints, margin state/function, dynamics) contrasts with the
+\emph{bounding} negative controls --- $k_M\to$acute sensitivity is non-trivial raw but collapses under
+a body-size control ($n{=}310$) --- and the amplification scalar $g/\mathcal{F}$, which is null as the
+margin-first reading predicts. CIs are illustrative (some anchors are small-$n$ or figure-digitised);
+$^{*}p<0.05$, $^{**}p<0.01$.}
+\label{fig:forest}
+\end{figure}
+
 \section{Discussion}
 \label{sec:discussion}
 
 External evidence supports the \textbf{margin/recovery layer} at four organisational levels --- its
-rate endpoints, its state, its function, and a first sign of its dynamics --- while the amplification
-scalar is null throughout, exactly as the margin-first reframe predicts. Three honest qualifications
+rate endpoints, its state, its function, and a first sign of its dynamics (Figure~\ref{fig:forest}) ---
+while the amplification scalar is null throughout, exactly as the margin-first reframe predicts. Three honest qualifications
 define the result.
 
 \paragraph{Rank-robust, magnitude-modest, specification-sensitive.} Effects are $\rho\approx0.2$--$0.45$
