@@ -1,0 +1,26 @@
+# Controlled lab dose-response of stress-on-stress (survival-in-air) to single contaminants
+# and a binary mixture. First CONTROLLED test of the model's impairment curve + mixture
+# aggregation (the field SFG/SoS tests cannot isolate single contaminants or mixtures).
+# Transcribed (LT50s exact, from text) from:
+#   Viarengo A., Canesi L., Pertica M., Mancinelli G., Accomando R., Smaal A.C., Orunesu M.
+#   (1995). Stress on Stress Response: A Simple Monitoring Tool in the Assessment of a General
+#   Stress Syndrome in Mussels. Mar. Environ. Res. 39:245-248.
+#
+# Mytilus galloprovincialis (4-5 cm), 3-day exposure to sublethal doses, then survival-in-air
+# (anoxia) assayed -> LT50 (days to 50% mortality; higher = more resilient). MoA axis routing
+# (parallels the field harnesses): Cu2+ -> maintenance (metal); DMBA (9,10-dimethyl-1,2-
+# benzanthracene, a PAH) -> assimilation (hydrocarbon); Aroclor 1254 (PCB) -> reproduction.
+# The mixture rows are Cu2+ + DMBA at matched component doses (the paper's "cumulative effect").
+# Control LT50 = 7 d (text). dose in micromol/L (uM). type = control/single/mixture.
+treatment,contaminant,moa_axis,Cu_uM,DMBA_uM,Aroclor_uM,LT50_days,type
+control,control,none,0,0,0,7.0,control
+Cu_0.3,Cu,maintenance,0.3,0,0,6.0,single
+Cu_0.6,Cu,maintenance,0.6,0,0,5.0,single
+Cu_1.2,Cu,maintenance,1.2,0,0,3.7,single
+DMBA_0.4,DMBA,assimilation,0,0.4,0,6.0,single
+DMBA_0.8,DMBA,assimilation,0,0.8,0,5.0,single
+DMBA_1.6,DMBA,assimilation,0,1.6,0,4.0,single
+Aroclor_0.3,Aroclor1254,reproduction,0,0,0.3,6.5,single
+Aroclor_0.6,Aroclor1254,reproduction,0,0,0.6,6.0,single
+MixCuDMBA_lo,Cu+DMBA,maint+assim,0.3,0.4,0,5.0,mixture
+MixCuDMBA_hi,Cu+DMBA,maint+assim,0.6,0.8,0,3.0,mixture

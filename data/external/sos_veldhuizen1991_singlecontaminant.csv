@@ -1,0 +1,25 @@
+# SINGLE-CONTAMINANT exposure time-course (Cd-only, PCB-only) — the dynamic firm-up that
+# removes the Cd-vs-PCB confound limiting the transplant proof-of-concept. Transcribed from:
+#   Veldhuizen-Tsoerkan M.B., Holwerda D.A., Zandee D.I. (1991). Anoxic Survival Time and
+#   Metabolic Parameters as Stress Indices in Sea Mussels Exposed to Cadmium or
+#   Polychlorinated Biphenyls. Arch. Environ. Contam. Toxicol. 20:259-265.
+#
+# Mytilus edulis. Anoxic survival LT50 (days; higher = more resilient) measured after various
+# exposure times. Cd -> maintenance axis (metal); PCB -> reproduction axis. THREE arms:
+#   Cd_lab       : 0.5 uM Cd, laboratory, 18C, 0/2/4 weeks (Fig 1B,C + text).
+#   Cd_semifield : 0.15 uM Cd, semi-field, 3/6/10 months (Fig 2A-C + text).
+#   PCB_semifield: ~0.5 ug/L PCB (Clophen A50), semi-field, 3/6 months (Fig 2A,B + text).
+# Burden: Cd in ug/g DRY wt; PCB in ug/g WET wt (paper notes dry:wet ~1:5). LT50/burden values
+# are from the TEXT (exact) where given; "nd" = not numerically reported (figure only).
+# control_LT50 = the matched (unexposed) control LT50 (lab 10.7 d; semi-field ~9.7 d at 6 mo,
+# seasonal). KEY FEATURE: Cd ALONE erodes SoS time/dose-dependently; PCB effect is DELAYED
+# (absent at 3 mo, present at 6 mo) -> a single-contaminant slow-erosion signature.
+arm,contaminant,axis,time_label,time_days,burden,burden_basis,LT50_days,control_LT50_days,note
+Cd_lab,Cd,maintenance,0wk,0,0.59,dry,10.7,10.7,control
+Cd_lab,Cd,maintenance,2wk,14,21.1,dry,9.5,10.7,sig_reduced
+Cd_lab,Cd,maintenance,4wk,28,40.3,dry,7.6,10.7,further_reduced
+Cd_semifield,Cd,maintenance,3mo,90,18.7,dry,9.3,10.5,sig_reduced_vs_control_max
+Cd_semifield,Cd,maintenance,6mo,180,40.3,dry,8.6,9.7,sig_reduced
+Cd_semifield,Cd,maintenance,10mo,300,nd,dry,nd,nd,sig_decreased_fig2C_no_number
+PCB_semifield,PCB,reproduction,3mo,90,3.0,wet,9.7,9.7,no_sig_effect_approx_control
+PCB_semifield,PCB,reproduction,6mo,180,7.0,wet,8.6,9.7,effect_appears

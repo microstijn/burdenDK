@@ -152,7 +152,13 @@ nearest-year), sign-stable but magnitude-sensitive. A **within-station temporal*
 underpowered** (ρ=+0.15, n.s.) — the panel is thin (mostly 2 yr/station) and within-station
 burden is too stable to drive a year-to-year signal, so the *dynamic* claim is directionally
 consistent but not established; the *static* margin→acute-resilience link is the solid result.
-Detail: `docs/notes/sos_validation_status.md`.
+
+**Controlled cross-check (Viarengo et al. 1995).** A controlled lab SoS dose-response (the only
+non-observational SoS test) corroborates the *mechanics*: LT50 falls monotonically with dose on
+each MoA axis (potency Cu>PAH>PCB), and a Cu+DMBA mixture is worse than either component with **no
+antagonism** — the model's own mixture rules (CA/TU and IA, `aggregate_axis_mixture_effects`)
+**bracket** the observed mixture LT50, corroborating the "mixtures are additive assumptions, not
+fitted interactions" design. Detail: `docs/notes/sos_validation_status.md`.
 
 ---
 
@@ -170,7 +176,16 @@ the continued SoS decline), while the static map gives ~0 extra erosion and **ca
 it. So the model's *dynamics*, on their own intrinsic timescale, produce the behaviour the static
 surface can't. **Honest scope:** n=4 sites × 2 times, figure-digitized, ρ=−1 trivial at n=4, and
 PCB roughly doubles 2½→5 mo so reality cannot fully exclude a PCB (vs time-integration) cause —
-a proof-of-concept, not a powered validation. Detail: `docs/notes/sos_validation_status.md`.
+a proof-of-concept, not a powered validation.
+
+**Firm-up (single contaminant).** The companion controlled study (Veldhuizen-Tsoerkan et al.
+1991, *ACET* 20:259–265) exposed *M. edulis* to Cd **or** PCB **separately**: **Cd alone erodes
+SoS progressively** (LT50 10.7→9.5→7.6 over 0/2/4 wk; 9.3→8.6 over 3/6 mo), modelled margin
+tracking it (ρ=+0.90, n=5), and **PCB alone** erodes SoS with a **delayed onset**. So the
+transplant's continued erosion is **not a PCB artifact** — a single toxicant suffices,
+time-/dose-dependently. It does not add a clean *constant-burden* test (burden rises throughout),
+so the dynamic claim is **de-confounded and reinforced**, still short of powered.
+Detail: `docs/notes/sos_validation_status.md`.
 
 ---
 
