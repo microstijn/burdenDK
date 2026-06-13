@@ -33,7 +33,7 @@ organisational level (**no scale bridge**).
 
 | # | anchor | organisational level | what it tests | headline result | status |
 | --- | --- | --- | --- | --- | --- |
-| 1 | **COMADRE** (matrix demography) | population | recovery **rate endpoints** `k_M`, `R_i` | `k_M`↔recovery **+0.19\*** (beyond pace+phylo); `R_i`↔compensation **+0.77\*\*** | ✅ corroborated |
+| 1 | **COMADRE** (matrix demography) | population | recovery **rate endpoints** `k_M`, `R_i` | `k_M`↔recovery **+0.19–0.22\*** (rank; survives pace + **dated-tree** PGLS); `R_i`↔compensation **+0.77\*\*** | ✅ corroborated |
 | 2 | **GlobTherm** (thermal tolerance) | individual physiology | is the capacity axis *general* resilience? | coherent (\|ρ\|≤0.45) but **recovery-specific** (general-resilience refuted) | ✅ bounding |
 | 3 | **Scope for Growth** (3 studies) | individual energetics | the margin **state** under pressure | **+0.41** (estuary) → +0.12 (basin) → −0.11 (confounded) | ✅ / ◐ scale-dependent |
 | 4 | **Stress-on-Stress** (ICES DOME) | individual energetics | the margin **function** (acute resilience), static | **+0.39 → +0.45** (confound-controlled), +0.62 QC-cleaned | ✅ static map |
@@ -74,18 +74,21 @@ time, and within-Order group-mean-centred (tree-free phylogeny proxy).
   Partial ρ holds 0.18–0.33 across 6 COMADRE matrix-quality filters (not a filter artifact).
 - **Specification-sensitive (important):** the gen-controlled `k_M` signal is **rank-based**
   (partial Spearman +0.264); the log-linear partial is only +0.04 — monotone but not log-linear.
-- **Real-phylogeny control — DONE (2026-06-13), and it does not overturn the result.** A dated
-  **TimeTree** (182 spp, real branch lengths) gives **Pagel's λ ≈ 0 *again*** (0.00–0.07): the log
-  damping ratio carries **no detectable phylogenetic signal**, so PGLS ≈ OLS and the earlier
-  within-Order proxy was adequate — **phylogeny was never the confound.** In the linear PGLS,
-  `k_M`→recovery is significant *alone* (β\*=0.30, **p=0.014**, λ=0) but **nulls under a
-  generation-time covariate** (β\*=0.009, p=0.96). That is the *log-linear* form, already known to be
-  weak (+0.04); the surviving COMADRE signal is the **rank-based** partial (Spearman +0.26\*\*, within-
-  Order +0.19\*), which this parametric PGLS does not test. **Net: phylogeny does not refute or rescue
-  — it confirms the `k_M` result is rank-based and pace-sensitive, not a robust parametric effect.**
-  *Output:* `data/external/comadre_pgls_dated_results.txt`; tree
-  `data/external/comadre_amp_dated_tree.nwk` (TimeTree, 184 tips; species list
-  `comadre_species_for_timetree.txt`).
+- **Real-phylogeny control — DONE (2026-06-13); the rank signal survives it.** A dated **TimeTree**
+  (182 spp, real branch lengths) over the COMADRE-matched species, with Pagel's λ estimated by ML.
+  Two specifications, and the contrast *is* the result:
+  - *Linear (log-linear) PGLS:* `k_M`→recovery is significant alone (β\*=0.30, p=0.014) but **nulls
+    under a generation-time covariate** (β\*=0.009, p=0.96). The log-linear form is weak (as already
+    known, +0.04) and Pagel's λ≈0 (the damping-ratio trait carries little phylogenetic signal).
+  - *Rank PGLS (phylogenetic Spearman):* rank-transform `y`, predictor and generation time, same dated
+    VCV. **`k_M`→recovery survives: β\*=0.221, p=0.011** under the generation-time control — barely
+    below the non-phylogenetic Spearman partial (+0.264\*\*), i.e. the dated-tree correction only mildly
+    attenuates it. `λ(A0)` drops to n.s. (β\*=0.10); `g` is null (β\*=−0.05).
+  **Net: the `k_M`↔recovery signal is a genuine rank/monotone effect that survives *both* pace-of-life
+  *and* a real dated-phylogeny control — only its log-linear form is weak.** This is the strongest
+  control combination the programme has applied, and the headline anchor holds in ranks.
+  *Output:* `comadre_pgls_dated_results.txt` (linear), `comadre_pgls_dated_rank_results.txt` (rank);
+  tree `comadre_amp_dated_tree.nwk` (TimeTree, 184 tips; list `comadre_species_for_timetree.txt`).
 
 *Detail:* `docs/wiki/COMADRE-External-Validation.md`, `Per-Axis-Resilience.md`,
 `Phylogenetic-PGLS.md`; notes `comadre_*`.
@@ -253,7 +256,9 @@ not for a scalar amplification readout.
 
 - **Rank-robust, magnitude-modest, specification-sensitive.** Effects are ρ≈0.2–0.45 (COMADRE,
   SFG, SoS) — corroboration, not strong prediction — and several are robust in *ranks* but weak in
-  log-linear form (COMADRE `k_M`). Report as monotone tendencies.
+  log-linear form. The cleanest case is COMADRE `k_M`: the rank effect **survives pace + a dated-tree
+  PGLS** (phylo-Spearman β\*=0.22, p=0.011) while its log-linear form nulls under the same controls.
+  Report as monotone tendencies, not linear effects.
 - **Scale bridge.** COMADRE needs an individual→population bridge (argued via DEB-structured
   models). SFG/SoS do **not** — they are at the margin's own level; that is their methodological
   strength.
@@ -287,9 +292,8 @@ the model's own unfitted timescale). The **amplification scalar `g`/`F` is null 
 exactly as the margin-first reframe predicts. A **direct cross-species test** of the maintenance
 claim (§7b, n=310) finds the single-trait `k_M`→toxicity signal is **body-size-confounded** —
 bounding, like GlobTherm. The **real-phylogeny control is now done** (dated TimeTree PGLS, §3): the
-damping-ratio trait shows **no phylogenetic signal** (Pagel's λ≈0), so phylogeny was never the
-confound — the `k_M` result stands as a rank-based, pace-sensitive tendency, neither rescued nor
-refuted. **Open:** the **capacity weighting**, which the single-species corpus cannot test and is therefore carried as
+`k_M`↔recovery signal **survives in rank form** under pace + a real dated-phylogeny correction
+(phylogenetic Spearman β\*=0.221, p=0.011); only its log-linear form is weak. **Open:** the **capacity weighting**, which the single-species corpus cannot test and is therefore carried as
 a **model assumption** (like the mixture rules), pending across-species gradient data that largely
 does not exist; and a **powered dynamic test**, which this session found is **data-starved** — the
 clean toxicodynamic recovery rate `k_r` is scarce and chemical-specific, while the abundant
@@ -303,7 +307,7 @@ rate/threshold endpoints reduce to body size (§7b).
 | --- | --- | --- |
 | COMADRE | COMADRE `.RData` (gitignored); derived CSV committed | `scripts/extract_comadre_recovery.jl`, `examples/comadre_*`, `scripts/comadre_*` |
 | COMADRE robustness | — | `examples/comadre_bootstrap_effectsizes.jl`, `scripts/comadre_filter_sensitivity.jl`, `comadre_ap_diagnostic.jl` |
-| PGLS (DONE) | `comadre_amp_dated_tree.nwk` (TimeTree, 184 tips; list `comadre_species_for_timetree.txt`); results `comadre_pgls_dated_results.txt` | `scripts/comadre_pgls_dated.jl` (needs `Distributions` env) |
+| PGLS (DONE) | `comadre_amp_dated_tree.nwk` (TimeTree, 184 tips; list `comadre_species_for_timetree.txt`); results `comadre_pgls_dated_results.txt` (linear), `comadre_pgls_dated_rank_results.txt` (rank) | `scripts/comadre_pgls_dated.jl` (linear), `scripts/comadre_pgls_dated_rank.jl` (rank/phylo-Spearman) — both need `Distributions` env |
 | GlobTherm | `GlobalTherm.csv` (gitignored); `globtherm_amp_matched.csv` committed | `scripts/extract_amp_for_globtherm.jl`, `examples/globtherm_validation.jl` |
 | SFG (Widdows 1995) | `sfg_widdows1995_*.csv` | `examples/sfg_margin_validation.jl` |
 | SFG (Widdows 2002) | `sfg_widdows2002_*.csv` (SFG figure-digitised) | `examples/sfg_margin_validation_widdows2002.jl` |
