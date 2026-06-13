@@ -105,6 +105,7 @@ function run_salmon_migration(; species::AbstractString = "Salmo_salar")
         r_bl  = compute_adaptive_margin_response(axes, whole)
         pos   = sum(s.occ[g] * (g - 1) for g in 1:length(REGIONS))
         push!(steps, (label = s.label, stage = stage.stage, L = s.L, pos = pos,
+                      occ = copy(s.occ),
                       C = C, B = copy(B), rho = rho,
                       A_t = r_st.A_t, lambda_st = r_st.lambda_t, lambda_bl = r_bl.lambda_t,
                       F_st = r_st.F_t, F_bl = r_bl.F_t))
