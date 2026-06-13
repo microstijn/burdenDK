@@ -39,7 +39,24 @@ stated as a falsifiable mechanism. The residual judgment (the assignment itself)
 | `ambient_condition` | `yes` = an environmental state (salinity, pH, hypoxia), not a tissue burden |
 | `pmoa_basis` | which pillar/category the routing rests on |
 | `confidence` | high / medium / low (evidence strength for the assignment) |
+| `pmoa_fitted` | the **fitted DEBtox pMoA** from the compilation (`debtox_fitted_pmoa_c7em00328e.csv`) where one exists, else "no DEBtox fit". Evidence, distinct from `primary_axis` (the operational assignment) |
+| `field_confound_route` | only populated where the operational route deliberately differs from the fitted pMoA as a **confound-control** (currently: `heavy_metals`) |
+| `references` | source tag(s): `c7em00328e` (fitted compilation), `jager2020` (framework), `Tier3-…` (aggregate-stressor ecophysiology, some pending), `pmoa_evidence_digest …` |
 | `mechanism_notes` | the one-line falsifiable mechanism + consistency note |
+
+### The `heavy_metals` dual route (read this — it is the crux)
+`primary_axis = maintenance` but `pmoa_fitted = assimilation`. These are **not** in conflict; they apply
+to different data regimes, and the difference is **empirically established** (`pmoa_evidence_digest.md`
+§4-RESULT):
+- **Field tissue-burden data → maintenance.** Measured metal tissue burden is a *positive confound*
+  (it tracks food/condition, not exposure: "tissue burden ≠ exposure"). Routing metals to the toxic
+  assimilation axis **degraded all five SFG/SoS anchors** (e.g. Widdows 1995 +0.41→+0.30, Widdows 2002
+  +0.12→−0.14). So maintenance is a deliberate confound-control, validated.
+- **Controlled / exposure-derived burden → assimilation.** The fitted DEBtox pMoA (metals damage
+  gut/gills → reduced uptake) holds where burden = exposure (lab dose-response; or a water-quality
+  coupling driven by *modelled* water concentration rather than measured tissue). `pmoa_fitted` records it.
+
+Pick the route by **how the burden is obtained**, and say which one a given run uses.
 
 ## 3. Two structural rules encoded in the table
 
