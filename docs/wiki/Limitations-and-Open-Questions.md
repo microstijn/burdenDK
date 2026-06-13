@@ -114,6 +114,10 @@ vulnerability *maps* can still be inert — a known follow-up.
 - **Real-raster ingestion** is partial — basic NetCDF utilities exist
   ([`netcdf.jl`](../../src/netcdf.jl)) but robust general ingestion is mostly
   example scripts, not a stable API.
+- **Life stages & movement** are implemented (stage-resolved capacity, occupancy-weighted
+  exposure, surface:volume `ρ(L)`) but **not yet externally validated** — the validation is still
+  adult, sessile *M. edulis*. They are capabilities, not validated claims. See
+  [Life stages & movement](Life-Stages-and-Movement.md).
 
 ## 5. Proxies carrying weight on thin evidence
 
@@ -129,7 +133,7 @@ vulnerability *maps* can still be inert — a known follow-up.
 - **The capacity weighting — the distinctive content — is untested**, carried as a model assumption
   (like the mixture rules) pending across-species gradient data that largely does not exist. And the
   single-trait `k_M`→toxicity reduction is **body-size-confounded** (well-powered null, n=310) — the
-  leverage is the *across-axis weighting*, not `k_M` alone ([Margin validation §5](Margin-Validation.md)).
+  leverage is the *across-axis weighting*, not `k_M` alone ([External validation](External-Validation.md)).
 - These are honestly flagged but must stay loud in any published result. See
   [Data & parameters](Data-and-Parameters.md).
 
