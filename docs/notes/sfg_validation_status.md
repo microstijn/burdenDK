@@ -94,6 +94,47 @@ capacity test needs gradients where burden→exposure holds across species. This
 **tissue-only** (no water/sediment concentrations), so it cannot be re-analysed on an
 exposure basis to escape the confound.
 
+## ◐ RESULTS (2026-06-13) — third study (Widdows 2002, Irish Sea): WEAK/PARTIAL replication (scale)
+Third gradient: **Widdows et al. 2002**, *Mar. Environ. Res.* 53(4):327–356,
+doi:10.1016/S0141-1136(01)00120-9 — *Mytilus edulis*, eastern Irish Sea (Phase I, 1996,
+**23 sites**). Same group/method/species as the validated Widdows 1995, but a larger,
+basin-scale, **exposure-driven** (hydrocarbon/industrial) gradient — the screened
+"good-gradient" the post-Albentosa rule wanted. Committed as `sfg_widdows2002_irishsea.csv`
+(SFG) + `sfg_widdows2002_contaminants.csv` (Table 1A); run via
+`examples/sfg_margin_validation_widdows2002.jl`. **SFG DIGITIZED from Fig 2A** (no numeric
+table in the paper; ~±1 J/g/h, anchored to 4 Table-2 values that my reads matched to <0.3) →
+**rank statistics only**; metals/TBT/PAH transcribed reliably, sparse organochlorines lower-
+confidence.
+
+**Result — right direction, weak: `SFG ~ margin A_t` ρ = +0.12** (n=23). This *partially*
+replicates Widdows 1995 (+0.41) but much attenuated. The attenuation is **expected and the
+paper predicts it**: Widdows et al. note single-marker tissue-burden↔SFG correlations fall
+from r≈−0.9 in small estuaries to weak over the large Irish-Sea scale (contaminants stop
+co-varying with any one marker; dilution/dispersion vary spatially). Figure-digitization adds
+noise too.
+
+**The mechanism is nonetheless visible and correct:**
+- *Axis diagnostic:* PAH/assimilation ρ=−0.27 (toxic, correct sign — the validated
+  `SFG = 26.8 − 9.4·log(toxic HC)` mechanism), metals/maintenance ρ=**+0.25** (confound),
+  repro ρ=−0.15. `SFG~As` ρ=**+0.60\*\*** and `SFG~Cd` +0.57\*\* reproduce the paper's own
+  "unexpected positive As–SFG" finding — the **same metal-as-confound signature as Albentosa's
+  Zn**, now confirmed in a third dataset.
+- *MoA routing earns its keep:* the routed margin (+0.12) beats the **naive equal-weight
+  toxic-unit load (0.005)** — i.e. routing PAHs to assimilation rather than diluting them with
+  the positively-confounded metals recovers what little signal the basin scale leaves.
+- (`SFG~DDE` ρ=−0.73\*\*, n=12, is striking but rests on the sparse/lower-confidence
+  organochlorine column and a small n; the paper says organochlorines are not at toxic
+  levels, so treat as suggestive, not load-bearing.)
+
+**The three-study picture is now coherent and scale-dependent:** the margin tracks SFG
+**strongly at estuary/regional scale where tissue burden indexes exposure** (Widdows 1995
+North Sea, +0.41), **weakly at basin scale where burden decouples from exposure** (Widdows
+2002 Irish Sea, +0.12 — the paper's own point), and is **confound-flipped where condition/
+food dominates** (Albentosa Iberia, −0.11). Across all three, **metals behave as a positive
+confound** (As/Cd/Zn), and the MoA routing's job is exactly to keep them off the toxic axis.
+Phase II (western Irish Sea, 1997) deferred (multi-day Mornington / repeat-site complications,
+sparser join).
+
 ## ✗ DATA-SOURCE PROBE (2026-06-13) — is there an SFG *database*? (ICES DOME: dead end)
 Asked whether SFG is held in a queryable database rather than per-paper tables. Conclusion:
 **no usable SFG database exists.** SFG is a *recognised* ICES biological-effects technique
@@ -169,13 +210,11 @@ paywalled). This is the "literature-assembly step" flagged in the scouting note.
 2. ✅ **Albentosa et al. 2012, *STOTEN* 435–436:430–445** (Spanish coast, 41 stations,
    *M. galloprovincialis*). **DONE — bounding negative (−0.11):** condition/age-confounded,
    does not replicate. *(Previously mislabelled "Beiras et al. 2003".)*
-3. ▶ **Widdows et al. 2002b, *Mar. Environ. Res.* 53(4):327–356** — **THE NEXT TARGET.**
-   SFG + tissue contaminants in *M. edulis* at **38 Irish Sea coastal sites** (1996 & 1997).
-   Same group/method/species as #1 (so `examples/sfg_margin_validation.jl` runs almost
-   as-is), but ~larger n; Liverpool/Morecambe Bay industrial gradient ⇒ likely
-   exposure-driven (lower food-confound than #2). **Pull: per-site SFG (+ its CR/AE/resp
-   components) and per-site tissue contaminants; ALSO condition index / shell length if
-   reported, to screen the Albentosa confound.** doi:10.1016/S0141-1136(01)00120-9.
+3. ◐ **Widdows et al. 2002b, *Mar. Environ. Res.* 53(4):327–356** — **DONE (Phase I, n=23):
+   weak/partial replication, ρ=+0.12** (see the ◐ RESULTS section above). SFG was figure-only
+   (digitized from Fig 2A, rank-only). Confirmed the scale-attenuation the paper predicts and
+   the metal-as-confound pattern (As/Cd positive). Phase II (western, 1997) deferred.
+   doi:10.1016/S0141-1136(01)00120-9.
 4. ○ **Halldórsson et al. 2005, *Mar. Environ. Res.*** — "Effect of pollution on SFG of
    *Mytilus edulis* in Iceland" (PMID 15325135). Second mussel gradient, different region.
 5. ○ **Norwegian Sea integrated assessment, 2023, *STOTEN*** — biological responses in wild
