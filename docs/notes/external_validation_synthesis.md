@@ -305,6 +305,24 @@ aggregate that consistently improves on naive. *This is the strongest internal s
 structure available without across-species gradient data, and it is now consolidated as
 Table (`tab:ablation`) in the manuscript (`\subsection{Does the structured margin earn its keep?}`).*
 
+### Response-curve-form robustness — the ranking does not depend on `E=x/(1+x)`
+`examples/response_curve_sensitivity.jl`. The licensed use is a *relative ranking*, so its
+defensibility rests on ranking stability — tested here against the **impairment curve form** (in
+addition to the MoA routing already tested in the Discussion). The engine applies `E(x)=x/(1+x)`;
+feeding a transformed pressure `x' = E_alt(x)/(1−E_alt(x))` reproduces any alternative curve *through
+the real engine* (Hill-`h`: `x'=x^h`; saturating-exp: `x'=exp(x)−1`). All alternatives are
+threshold-free, monotone, bounded, and **half-saturate at the reference `x=1`** — shape probes, **no
+half-saturation knob reintroduced** (cf. the removed `K_A`).
+
+| anchor | margin↔outcome ρ (baseline → Hill h=2 / h=0.5 / 1−e^−x) | ranking stability (rank ρ vs baseline) |
+| --- | --- | --- |
+| Widdows 1995 SFG (n=36) | +0.405 → +0.402 / +0.407 / +0.406 | **0.988–0.997** |
+| DOME stress-on-stress (n=17) | +0.392 → +0.426 / +0.392 / +0.414 | **0.990–1.000** |
+
+**Neither the corroboration nor the licensed ranking depends on the specific impairment form** (ρ moves
+within ±0.03; rank ρ ≥ 0.99). Manuscript: Discussion `\paragraph{The relative ranking is robust to the
+response-curve form.}`.
+
 ### Bridge figure — the licensed relative use, on validated ground
 `examples/dome_margin_ranking_figure.jl` → `docs/wiki/figures/dome_margin_ranking.png` (+
 `docs/tex/dome_margin_ranking.pdf`). The 17-station ICES DOME network **ranked by modelled adaptive

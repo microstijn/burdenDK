@@ -90,6 +90,13 @@ This supports the **operative response structure** (MoA routing, bounded impairm
 *not* the across-species capacity **weighting**, which is held constant within each single-species anchor
 and remains the open question below.
 
+**Ranking robust to the response curve.** Since the licensed use is a *relative ranking*, we
+sensitivity-test it against the impairment-curve form (not just the MoA routing). Swapping `E=x/(1+x)`
+for Hill (`h=0.5,2`) or `1−e^−x` — all threshold-free and half-saturating at the reference, so no knob
+is reintroduced — barely moves the corroboration (margin↔outcome ρ within ±0.03) and leaves the site
+ranking near-identical (rank ρ ≥ 0.99). The relative ranking does not depend on the specific impairment
+form. *(Script: `examples/response_curve_sensitivity.jl`.)*
+
 ## Honest through-line
 
 - **Rank-robust, magnitude-modest, specification-sensitive.** Effects are ρ≈0.2–0.45 (corroboration,
