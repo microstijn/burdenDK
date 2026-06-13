@@ -67,9 +67,38 @@ axis and **could break the SFG/SoS validation**. These are not reconcilable by f
    whether the validation degrades. The data decides.
 
 **Do not silently change `mode_of_action.jl` or the routing table.** This is a scientific call for the
-project owner. My recommendation: adopt the fitted pMoAs for the *aggregate/controlled* routing table,
-mark metals with a `pmoa_fitted = assimilation` field **and** a note that field tissue-burden
-applications keep the maintenance confound-control, and run option 3 as the test.
+project owner.
+
+### 4-RESULT — Option 3 RAN (2026-06-13): metals→assimilation DEGRADES every field anchor
+
+Re-routed metals from maintenance to assimilation in all four field harnesses (the one-line change:
+fold `tu(metals…)` into `p_assim`, set `p_maint = fill(1.0, …)`) and re-ran. **Every dataset got
+worse:**
+
+| dataset | baseline (metals→maintenance) | variant (metals→assimilation) |
+| --- | --- | --- |
+| Widdows 1995 SFG | **+0.405\*** | +0.295 (loses significance) |
+| Widdows 2002 SFG | +0.116 | **−0.137** (sign flips wrong) |
+| Albentosa 2012 SFG | −0.114 | −0.206 (worse) |
+| SoS DOME (raw) | +0.392 | +0.267 |
+| SoS DOME (length + condition) | **+0.452** | +0.259 (control no longer strengthens) |
+
+**Verdict: the fitted-pMoA metals→assimilation does NOT transfer to field tissue-burden data — it
+degrades all five tests.** Clearest driver: in the Albentosa variant the metals are a demonstrable
+**positive** confound (Cu **+0.40\***, Cd +0.29 *with* SFG) — tissue metal burden tracks food/condition,
+not toxic exposure — so loading them onto the toxic axis imports that confound (and dilutes the PAH
+signal that the assimilation axis is meant to carry).
+
+**Resolution (option 1, now empirically backed): both assignments stay, for different data regimes.**
+- **Field tissue-burden data → metals = maintenance** (a confound-control, *not* a pMoA claim; tissue
+  burden ≠ exposure). **KEEP `src/mode_of_action.jl` and the field harnesses unchanged** — the
+  validation depends on it.
+- **Controlled / exposure-based data → metals = assimilation** (the fitted DEBtox pMoA, valid where
+  burden = exposure; e.g. Viarengo, or an exposure-driven water-quality coupling).
+
+So the routing table should carry metals with `pmoa_fitted = assimilation` *and* a
+`field_confound_route = maintenance` note. **No change to the validated codebase.** (Reproduce: apply
+the one-line metals→`p_assim` swap to any field harness and re-run; full numbers above.)
 
 ## 5. Bonus resources unlocked
 - **EnviroTox consensus MOA (etc4531)** — open-access, consensus across 4 schemes, large CAS coverage
