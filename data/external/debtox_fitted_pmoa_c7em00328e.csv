@@ -1,0 +1,29 @@
+compound,n_fits,dominant_pMoA,pMoA_distribution,source
+3,4-dichloroaniline,1,R/H,"R/H:1",ESPI2018_c7em00328e
+acetone,1,A,"A:1",ESPI2018_c7em00328e
+aldicarb,1,M,"M:1",ESPI2018_c7em00328e
+atrazine,1,M,"M:1",ESPI2018_c7em00328e
+benzo(k)-fluoranthene,1,A,"A:1",ESPI2018_c7em00328e
+cadmium,8,A,"A:6;A/M:1;G:1",ESPI2018_c7em00328e
+carbendazim,2,A,"A:2",ESPI2018_c7em00328e
+chlorpyrifos,1,R,"R:1",ESPI2018_c7em00328e
+copper,5,A,"A:3;G:1;M+R:1",ESPI2018_c7em00328e
+diquat,1,A/M,"A/M:1",ESPI2018_c7em00328e
+fenvalerate,1,A,"A:1",ESPI2018_c7em00328e
+fluoranthene,3,G+R,"G+R:2;R:1",ESPI2018_c7em00328e
+mercury,2,A,"A:1;A/M:1",ESPI2018_c7em00328e
+nonylphenol,1,G+R,"G+R:1",ESPI2018_c7em00328e
+pah mixture,1,A,"A:1",ESPI2018_c7em00328e
+pentachlorobenzene,2,A,"A:1;G+R:1",ESPI2018_c7em00328e
+pentachlorophenol,1,A+M,"A+M:1",ESPI2018_c7em00328e
+ph (ocean acidification),1,M,"M:1",ESPI2018_c7em00328e
+produced water,2,A+M,"A+M:2",ESPI2018_c7em00328e
+pyrene,1,R,"R:1",ESPI2018_c7em00328e
+pyridine,1,M,"M:1",ESPI2018_c7em00328e
+tetradifon,1,A,"A:1",ESPI2018_c7em00328e
+toxic cyanobacteria,1,A/M,"A/M:1",ESPI2018_c7em00328e
+tributyltin,1,A,"A:1",ESPI2018_c7em00328e
+triphenyltin,1,M,"M:1",ESPI2018_c7em00328e
+uranium,4,A,"A:2;A/M:1;M+G:1",ESPI2018_c7em00328e
+zinc,2,M,"M:1;A/M:1",ESPI2018_c7em00328e
+zinc-oxide nanopart.,1,A+M,"A+M:1",ESPI2018_c7em00328e
