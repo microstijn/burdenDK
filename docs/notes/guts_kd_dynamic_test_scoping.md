@@ -266,9 +266,10 @@ Replicated the Baas & Kooijman *state*-axis idea in-repo, no downloads. Pulled s
 lethality (LC50/MOR + EC50/IMM, 24–96 h, water-conc units → µg/L) from the **raw ECOTOX ASCII dump**
 (`data/ecotox/ecotox_ascii_03_12_2026/`) for B&K's **four chemicals** (chlorpyrifos, malathion,
 carbaryl, carbofuran), aggregated to a per-species LC50 (median), and matched to AmP `k_M`/`[p_M]`/`L_m`.
-**310 chemical×species pairs** matched to AmP (42–95 per chemical). Pipeline:
-`data/ecotox/.../` → `/tmp/extract_ecotox.awk` → `data/external/ecotox_acute_4chem.csv` →
-`data/external/state_axis_ecotox_amp_paired.csv`.
+**310 chemical×species pairs** matched to AmP (42–95 per chemical). Pipeline (committed, reproducible):
+`data/ecotox/.../` → `scripts/extract_ecotox_acute.awk` → `data/external/ecotox_acute_4chem.csv` →
+`scripts/state_axis_ecotox_amp.jl` → `data/external/state_axis_ecotox_amp_paired.csv`
+(rate axis: `scripts/rubach2010_rate_axis.jl`).
 
 **Result (log LC50 = potency; higher LC50 = LESS sensitive):**
 | chemical (n) | cor(LC50, k_M) | cor(LC50, `[p_M]`) | cor(LC50, size L_m) | **partial(LC50, k_M ∣ size)** |
