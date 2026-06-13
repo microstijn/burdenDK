@@ -118,7 +118,18 @@ vulnerability *maps* can still be inert — a known follow-up.
 ## 5. Proxies carrying weight on thin evidence
 
 - `ρ`, `K` are class-level memory defaults, not measured kinetics.
-- ECOTOX `effect_code` is a mode-of-action proxy for axis routing.
+- **Stressor→DEB-axis routing is a declared pMoA assumption, not a fit.** For aggregate
+  water-quality stressors the routing lives in `data/pMoA_Stressor_Routing.csv` (physiological
+  mode-of-action; fitted DEBtox pMoAs where available, mechanism otherwise) — *not* tuning weights.
+  The tempting in-house shortcut (read pMoA off ECOTOX `effect_code` sensitivities) was prototyped and
+  is a **documented negative**: the DEB κ-cascade makes reproduction the most-sensitive endpoint for
+  almost any pMoA, so endpoint ≠ pMoA. The `heavy_metals` field-vs-fitted dual route is empirically
+  settled (metals→assimilation degrades all field anchors). See
+  [Water-quality coupling](Water-Quality-Coupling.md).
+- **The capacity weighting — the distinctive content — is untested**, carried as a model assumption
+  (like the mixture rules) pending across-species gradient data that largely does not exist. And the
+  single-trait `k_M`→toxicity reduction is **body-size-confounded** (well-powered null, n=310) — the
+  leverage is the *across-axis weighting*, not `k_M` alone ([Margin validation §5](Margin-Validation.md)).
 - These are honestly flagged but must stay loud in any published result. See
   [Data & parameters](Data-and-Parameters.md).
 

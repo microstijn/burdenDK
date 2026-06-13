@@ -26,9 +26,9 @@ used a taxonomic-Order proxy for phylogeny; this replaces it with a **real phylo
 **1. The undated OTL+Grafen tree carries ~no phylogenetic signal — this PGLS ≈ OLS.**
 ML Pagel's λ ≈ 0 for every model; the logL profile peaks at λ≈0.1 (−349.9) and falls
 monotonically to full Brownian motion at λ=1 (−467.5). The Grafen-on-undated-topology
-covariance is essentially uninformative, so the analysis **cannot meaningfully
-adjudicate phylogenetic non-independence**. A *dated* tree (VertLife/TimeTree) is the
-genuine phylogenetic test — the necessary follow-up.
+covariance is essentially uninformative, so this pass **cannot meaningfully adjudicate
+phylogenetic non-independence**. The *dated*-tree test that resolves it is now **done** —
+see "Dated-tree PGLS — DONE" below (λ≈0 again; the rank signal survives).
 
 **2. `k_M` predicts recovery alone, but not under a log-linear gen.-time control — and
 this is a rank-vs-linear effect, not phylogeny.** `k_M` is significant on its own
@@ -44,25 +44,34 @@ this is a rank-vs-linear effect, not phylogeny.** `k_M` is significant on its ow
 **monotone but not log-linear** — it lives in the ranks and a linear specification does
 not see it.
 
-## Verdict
-**Neither a clean confirmation nor a clean refutation — and that is informative.**
-(a) The cheap all-taxa OTL+Grafen tree is too weak to test phylogeny, so a dated tree is
-now clearly the necessary next step. (b) The `k_M`-beyond-pace signal is
-**specification-sensitive** (robust under rank correlation, absent under log-linear
-regression); both hold under their own functional-form assumption, but this bounds how
-strongly a single number can be leaned on. Repo notes:
-`docs/notes/comadre_pgls_validation.md`.
+## Dated-tree PGLS — DONE (2026-06-13): the genuine phylogenetic test
 
-## Dated-tree follow-up — pipeline ready, one manual step
-The genuine phylogenetic test needs a **dated** tree (the OTL+Grafen one was too weak).
-**190/198 matched species are vertebrates**, so a VertLife/TimeTree vertebrate timetree
-covers essentially the whole set. `scripts/comadre_pgls_dated.jl` is built and
-smoke-tested: it parses a dated Newick (real branch lengths → VCV), estimates Pagel's λ
-by ML, and re-runs the models. The one blocker is that there is **no reliable public
-dated-tree API** (datelife unreachable; VertLife/TimeTree behind download UIs), so a
-human downloads one Newick to `data/external/comadre_amp_dated_tree.nwk` (the script
-prints the species list + path) — after which the PGLS runs unattended. **This is the
-single remaining manual step in the whole validation programme.**
+A dated **TimeTree** (184 tips over the 197 COMADRE-matched species, real branch lengths) was
+obtained and the PGLS re-run on the **182** matched species, with Pagel's λ by ML
+(`scripts/comadre_pgls_dated.jl` linear, `scripts/comadre_pgls_dated_rank.jl` rank). The
+**linear vs rank contrast is the result**:
+
+| `k_M` → recovery, + generation-time control, dated VCV | β\* | p |
+| --- | --- | --- |
+| **linear** (log-linear) PGLS | 0.009 | 0.96 |
+| **rank** PGLS (phylogenetic Spearman) | **0.221** | **0.011** |
+
+- **Pagel's λ ≈ 0 *again* on the dated tree** (0.00–0.13): the damping-ratio trait carries little
+  phylogenetic signal, so PGLS ≈ OLS and the earlier within-Order proxy was adequate — **phylogeny
+  was never the confound.**
+- **In rank form, `k_M`→recovery SURVIVES** the generation-time control *and* the dated-tree
+  correction (β\*=0.221, p=0.011) — barely below the non-phylogenetic Spearman partial (+0.264). The
+  *linear* form nulls (p=0.96), confirming the effect is **monotone, not log-linear** (`λ(A0)` drops
+  to n.s.; `g` null). Results: `data/external/comadre_pgls_dated_results.txt` (linear),
+  `comadre_pgls_dated_rank_results.txt` (rank); tree `comadre_amp_dated_tree.nwk`.
+
+## Verdict (updated)
+**The `k_M`↔recovery anchor holds.** It is a genuine **rank/monotone** effect that survives the
+strongest control combination applied anywhere in the programme — **pace-of-life *and* a real dated
+phylogeny, simultaneously** — while its log-linear form is weak. Phylogeny neither rescues nor
+refutes it (λ≈0). So the honest reading is exactly the scorecard's: **rank-robust, magnitude-modest,
+specification-sensitive** — corroboration, reported as a monotone tendency, not a linear effect. Repo
+notes: `docs/notes/comadre_pgls_validation.md`, `external_validation_synthesis.md` §3.
 
 ## Sources
 - Open Tree of Life synthetic tree / induced-subtree API.

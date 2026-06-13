@@ -48,10 +48,13 @@ defaults, but they carry real weight and must stay visible in any results:
   `Compound_Memory_Library.csv`, not per-compound measured kinetics. The route to
   defensible values is one-compartment toxicokinetics (BCF/BAF, elimination
   constants).
-- **ECOTOX `effect_code` as mode-of-action.** The routing of a compound to a DEB
-  axis is a physiological-mode-of-action (pMoA) assignment proxy. This is a known,
-  formalised problem in the DEBtox literature; the routing is defensible but
-  approximate.
+- **Stressor → DEB-axis routing (pMoA).** Routing a stressor to a DEB axis is a
+  physiological-mode-of-action assignment. For aggregate water-quality stressors it is a **declared
+  mechanistic table** — `data/pMoA_Stressor_Routing.csv` (fitted DEBtox pMoAs where available, from
+  `debtox_fitted_pmoa_c7em00328e.csv`; mechanism otherwise) — *not* tuning weights. Note the
+  ECOTOX-`effect_code` shortcut was tested and is **confounded** (κ-cascade → endpoint ≠ pMoA), and
+  the `heavy_metals` field-vs-fitted dual route is settled. See
+  [Water-quality coupling](Water-Quality-Coupling.md).
 - **Recovery-curve shape.** The restoring force is now **linear** in the relative
   margin `A/A0` (no half-saturation constant); the old `KA = 0.3·A0` knob was removed
   — see [Limitations §2](Limitations-and-Open-Questions.md).

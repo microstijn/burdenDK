@@ -208,6 +208,28 @@ remains null throughout. Net: solid support for the margin **state and (static) 
 **dynamics have their first positive (if small) sign** and need a denser time series to firm up,
 consistent with the [margin-first reframe](Limitations-and-Open-Questions.md).
 
+## 5. Bounding the maintenance claim — single-trait `k_M`→toxicity is body-size-confounded
+
+A direct, out-of-sample test of "does maintenance pace predict toxic response?" — on two axes, both
+**reducing to a body-size confound** (a bounding result, like GlobTherm). Detail:
+`docs/notes/guts_kd_dynamic_test_scoping.md`.
+
+- **State axis (`k_M` → acute sensitivity), n=310.** Species-level acute LC50/EC50 for four AChE
+  inhibitors (chlorpyrifos, malathion, carbaryl, carbofuran) from raw EPA ECOTOX, matched to AmP
+  (replicating Baas & Kooijman 2015). The maintenance↔sensitivity link **replicates raw** (higher
+  `k_M`/`[p_M]` → more sensitive; ρ≈−0.27, all four chemicals) but **vanishes under a body-size
+  control** (partial ρ ≈ −0.03). At n=310 this is a **robust null, not underpower**: small species are
+  both faster-`k_M` and more sensitive, so `k_M` carries no signal *beyond* size.
+- **Rate axis (`k_M` → elimination), n=6.** Against measured chlorpyrifos elimination `k_out` (Rubach
+  2010, non-DEB), weak/wrong-signed (ρ≈−0.5, n.s.); and `k_out` is the *toxicokinetic* rate, not the
+  thesis-relevant *toxicodynamic* recovery rate `k_r` (which is scarce, *G. pulex*-centric, and
+  chemical-specific — leaving a powered dynamic-rate test data-starved).
+
+**Reading:** the distinctive content is **not** "`k_M` predicts toxic response" — that is a size story
+— but the **across-axis capacity weighting** (§ caveats), which these single-trait tests hold constant.
+Honest negative controls that bound, not refute. (Scripts: `scripts/state_axis_ecotox_amp.jl`,
+`rubach2010_rate_axis.jl`.)
+
 ## Caveats (carried)
 - **Capacity weighting untested.** Single-species designs hold the AmP capacity constant;
   testing the κ-rule axis weights needs *across-species* SFG. That data is largely absent —
