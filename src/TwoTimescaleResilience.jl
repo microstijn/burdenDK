@@ -49,6 +49,9 @@ export update_internal_burden!
 
 export analytical_initial_burden, background_for_target_burden, analytical_periodic_initial_burden
 
+export load_pmoa_stressor_routing, validate_pmoa_stressor_record,
+    stressor_axis_weights, stressor_tissue_rho, is_rate_modifier
+
 include("deb_axes.jl")
 include("condition_buffer.jl")
 include("reduced_deb_response.jl")
@@ -77,5 +80,6 @@ include("vulnerability_regime_outputs.jl")
 include("vulnerability_tranche_comparison.jl")
 
 include("compound_memory_warmup.jl")
+include("pmoa_stressor_routing.jl")
 
 end # module
