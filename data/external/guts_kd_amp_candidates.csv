@@ -1,0 +1,26 @@
+species,amp_k_M_perday,amp_L_m_cm,guts_kd_perday,guts_model_SDorIT,candidate_guts_sources,chemicals
+Gammarus_pulex,0.07262393,0.1114,,,Ashauer2016; Focks2018-adjacent; Nyman2012; EST2022-temperature,malathion/dimethoate/cypermethrin/carbendazim/imidacloprid/flupyradifurone
+Pimephales_promelas,0.05674937,0.20018,,,Ashauer2016(SSD); Gericke2022(fishSSR),malathion; benzovindiflupyr
+Poecilia_reticulata,0.01130727,0.72018,,,Ashauer2016(SSD),malathion
+Clarias_gariepinus,0.03653403,16.0205,,,Ashauer2016(SSD),malathion
+Oncorhynchus_mykiss,0.06539736,4.3981,,,Gericke2022(fishSSR),benzovindiflupyr
+Cyprinus_carpio,0.06982723,6.3743,,,Gericke2022(fishSSR),benzovindiflupyr
+Asellus_aquaticus,0.11903396,0.15173,,,Focks2018,imidacloprid
+Cloeon_dipterum,0.03083515,0.29154,,,Focks2018,imidacloprid/thiacloprid/thiamethoxam
+Daphnia_magna,0.27272727,0.1516,,,openGUTS/EFSA2018/morse,various(propiconazole/etc)
+Lymnaea_stagnalis,0.01501795,0.2959,,,GUTS-lit(candidate),
+Gammarus_fossarum,0.10444042,0.057888,,,GUTS-lit(candidate),
+Chironomus_riparius,0.03612296,0.61942,,,GUTS-lit(candidate),
+Hyalella_azteca,0.06430588,0.19694,,,GUTS-lit(candidate),
+Americamysis_bahia,0.48524755,0.082353,,,GUTS-lit(candidate),
+Lepomis_macrochirus,0.00476391,4.4177,,,GUTS-lit(candidate),
+Danio_rerio,0.04613294,0.22178,,,GUTS-lit(candidate),
+Gasterosteus_aculeatus,0.0208402,1.5136,,,GUTS-lit(candidate),
+Daphnia_pulex,0.35948741,0.1426,,,GUTS-lit(candidate),
+Aedes_aegypti,1.92380712,0.012842,,,GUTS-lit(candidate),
+Culex_pipiens,0.70975114,0.016333,,,GUTS-lit(candidate),
+Folsomia_candida,0.42181456,0.017619,,,GUTS-lit(candidate;soil),
+Eisenia_fetida,1.13369058,0.3431,,,GUTS-lit(candidate;soil),
+Caenorhabditis_elegans,2.05637907,0.0050061,,,GUTS-lit(candidate),
+Mytilus_edulis,0.00112704,4.1674,,,GUTS-lit(candidate;in-thesis sp),
+Procambarus_clarkii,1.04189229,1.0486,,,GUTS-lit(candidate),
