@@ -1,12 +1,24 @@
-# Stress-on-Stress (survival-in-air) — the DIRECT amplification test: RESULTS
+# Stress-on-Stress (survival-in-air) — the margin↔acute-resilience map: RESULTS
 
-## ✅ RESULTS (2026-06-13) — chronic burden → eroded margin → reduced acute-stress survival
-The strongest, most *on-thesis* external support for the adaptive margin so far. Where Scope
-for Growth validated the margin **state** (the energetic budget), **stress-on-stress (SoS)**
-validates what the margin is **for**: the capacity to withstand an **acute perturbation**.
-SoS = survival-in-air (days) under emersion/anoxia — a direct field proxy for the framework's
-core two-timescale claim (chronic pressure erodes the margin → less able to survive an acute
-hit).
+## ✅ RESULTS (2026-06-13) — accumulated burden → (static) modeled margin → acute-stress survival
+The strongest external support for the adaptive margin so far, and the closest to the
+framework's *acute-resilience* claim. Where Scope for Growth validated the margin **state**
+(the energetic budget), **stress-on-stress (SoS)** probes what the margin is **for**: the
+capacity to withstand an **acute perturbation**. SoS = survival-in-air (days) under
+emersion/anoxia.
+
+> **Scope of the test — read this.** This is a **static, cross-sectional map**, not a
+> simulation of the two-timescale dynamics. We take the *already-accumulated* field tissue
+> burden and pass it through the instantaneous point API
+> (`compute_adaptive_margin_response`: burden → per-axis impairment → `A_t = A0·(1−Q)`), then
+> correlate `A_t` with measured survival across sites. It does **not** run the dynamics: the
+> `B_t` accumulation memory, the slow-timescale erosion ODE, and the amplification of an acute
+> pulse are **not** invoked (those functions exist —`simulate_deb_axis_response`,
+> `pulse_deb_axes_timeseries`— but the harness never calls them). So this validates the
+> **pressure→margin→outcome mapping** (response-curve shape, MoA routing, AmP capacity
+> weighting) — the *cross-sectional shadow* of the two-timescale story — **not** the
+> accumulate→erode→amplify *sequence*. The dynamic claim is tested only weakly by the
+> within-station temporal pass below, and remains essentially unvalidated (see end).
 
 **Data — the multi-station, exposure-paired, QA'd dataset SFG never had.** ICES DOME 2024
 OSPAR CEMP (figshare 27211422, CC BY 4.0), *Mytilus edulis*, **17 UK stations** (one SURVT
@@ -40,8 +52,10 @@ Baselines: best single axis (PAH) |ρ|=0.43; **naive mean toxic-unit |ρ|=0.32**
 `Zn` +0.25 — the familiar weak metal positive-confound).
 
 ### Reading — why this is *stronger* than the SFG line
-1. **On-thesis.** It tests the amplification claim (resilience to an acute perturbation)
-   directly, not the margin state. This is the thing the framework is *for*.
+1. **Closest to the acute-resilience claim.** The outcome *is* resilience to an acute
+   perturbation (not the energetic budget SFG measures) — so the static margin→survival map is
+   the cross-sectional shadow of the amplification story. (It does not *simulate* the
+   accumulate→erode→amplify sequence — see the scope note above.)
 2. **Confound control STRENGTHENS it (0.39 → 0.45).** The decisive contrast with Albentosa:
    there, controlling condition could not rescue the margin (the confound *was* the signal);
    here, partialling size + condition makes the margin signal *stronger* — strong evidence
@@ -99,7 +113,8 @@ offers (and ideally stations with a real within-station contaminant trend).
 | recovery rate endpoints | COMADRE (`k_M`, `R_i`) | corroborated |
 | capacity coherence (bounding) | GlobTherm | recovery-specific, not general resilience |
 | margin **state** | Scope for Growth | +0.41 (estuary) → +0.12 (basin) → −0.11 (confounded) |
-| margin **function (acute resilience)** | **Stress-on-Stress** | **+0.39 / +0.45 controlled — the amplification claim, direct** |
+| margin **function (acute resilience), static map** | **Stress-on-Stress** | **+0.39 / +0.45 controlled — burden→margin→acute-survival (not the dynamics)** |
+| margin **dynamics** (accumulate→erode→amplify) | within-station temporal (proxy) | **+0.15 n.s. — essentially unvalidated** |
 
 ## Sources
 - ICES DOME 2024 OSPAR CEMP biota (figshare [27211422](https://ices-library.figshare.com/articles/dataset/Data_and_results_for_the_2024_OSPAR_CEMP_assessment/27211422), CC BY 4.0); SURVT = stress-on-stress survival.
