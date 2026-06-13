@@ -1,4 +1,5 @@
 export DEBAxisParams, DEBAxisMapping, deb_axes, deb_adaptive_margin, ec50_anchored_fractional_impairment, axis_weights_for_species, compute_adaptive_margin_response, restoring_force_from_margin, amplification_from_margin, restoring_force_from_margin_and_axes
+export DEBStageProfile, v_eff_at_length, deb_stage_profile
 export deb_axes_grid, deb_adaptive_margin_grid, restoring_force_from_margin_grid, amplification_from_margin_grid, restoring_force_from_margin_and_axes_grid
 export default_pathogen_organic_deb_mapping
 export deb_amplification_pipeline
@@ -133,6 +134,90 @@ function amplification_from_margin(A::Real, params::DEBAxisParams; A_control=par
     lambda_control = restoring_force_from_margin(A_control, params)
     lambda_A = restoring_force_from_margin(A, params)
     return lambda_control / lambda_A
+end
+
+# --- Stage-resolved capacity (life-stage integration) --------------------------------------
+# The recovery bounds in DEBAxisParams are whole-organism: lambda_max = v/L_m at the ASYMPTOTIC
+# length L_m. For a juvenile the DEB mobilisation/recovery rate is faster, because it scales as
+# energy conductance over CURRENT structural length: lambda_max(L) = v_eff(L)/L. lambda_min =
+# k_M (a primary parameter) is stage-invariant; A0 = E_m (a reserve density) and the alpha-axes
+# are stage-invariant too. No new knobs -- we only evaluate existing DEB expressions at the
+# stage's structural length, including metabolic acceleration s_M (abj models).
+
+"""
+    DEBStageProfile
+
+A stage-resolved capacity profile (see `deb_params_at_length` / `deb_params_for_stage` in
+amp_library.jl, and [`deb_stage_profile`](@ref)). `params` is a standard `DEBAxisParams` with a
+length-dependent `lambda_max`; `A0`, `alpha_axes` and `lambda_min` are unchanged from the
+whole-organism record. `reproductive_axis_role` records that the kappa-rule `(1 - kappa)` branch
+funds *maturation* before puberty (`L < L_p`) and *reproduction* after (`L >= L_p`) -- its weight
+is unchanged either way, because the DEB allocation fraction is continuous across stages.
+"""
+struct DEBStageProfile
+    params::DEBAxisParams
+    structural_length::Float64
+    scaled_length::Float64
+    stage::Symbol                   # :embryo | :juvenile | :adult
+    reproductive_axis_role::Symbol  # :maturation (L < L_p) | :reproduction (L >= L_p)
+    s_M_effective::Float64          # acceleration factor actually applied at this length
+end
+
+"""
+    v_eff_at_length(L; v, L_b, L_j, s_M)
+
+Effective DEB energy conductance at structural length `L` under metabolic acceleration. For
+non-accelerating models (`s_M = 1`, `L_j = L_b`) this is just `v`. For accelerating (abj) models
+conductance ramps linearly with length through the acceleration window `(L_b, L_j)` and plateaus
+at `v * s_M` after metamorphosis.
+"""
+function v_eff_at_length(L::Real; v::Real, L_b::Real, L_j::Real, s_M::Real)
+    Lf = Float64(L)
+    if Lf <= L_b
+        return Float64(v)
+    elseif Lf >= L_j
+        return Float64(v) * Float64(s_M)
+    else
+        return Float64(v) * (Lf / Float64(L_b))   # accelerating phase
+    end
+end
+
+"""
+    deb_stage_profile(base_params, L; v, lambda_min, L_b, L_j, L_p, L_i, s_M)
+
+Build a [`DEBStageProfile`](@ref) at structural length `L` from a whole-organism `base_params`,
+the DEB conductance `v`, the maintenance-rate floor `lambda_min = k_M`, and stage geometry.
+`lambda_max = v_eff(L)/L`, clamped so `lambda_min <= lambda_max` (a very large `L`, or a
+reserve-rich species, collapses the two timescales -> F ~ 1). `A0`, `alpha_axes`, and the
+recovery-penalty settings are copied unchanged from `base_params`.
+"""
+function deb_stage_profile(base_params::DEBAxisParams, L::Real;
+                           v::Real, lambda_min::Real,
+                           L_b::Real, L_j::Real, L_p::Real, L_i::Real, s_M::Real)
+    Lf = Float64(L)
+    if !isfinite(Lf) || Lf <= 0
+        throw(ArgumentError("structural length L must be finite and > 0"))
+    end
+
+    v_eff = v_eff_at_length(Lf; v=v, L_b=L_b, L_j=L_j, s_M=s_M)
+    lam_max = v_eff / Lf
+    lam_min = min(Float64(lambda_min), lam_max)   # preserve lambda_min <= lambda_max
+
+    stage = Lf < L_b ? :embryo : (Lf < L_p ? :juvenile : :adult)
+    role  = Lf < L_p ? :maturation : :reproduction
+
+    params = DEBAxisParams(
+        A0 = base_params.A0,
+        alpha_axes = base_params.alpha_axes,
+        lambda_min = lam_min,
+        lambda_max = lam_max,
+        recovery_axes = base_params.recovery_axes,
+        use_axis_recovery_penalty = base_params.use_axis_recovery_penalty,
+        use_buffer_recovery_factor = base_params.use_buffer_recovery_factor,
+        beta_Z = base_params.beta_Z
+    )
+
+    return DEBStageProfile(params, Lf, Lf / Float64(L_i), stage, role, v_eff / Float64(v))
 end
 
 function deb_axes_grid(layers::Vector{Matrix{Float64}}, mapping::DEBAxisMapping)
