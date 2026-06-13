@@ -8,8 +8,11 @@ This page covers the two external checks that target the **margin**, at the marg
 organisational level (**individual energetics → no scale bridge**, unlike COMADRE):
 
 1. **GlobTherm** (thermal tolerance) — a *coherence/bounding* probe of the capacity axis.
-2. **Scope for Growth (SFG)** — the real test: does the modelled margin track an *independent,
-   same-level* energetic outcome along real contaminant gradients?
+2. **Scope for Growth (SFG)** — the margin **state**: does the modelled margin track an
+   *independent, same-level* energetic outcome along real contaminant gradients?
+3. **Stress on Stress (SoS)** — the margin **function**, and the strongest result: does an
+   eroded margin reduce resilience to an *acute perturbation*? This is the framework's core
+   two-timescale claim tested directly.
 
 ---
 
@@ -88,16 +91,64 @@ Detail + reproducibility: `docs/notes/sfg_validation_status.md`.
 
 ---
 
+## 3. Stress on Stress — the margin's *function* (the strongest, most on-thesis result)
+
+SFG validates the margin *state* (the energetic budget). The framework's *core* claim,
+though, is not "the margin is low" — it is that **an eroded margin amplifies the response to a
+later acute perturbation** (the whole two-timescale point). **Stress-on-stress (SoS)** tests
+exactly that: survival-in-air (days) under emersion/anoxia is a direct field proxy for the
+capacity to withstand an acute hit. Chronic burden → eroded margin → shorter SoS survival.
+
+**Data** (the multi-station, exposure-paired, QA'd dataset SFG lacked): ICES DOME 2024 OSPAR
+CEMP (open, CC BY 4.0), *Mytilus edulis*, **17 UK stations**, 2012–2022, with co-located
+tissue contaminants and body size. Same MoA routing and margin-first API; **pre-registered**
+positive prediction (`examples/sos_margin_validation_dome.jl`).
+
+| test | ρ (n=17) |
+| --- | --- |
+| **survival ~ modelled margin `A_t`** | **+0.39** |
+| survival ~ margin \| body length | +0.40 |
+| **survival ~ margin \| length + condition** | **+0.45** |
+
+| axis diagnostic | ρ |
+| --- | --- |
+| PAH / assimilation (toxic hydrocarbons) | **−0.43** |
+| metals / maintenance | +0.09 (near-null) |
+| PCB / reproduction | **−0.48 \*** |
+
+Why this is the **strongest** margin evidence:
+- **On-thesis:** it tests the amplification claim (acute-perturbation resilience) directly,
+  not the budget state.
+- **Confound control *strengthens* it (0.39 → 0.45)** — the decisive contrast with the
+  Albentosa failure mode (there, controlling condition could not rescue the margin because the
+  confound *was* the signal). Here the metal confound is near-dead (`p_maint` +0.09) and the
+  signal grows under control — genuine margin erosion, not a health-proxy artifact.
+- **Validated mechanism:** the PAH/assimilation axis carries the toxic signal (−0.43, the
+  Widdows hydrocarbon mechanism); routed margin (0.39) beats naive load (0.32).
+
+**Honest caveat:** at n=17 the two-sided test is n.s. (p≈0.1); under the pre-registered
+*one-sided* prediction the confound-controlled result is marginally significant (p≈0.04).
+Positive, confound-robust, mechanistically coherent — suggestive-to-moderate, not yet a slam
+dunk. The data are multi-year, so a **within-station temporal** analysis (does survival track
+contaminant change at the *same* station over 2012–2022?) is the natural power-boosting
+follow-up — and would test erosion *over time* directly. Detail: `docs/notes/sos_validation_status.md`.
+
+---
+
 ## Verdict
 
-The **margin/recovery layer** has external support at two levels now: its *rate endpoints*
-(COMADRE: `k_M`, `R_i`) and the *margin state under pressure itself* (SFG). The SFG evidence
-is the first **same-level, no-scale-bridge** corroboration of the adaptive margin — strong
-where tissue burden indexes exposure (ρ=+0.41), attenuating predictably with spatial scale,
-and honestly bounded where condition/food confounds dominate. Modest and qualified, but it
-validates *the thing the framework is for* — the margin state under chronic pressure — not
-just adjacent rates. The amplification scalar `g`/`F` remains null throughout, consistent with
-the [margin-first reframe](Limitations-and-Open-Questions.md).
+The **margin/recovery layer** now has external support at three levels: its *rate endpoints*
+(COMADRE: `k_M`, `R_i`), the *margin state under pressure* (SFG, ρ=+0.41 where tissue burden
+indexes exposure, scale-attenuating and confound-bounded), and — most on-thesis — the *margin
+function*, i.e. resilience to an acute perturbation (**Stress-on-Stress, ρ=+0.39, rising to
++0.45 under body-size/condition control**). The SoS result is the first direct external
+support for the framework's **two-timescale amplification claim** (chronic pressure → eroded
+margin → reduced acute-stress survival), and the only margin test where controlling the
+condition confound *strengthens* rather than kills the signal. It validates *the thing the
+framework is for* — not just the margin state but its consequence for surviving acute events.
+Modest in n (17 stations; one-sided p≈0.04 controlled) but mechanistically coherent. The
+amplification *scalar* `g`/`F` remains null throughout — the support is for the margin **state
+and function**, consistent with the [margin-first reframe](Limitations-and-Open-Questions.md).
 
 ## Caveats (carried)
 - **Capacity weighting untested.** Single-species designs hold the AmP capacity constant;
@@ -115,5 +166,6 @@ the [margin-first reframe](Limitations-and-Open-Questions.md).
 - SFG: [Widdows et al. 1995, *MEPS* 127:131](https://www.int-res.com/abstracts/meps/v127/p131-148/) ·
   [Widdows et al. 2002, *Mar. Environ. Res.* 53:327](https://doi.org/10.1016/S0141-1136(01)00120-9) ·
   [Albentosa et al. 2012, *STOTEN* 435–436:430](https://doi.org/10.1016/j.scitotenv.2012.07.025)
+- SoS: [ICES DOME 2024 OSPAR CEMP biota](https://ices-library.figshare.com/articles/dataset/Data_and_results_for_the_2024_OSPAR_CEMP_assessment/27211422) (CC BY 4.0; SURVT = survival-in-air)
 - GlobTherm: [Bennett et al. 2018, *Scientific Data* 5:180022](https://www.nature.com/articles/sdata201822)
-- Repo notes: `docs/notes/sfg_validation_status.md`, `docs/notes/globtherm_validation.md`.
+- Repo notes: `docs/notes/sfg_validation_status.md`, `docs/notes/sos_validation_status.md`, `docs/notes/globtherm_validation.md`.
