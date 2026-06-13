@@ -64,13 +64,34 @@ Baselines: best single axis (PAH) |ρ|=0.43; **naive mean toxic-unit |ρ|=0.32**
   (untestable without across-species data; see `sfg_validation_status.md`).
 - PCB axis rests partly on a sparse `SCB7` (nd→neutral); the PAH/metal axes are fully populated.
 
-### The obvious power-boosting follow-up (not yet done)
-The data are **multi-year**. A **within-station temporal** analysis — does SoS survival track
-contaminant *change* at the *same* station across 2012–2022? — would (a) add real statistical
-power and (b) test the erosion mechanism **over time** directly (the dynamic claim), not just
-cross-sectionally. Needs SURVT-year ↔ contaminant-year matching and repeated-measures handling
-(mixed model or within-station rank methods). This is the natural next step to turn a
-suggestive cross-sectional result into a powered one.
+### Temporal analysis (2026-06-13) — DONE: static claim robust, dynamic claim underpowered
+Built a station-YEAR panel (`scripts/extract_dome_sos_yearly.jl` → `sos_dome_ukcemp_yearly.csv`,
+nearest-year ±2 contaminant matching since burden changes slowly; one Cu≈1046 mg/kg outlier
+station-year QC-dropped) → `examples/sos_temporal_validation_dome.jl`. 36 usable station-years.
+Three readouts:
+
+| readout | ρ | note |
+| --- | --- | --- |
+| **(A) within-station fixed effects** (de-mean by station; the clean dynamic test) | **+0.15** | n.s. (11 stations, 30 st-yr, df=19) — erosion *over time* underpowered |
+| **(B) pooled station-years** (n=36; pseudoreplicated) | **+0.28** | PAH axis −0.33\*, PCB axis −0.34\* (toxic axes significant) |
+| **(C) station-level, QC-cleaned** (n=17) | **+0.62 \*\*** | nearest-year + outlier-drop *strengthens* vs the +0.39 raw-median |
+
+**Honest reading.** The **within-station** design — which removes *every* fixed between-station
+confound (size regime, population, hydrography), the cleanest control possible — is **positive
+but not significant** (+0.15). The panel is too thin for the dynamic test: 11 multi-year
+stations, mostly 2-year spans, and tissue burden is fairly stable within a station over these
+windows, so there is little within-station pressure variation to drive a year-to-year signal.
+So the **dynamic erosion-over-time claim is not established with power** here — directionally
+consistent, no more.
+
+What the temporal pass *did* establish: (i) the **cross-sectional** margin↔acute-resilience
+link is **robustly positive across aggregations** (+0.39 raw-median → +0.62 QC-cleaned/
+nearest-year), magnitude specification-sensitive but sign-stable (the programme's recurring
+"rank-robust, magnitude-sensitive" pattern, cf. COMADRE `k_M`); and (ii) in the larger panel
+the **toxic axes (PAH, PCB) carry significant signal** (−0.33\*, −0.34\*) while metals remain
+the weak positive confound. Net: the **static** margin→acute-resilience result is solid; the
+**dynamic** (temporal erosion) claim needs longer station time series than DOME currently
+offers (and ideally stations with a real within-station contaminant trend).
 
 ## Where SoS sits in the validation programme
 | layer | anchor | result |

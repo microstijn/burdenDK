@@ -127,11 +127,14 @@ Why this is the **strongest** margin evidence:
   Widdows hydrocarbon mechanism); routed margin (0.39) beats naive load (0.32).
 
 **Honest caveat:** at n=17 the two-sided test is n.s. (p≈0.1); under the pre-registered
-*one-sided* prediction the confound-controlled result is marginally significant (p≈0.04).
-Positive, confound-robust, mechanistically coherent — suggestive-to-moderate, not yet a slam
-dunk. The data are multi-year, so a **within-station temporal** analysis (does survival track
-contaminant change at the *same* station over 2012–2022?) is the natural power-boosting
-follow-up — and would test erosion *over time* directly. Detail: `docs/notes/sos_validation_status.md`.
+*one-sided* prediction the confound-controlled result is marginally significant (p≈0.04). The
+cross-sectional result is robustly positive across aggregations (+0.39 raw → +0.62 QC-cleaned/
+nearest-year), sign-stable but magnitude-sensitive. A **within-station temporal** analysis
+(station-year panel, fixed effects) was run to test erosion *over time*: it is **positive but
+underpowered** (ρ=+0.15, n.s.) — the panel is thin (mostly 2 yr/station) and within-station
+burden is too stable to drive a year-to-year signal, so the *dynamic* claim is directionally
+consistent but not established; the *static* margin→acute-resilience link is the solid result.
+Detail: `docs/notes/sos_validation_status.md`.
 
 ---
 
