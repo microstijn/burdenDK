@@ -25,9 +25,9 @@ organisational level (**individual energetics → no scale bridge**, unlike COMA
 > **erosion ODE**, and the **amplification of an acute pulse** are not invoked (those functions
 > exist in the package but the validation harnesses never call them). So "erosion" and
 > "amplification" here are the *cross-sectional consequence* of the static map, **not** the
-> simulated accumulate→erode→amplify *sequence over time*. The dynamic claim is reached for only
-> by the within-station temporal pass (§3, underpowered) and remains essentially unvalidated —
-> testing it needs **time-resolved** exposure→burden→outcome data (a caging/transplant series).
+> simulated accumulate→erode→amplify *sequence over time*. The dynamics are tested only by the
+> within-station temporal pass (§3, underpowered) and a first transplant proof-of-concept (§4)
+> — encouraging but not yet a powered validation.
 
 ---
 
@@ -156,6 +156,24 @@ Detail: `docs/notes/sos_validation_status.md`.
 
 ---
 
+## 4. Dynamics — a first transplant proof-of-concept (the only test that runs the model's dynamics)
+
+§§1–3 are static maps. This one exercises the **erosion dynamics** (`simulate_deb_axis_response`).
+Data: **Veldhuizen-Tsoerkan et al. 1991** — clean *M. edulis* transplanted to a Western Scheldt
+contamination gradient, stress indices at **2½ and 5 months**. The discriminating feature: **Cd
+accumulates fast and plateaus by 2½ mo, yet SoS survival keeps dropping** 2½→5 mo (Terneuzen
+5.7→2.2 d). A static burden→margin map predicts ~no further erosion once burden plateaus; a
+dynamic model that integrates erosion under *sustained* burden predicts continued erosion **iff**
+its timescale `1/λ` ≈ months — and for *M. edulis* `λ_min=k_M=0.00113/day ⇒ 1/λ ≈ 68–887 d ≈
+months`, **unfitted**. Result: the dynamic erosion state rises **~33% from 2½→5 mo** (matching
+the continued SoS decline), while the static map gives ~0 extra erosion and **cannot** reproduce
+it. So the model's *dynamics*, on their own intrinsic timescale, produce the behaviour the static
+surface can't. **Honest scope:** n=4 sites × 2 times, figure-digitized, ρ=−1 trivial at n=4, and
+PCB roughly doubles 2½→5 mo so reality cannot fully exclude a PCB (vs time-integration) cause —
+a proof-of-concept, not a powered validation. Detail: `docs/notes/sos_validation_status.md`.
+
+---
+
 ## Verdict
 
 The **margin/recovery layer** now has external support at three levels: its *rate endpoints*
@@ -166,12 +184,14 @@ body-size/condition control**, the only margin test where controlling the condit
 *strengthens* rather than kills the signal). All three are **static cross-sectional maps** of
 the pressure→margin→outcome relationship — they validate the model's *response curve, MoA
 routing, and capacity weighting*, and the SoS result is the closest cross-sectional shadow of
-the two-timescale **amplification** story. What they do **not** test is the model's *dynamics*
-— `B_t` accumulation, the slow erosion ODE, the amplification of an acute pulse over time (see
-the scope box up top); that claim is reached for only by the underpowered within-station
-temporal pass and **remains essentially unvalidated**. The amplification *scalar* `g`/`F`
-remains null throughout. Net: support for the margin **state and (static) function**;
-**dynamics open**, consistent with the [margin-first reframe](Limitations-and-Open-Questions.md).
+the two-timescale **amplification** story. The model's *dynamics* — `B_t`
+accumulation, the slow erosion ODE — are touched only by the within-station temporal pass
+(underpowered) and a **first transplant proof-of-concept (§4)**: there the dynamics, on the
+model's own unfitted `k_M` timescale, reproduce the continued multi-month erosion that the
+static map cannot — encouraging, but n=4 and qualitative. The amplification *scalar* `g`/`F`
+remains null throughout. Net: solid support for the margin **state and (static) function**; the
+**dynamics have their first positive (if small) sign** and need a denser time series to firm up,
+consistent with the [margin-first reframe](Limitations-and-Open-Questions.md).
 
 ## Caveats (carried)
 - **Capacity weighting untested.** Single-species designs hold the AmP capacity constant;

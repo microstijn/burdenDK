@@ -1,0 +1,32 @@
+# Transplant TIME-COURSE — clean Mytilus edulis moved to a contamination gradient, stress
+# indices tracked over time. The first time-resolved dataset for the DYNAMIC margin claim
+# (accumulate -> erode -> reduced acute-stress resilience). Transcribed from:
+#   Veldhuizen-Tsoerkan M.B., Holwerda D.A., de Bont A.M.T., Smaal A.C., Zandee D.I. (1991).
+#   A Field Study on Stress Indices in the Sea Mussel, Mytilus edulis: Application of the
+#   "Stress Approach" in Biomonitoring. Arch. Environ. Contam. Toxicol. 21:497-504.
+#
+# Design: mussels from a clean reference (Jacoba harbor, Eastern Scheldt) transplanted to 4
+# Western Scheldt sites along a pollution gradient (Jacoba=reference, Honte, Terneuzen,
+# Walsoorden), assayed after 2.5 and 5 months. So at t=0 all are clean-equivalent (same
+# source); burden accumulates and stress indices erode over the exposure.
+#
+# THE DISCRIMINATING FEATURE: Cd accumulates fast and PLATEAUS by 2.5 mo (text: "after 5
+# months accumulation essentially unchanged"), yet SoS survival keeps DROPPING from 2.5->5 mo
+# at contaminated sites -> continued erosion under ~constant Cd burden = the signature of
+# time-integrated (dynamic ODE) erosion, not a static instantaneous burden->margin map.
+# (PCB doubling by 5 mo at inner sites is a partial confound for the extra drop -- noted.)
+#
+# PROVENANCE per column: SoS_LT50_days and PCB from the TEXT (exact); Cd from Fig 2 and
+# CI_pct/AEC_anoxic from Figs 3/4 are DIGITIZED (~approximate). Cd at 5 mo set = 2.5 mo
+# value per the text ("essentially unchanged"). PCB measured only at 5 mo (nd at 2.5 mo).
+# AEC_anoxic = adenylate energy charge after 6 h anoxia (a margin-under-acute-challenge proxy;
+# higher = healthier). CI = condition index %. Use RANK/trajectory reasoning, not precise fits.
+site,site_code,salinity_rank,exposure_months,Cd_ug_g_dry,PCB_ug_g_lipid,CI_pct,AEC_anoxic_6h,SoS_LT50_days,reference
+Jacoba,1,1,2.5,0.3,nd,9.5,0.65,7.6,1
+Honte,2,2,2.5,1.0,nd,10.0,0.65,6.6,0
+Terneuzen,3,3,2.5,6.0,nd,9.0,0.20,5.7,0
+Walsoorden,4,4,2.5,7.3,nd,9.0,0.65,5.1,0
+Jacoba,1,1,5.0,0.3,4.07,9.5,0.85,5.3,1
+Honte,2,2,5.0,1.0,3.99,8.0,0.40,3.1,0
+Terneuzen,3,3,5.0,6.0,8.85,6.5,0.30,2.2,0
+Walsoorden,4,4,5.0,7.3,9.92,6.5,0.30,1.4,0

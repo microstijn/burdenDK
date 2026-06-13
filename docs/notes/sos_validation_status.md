@@ -107,6 +107,41 @@ the weak positive confound. Net: the **static** margin→acute-resilience result
 **dynamic** (temporal erosion) claim needs longer station time series than DOME currently
 offers (and ideally stations with a real within-station contaminant trend).
 
+## ◑ DYNAMIC test (2026-06-13) — Veldhuizen-Tsoerkan transplant: proof-of-concept, positive
+The **first** test that exercises the model's **dynamics** (the `B_t`/erosion machinery), not
+the static point map. Data: **Veldhuizen-Tsoerkan et al. 1991**, *Arch. Environ. Contam.
+Toxicol.* 21:497–504 — clean *M. edulis* transplanted to a Western Scheldt contamination
+gradient (4 sites), stress indices at **2.5 and 5 months**
+(`data/external/sos_veldhuizen1991_transplant.csv`; harness
+`examples/sos_dynamic_validation_veldhuizen.jl`).
+
+**The discriminating feature.** Cd accumulates fast and **plateaus by 2.5 mo**, yet SoS
+survival keeps **dropping** 2.5→5 mo at the contaminated sites (Terneuzen 5.7→2.2 d,
+Walsoorden 5.1→1.4 d). A **static** burden→margin map predicts ~no further erosion once burden
+plateaus; a **dynamic** model that integrates erosion under *sustained* burden predicts
+continued erosion if its timescale `1/λ` ~ the experiment length.
+
+**It does.** For *M. edulis*, `λ_min = k_M = 0.00113/day` → `1/λ ≈ 68–887 days ≈ months` — **not
+fitted**, it falls out of the maintenance rate. Running `simulate_deb_axis_response` under the
+sustained (Cd-dominated) cost:
+- **Cross-sectional (n=4):** ρ(dynamic erosion `y(5mo)`, SoS(5mo)) = **−1.0** (monotone; right
+  direction, but trivially perfect at n=4).
+- **Temporal (the point):** the dynamic erosion state rises **~33% from 2.5→5 mo** (continued
+  erosion), matching the observed continued SoS decline; the **static** map gives ~0 extra
+  erosion (+0.12–0.19) and **cannot** reproduce the drop. In the *model* this continued erosion
+  is pure time-integration (its PCB cost-weight is negligible), so it is a genuine dynamics
+  signal, not a relabelled burden effect.
+
+**Honest scope — proof-of-concept, not a powered validation.** n=4 sites × 2 times;
+burden/CI/AEC figure-digitized (SoS LT50 + PCB from text); ρ=−1 is trivial at n=4; the model
+predicts a *uniform* fractional continued-erosion (because cost≪A0 ⇒ `λ≈λ_max` for all sites)
+whereas the observed absolute SoS drops are similar across sites — a shape mismatch in detail.
+**Crucial real-world confound:** PCB *does* roughly double 2.5→5 mo, so biologically the extra
+drop could be PCB rather than time-integration — the data cannot exclude that (only the *model*
+shows time-integration is sufficient). Verdict: the dynamics produce the **right qualitative
+behaviour the static map cannot**, with the model's own (unfitted) timescale — encouraging
+first evidence, to be firmed up by a denser, single-contaminant exposure time series.
+
 ## Where SoS sits in the validation programme
 | layer | anchor | result |
 | --- | --- | --- |
@@ -114,9 +149,11 @@ offers (and ideally stations with a real within-station contaminant trend).
 | capacity coherence (bounding) | GlobTherm | recovery-specific, not general resilience |
 | margin **state** | Scope for Growth | +0.41 (estuary) → +0.12 (basin) → −0.11 (confounded) |
 | margin **function (acute resilience), static map** | **Stress-on-Stress** | **+0.39 / +0.45 controlled — burden→margin→acute-survival (not the dynamics)** |
-| margin **dynamics** (accumulate→erode→amplify) | within-station temporal (proxy) | **+0.15 n.s. — essentially unvalidated** |
+| margin **dynamics** (accumulate→erode) | DOME within-station temporal (proxy) | +0.15 n.s. — underpowered |
+| margin **dynamics** (sustained-burden erosion) | Veldhuizen 1991 transplant (2.5 & 5 mo) | **◑ proof-of-concept: dynamics reproduce continued erosion the static map can't (n=4, qual.)** |
 
 ## Sources
 - ICES DOME 2024 OSPAR CEMP biota (figshare [27211422](https://ices-library.figshare.com/articles/dataset/Data_and_results_for_the_2024_OSPAR_CEMP_assessment/27211422), CC BY 4.0); SURVT = stress-on-stress survival.
 - SoS method/biomarker background: Viarengo et al.; Eertman et al. 1993; ICES biological-effects monitoring.
+- Dynamic transplant time-course: Veldhuizen-Tsoerkan M.B. et al. (1991), *Arch. Environ. Contam. Toxicol.* 21:497–504 (DOI 10.1007/BF01183870).
 - Mechanism (hydrocarbon narcosis on feeding/energetics): Widdows et al. 1995, 2002.
