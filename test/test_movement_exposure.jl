@@ -38,3 +38,37 @@ using TwoTimescaleResilience
         @test_throws ArgumentError occupancy_weighted_exposure([[1.0, -1.0]], [1.0])      # negative conc
     end
 end
+
+@testset "Surface:volume retention (aquatic toxicokinetics)" begin
+    Lref = 26.0
+
+    @testset "Anchored at the reference length" begin
+        @test surface_volume_retention(0.7, Lref, Lref) ≈ 0.7
+    end
+
+    @testset "Smaller stage equilibrates faster; monotone in L" begin
+        @test surface_volume_retention(0.7, 3.0, Lref) < 0.7        # parr: low retention, fast
+        @test surface_volume_retention(0.7, 50.0, Lref) > 0.7       # larger than ref: lags more
+        @test surface_volume_retention(0.7, 3.0, Lref) <
+              surface_volume_retention(0.7, 10.0, Lref) <
+              surface_volume_retention(0.7, Lref, Lref)
+    end
+
+    @testset "Formula rho_ref^(L_ref/L)" begin
+        @test surface_volume_retention(0.7, 13.0, Lref) ≈ 0.7^(Lref / 13.0)
+    end
+
+    @testset "Gating by exposure route" begin
+        @test waterborne_stage_retention(0.7, 3.0, Lref; waterborne = true) ≈
+              surface_volume_retention(0.7, 3.0, Lref)
+        @test waterborne_stage_retention(0.7, 3.0, Lref; waterborne = false) ≈ 0.7   # inert for non-aquatic
+    end
+
+    @testset "Guards" begin
+        @test surface_volume_retention(0.0, 3.0, Lref) == 0.0
+        @test_throws ArgumentError surface_volume_retention(1.0, 3.0, Lref)   # rho_ref >= 1
+        @test_throws ArgumentError surface_volume_retention(-0.1, 3.0, Lref)  # rho_ref < 0
+        @test_throws ArgumentError surface_volume_retention(0.7, 0.0, Lref)   # L <= 0
+        @test_throws ArgumentError surface_volume_retention(0.7, 3.0, 0.0)    # L_ref <= 0
+    end
+end
