@@ -35,10 +35,13 @@ predict independent demographic data from the COMADRE matrix database?
 | [COMADRE external validation](COMADRE-External-Validation.md) | The scalar result: the DEB maintenance rate `k_M` predicts demographic recovery beyond pace-of-life + coarse phylogeny; GBIF species-name harmonisation. |
 | [Phylogenetic PGLS](Phylogenetic-PGLS.md) (Idea A) | A real Open-Tree-of-Life phylogeny + PGLS; the `k_M` signal is rank-robust but log-linear-fragile, and the undated tree is too weak to test phylogeny. |
 | [Per-axis resilience](Per-Axis-Resilience.md) (Idea B) | The multi-dimensional test: the DEB reproduction rate `R_i` specifically predicts demographic *compensation* (ρ=0.77) — the strongest external result. |
+| [Margin validation](Margin-Validation.md) (SFG + GlobTherm) | The **margin state itself**: the modelled adaptive margin tracks measured Scope for Growth along contaminant gradients (ρ=+0.41 estuary-scale, scale-attenuated, confound-bounded) — same level, *no scale bridge*. GlobTherm bounds the capacity axis (recovery-specific, not general resilience). |
 | [Reproducibility](Reproducibility.md) | Exact commands + data provenance for the validation pipeline (extractors, resolvers, analyses). |
 
-**Bottom line:** external support lands on the **recovery/margin layer** (`k_M`, `R_i`);
-the amplification scalar `g`/`F` predicts nothing — consistent with the margin-first reframe.
+**Bottom line:** external support lands on the **recovery/margin layer** — its *rate
+endpoints* (`k_M`, `R_i` vs COMADRE) **and the margin state under pressure itself** (vs
+Scope for Growth, where tissue burden indexes exposure); the amplification scalar `g`/`F`
+predicts nothing — consistent with the margin-first reframe.
 
 ### Component reference (deeper dives)
 
@@ -69,6 +72,7 @@ These pre-existing topic docs are the authoritative detail for each component:
 | Stable real-raster ingestion | partial (mostly example scripts) |
 | DEBtox scaled damage `D_t`, synergism/antagonism | not implemented (by design) |
 | External validation vs COMADRE | **recovery/margin layer corroborated** (`k_M`, `R_i`); amplification scalar null |
+| External validation vs Scope for Growth | **margin state corroborated** where burden indexes exposure (ρ=+0.41; scale-attenuated, confound-bounded) — see [Margin validation](Margin-Validation.md) |
 
 See [Limitations & open questions](Limitations-and-Open-Questions.md) for the important caveats — in particular, the amplification factor is a **one-dimensional index** (it was the allocation fraction κ; after re-anchoring the recovery floor to the DEB maintenance rate constant it now tracks the energy investment ratio `g`). As of 2026-06-12 the framework has its **first external validation** against COMADRE (see [External validation](#external-validation-vs-comadre) above): the **recovery/margin layer is corroborated** (the DEB rates `k_M`↔recovery and `R_i`↔compensation), while the **amplification scalar `g`/`F` remains null** — direct support for the margin-first reframe.
 
