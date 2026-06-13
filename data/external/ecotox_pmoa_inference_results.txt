@@ -1,0 +1,49 @@
+ECOTOX effect-code pMoA inference — DIAGNOSTIC (negative result).
+most-sensitive sublethal endpoint != pMoA: the DEB kappa-cascade makes
+reproduction win for almost any stress. See script headers.
+
+===== Cadmium   [a priori: maintenance(table)] =====
+axis          n_chron med_chronic_ugL n_acute med_acute_ugL
+assimilation  0       -               1       6450.0
+maintenance   28      42.9            3       71.0
+growth        15      9.6             6       780.0
+reproduction  23      19.0            7       220.0
+survival      36      18.5            520     1800.0
+  --> most-sensitive sublethal axis (chronic) = GROWTH   (confounded — see header)
+
+===== Copper   [a priori: maintenance(table)] =====
+axis          n_chron med_chronic_ugL n_acute med_acute_ugL
+assimilation  31      52400.0         1       0.156
+maintenance   110     125.0           17      481.0
+growth        223     57.0            99      22.0
+reproduction  151     46.7            103     45.8
+survival      177     55.1            1024    87.1
+  --> most-sensitive sublethal axis (chronic) = REPRODUCTION   (confounded — see header)
+
+===== Chlorpyrifos   [a priori: maintenance(table)] =====
+axis          n_chron med_chronic_ugL n_acute med_acute_ugL
+assimilation  29      1.8             1       450.0
+maintenance   82      11.2            2       2250.0
+growth        312     50.0            24      233.0
+reproduction  130     0.595           5       0.15
+survival      279     5.0             1585    34.2
+  --> most-sensitive sublethal axis (chronic) = REPRODUCTION   (confounded — see header)
+
+===== Atrazine   [a priori: not in table] =====
+axis          n_chron med_chronic_ugL n_acute med_acute_ugL
+assimilation  48      500.0           0       -
+maintenance   265     70.0            141     103.0
+growth        890     192.0           106     786.0
+reproduction  238     47.9            4       58000.0
+survival      256     562.0           419     18900.0
+  --> most-sensitive sublethal axis (chronic) = REPRODUCTION   (confounded — see header)
+
+===== Bisphenol A   [a priori: reproduction(expected)] =====
+axis          n_chron med_chronic_ugL n_acute med_acute_ugL
+assimilation  11      2000.0          3       1140.0
+maintenance   48      500.0           7       3320.0
+growth        364     640.0           20      1250.0
+reproduction  224     200.0           7       5250.0
+survival      81      1000.0          101     5250.0
+  --> most-sensitive sublethal axis (chronic) = REPRODUCTION   (confounded — see header)
+
