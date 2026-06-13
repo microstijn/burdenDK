@@ -1,6 +1,7 @@
 export ExposureFilter
 export apply_exposure_filter, apply_exposure_filter_grid
 export aquatic_exposure_filter, human_exposure_filter, default_exposure_filter
+export surface_volume_retention, waterborne_stage_retention
 
 Base.@kwdef struct ExposureFilter
     multipliers::Vector{Float64}
@@ -67,4 +68,47 @@ function human_exposure_filter()
         name = "human",
         description = "This is a placeholder contact/use filter, not calibrated human health exposure."
     )
+end
+
+# --- Surface:volume waterborne toxicokinetics (aquatic, water-breathing targets only) -------
+# A waterborne contaminant exchanges across the gill/skin SURFACE and dilutes into body VOLUME,
+# so the one-compartment exchange rate scales with surface:volume ∝ 1/L. Because BOTH uptake and
+# elimination scale the same way, the uptake/elimination ratio (steady-state burden) is
+# size-independent; what changes with length is the RATE. Over a fixed month the exchange rate
+# enters through the retention: rho(L) = exp(-k(L) Δt) with k(L) ∝ 1/L. Anchoring at a reference
+# length L_ref (retention rho_ref there) gives rho(L) = rho_ref^(L_ref/L): a small juvenile
+# (L < L_ref) equilibrates FAST (low retention, tracks the ambient water), a large adult LAGS
+# (high retention, carries burden longer). No new knob -- just the surface:volume exponent on the
+# existing per-compound retention. This mechanism is GILL/SKIN uptake and does NOT apply to
+# terrestrial, air-breathing, or dietary-dominated routes.
+
+"""
+    surface_volume_retention(rho_ref, L, L_ref) -> Float64
+
+Length-dependent monthly retention for waterborne (gill/skin) toxicokinetics: `rho_ref^(L_ref/L)`.
+`rho_ref` is the retention at reference structural length `L_ref`. Smaller stages (`L < L_ref`)
+get lower retention (faster equilibration); larger stages lag. Steady-state burden is unchanged
+(uptake/elimination both scale ∝ 1/L), so only the rate moves with length.
+"""
+function surface_volume_retention(rho_ref::Real, L::Real, L_ref::Real)
+    rr = Float64(rho_ref); Lf = Float64(L); Lr = Float64(L_ref)
+    if !isfinite(rr) || !(0.0 <= rr < 1.0)
+        throw(ArgumentError("rho_ref must be finite and satisfy 0 <= rho_ref < 1"))
+    end
+    if !isfinite(Lf) || Lf <= 0.0 || !isfinite(Lr) || Lr <= 0.0
+        throw(ArgumentError("L and L_ref must be finite and > 0"))
+    end
+    rr == 0.0 && return 0.0
+    return rr ^ (Lr / Lf)
+end
+
+"""
+    waterborne_stage_retention(rho_ref, L, L_ref; waterborne) -> Float64
+
+Gated surface:volume retention. Returns [`surface_volume_retention`](@ref) for a waterborne /
+water-breathing aquatic target, or `rho_ref` unchanged otherwise -- the surface:volume mechanism
+is gill/skin uptake and must not fire on terrestrial, air-breathing, or dietary-dominated targets.
+"""
+function waterborne_stage_retention(rho_ref::Real, L::Real, L_ref::Real; waterborne::Bool)
+    return waterborne ? surface_volume_retention(rho_ref, L, L_ref) : Float64(rho_ref)
 end
