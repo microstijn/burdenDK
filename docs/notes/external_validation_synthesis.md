@@ -282,6 +282,39 @@ not for a scalar amplification readout.
 
 ---
 
+## 9b. The structure earns its keep — within-anchor ablation (routed vs naive)
+
+Every field anchor admits a direct ablation: replace the MoA-routed, bounded, AmP-weighted margin
+with a **naive equal-weight load index** (mean median-normalised burden over all contaminants, no
+routing, no capacity structure) and ask which better tracks the outcome. Consolidated across the
+three field anchors with a contaminant gradient:
+
+| anchor (outcome) | naive equal-weight load | routed margin |
+| --- | --- | --- |
+| Widdows 1995, estuary (SFG) | +0.22 | **+0.41\*** |
+| Widdows 2002, basin (SFG) | +0.005 | **+0.12** |
+| Stress-on-Stress, DOME (survival-in-air) | +0.32 | **+0.39** (+0.45 \| size+cond.) |
+
+**The routed margin beats the naive index at every anchor** — the response *structure* is not
+decorative. **Precise scope:** this supports the **operative structure** (MoA routing, the saturating
+`E=x/(1+x)`, axis aggregation) over an unstructured index; it does **not** test the across-**species**
+capacity weighting `w_i`, which is held constant within each single-species anchor and remains the
+open question (§9, §10). A single hand-picked axis (e.g. PAH/assimilation alone, 0.43–0.47) can edge
+the routed margin, but that axis is not known a priori; the routed margin is the **choice-free**
+aggregate that consistently improves on naive. *This is the strongest internal support for the
+structure available without across-species gradient data, and it is now consolidated as
+Table (`tab:ablation`) in the manuscript (`\subsection{Does the structured margin earn its keep?}`).*
+
+### Bridge figure — the licensed relative use, on validated ground
+`examples/dome_margin_ranking_figure.jl` → `docs/wiki/figures/dome_margin_ranking.png` (+
+`docs/tex/dome_margin_ranking.pdf`). The 17-station ICES DOME network **ranked by modelled adaptive
+margin** `A_t/A0`, coloured by the independent survival-in-air outcome (warmer = more resilient
+clusters toward larger retained margin; in-script `ρ(margin, survival)=+0.392` raw, reproducing the
+SoS anchor). Built **entirely from validated SoS machinery**; **no modelled water concentration enters**
+— it demonstrates the relative, mechanistically-structured ranking the framework licenses (Discussion
+"licensed use"), not the spatial coupling. This is the figure that speaks to the water-quality reader
+on already-defended ground (manuscript `fig:ranking`).
+
 ## 10. Validated vs open — one-paragraph summary
 
 External evidence supports the **margin/recovery layer** at four levels: its **rate endpoints**
@@ -295,9 +328,16 @@ bounding, like GlobTherm. The **real-phylogeny control is now done** (dated Time
 `k_M`↔recovery signal **survives in rank form** under pace + a real dated-phylogeny correction
 (phylogenetic Spearman β\*=0.221, p=0.011); only its log-linear form is weak. **Open:** the **capacity weighting**, which the single-species corpus cannot test and is therefore carried as
 a **model assumption** (like the mixture rules), pending across-species gradient data that largely
-does not exist; and a **powered dynamic test**, which this session found is **data-starved** — the
-clean toxicodynamic recovery rate `k_r` is scarce and chemical-specific, while the abundant
-rate/threshold endpoints reduce to body size (§7b).
+does not exist; and a **powered dynamic test**, which this session found is **data-starved** for the
+*toxicodynamic recovery rate* `k_r` (scarce, chemical-specific; the abundant rate/threshold endpoints
+reduce to body size, §7b) — **but a well-matched *erosion-dynamics* firm-up dataset does exist and is
+the concrete next step:** Dellali et al. 2023 (*Animals* 13(1):151, doi:10.3390/ani13010151) report
+**weekly survival-in-air LT50 of *M. galloprovincialis* under graded phenanthrene (50, 100 µg/L) at 7,
+15, 21, 28 d, with near-flat controls** — a controlled, *time- and concentration-resolved* single-PAH
+(→ assimilation axis, same routing as Widdows/DOME) survival-in-air series. It upgrades the n=4
+transplant proof-of-concept to a powered test of the erosion ODE on its own timescale and needs only
+**digitisation**, no new experiment. (Companion: the openGUTS / Nyman *G. pulex*–propiconazole `k_r`
+data remain the toxicodynamic-rate route, but are *G. pulex*-centric.)
 
 ---
 

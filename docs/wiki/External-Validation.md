@@ -64,6 +64,32 @@ four AChE inhibitors (ECOTOX, n=310) replicate the raw maintenance→sensitivity
 **nulls under a body-size control** (partial ≈−0.03). The model's distinctive leverage is therefore
 its **across-axis capacity weighting**, *not* `k_M` as a scalar predictor.
 
+## The licensed use, and does the structure earn its keep?
+
+The framework's defensible use is **relative**: mechanistically-structured rankings of sites, months, or
+scenarios under sustained pressure — not absolute prediction. The **bridge figure** shows this on
+validated ground: the 17-station ICES DOME network **ranked by modelled adaptive margin** `A_t/A0`,
+coloured by the independent survival-in-air outcome (warmer = more resilient clusters toward larger
+retained margin; ρ=+0.39 raw, +0.45 controlling size+condition). It uses **only validated stress-on-
+stress machinery** and introduces **no modelled water concentration** — the point where a water-quality
+monitoring product and an ecological response model meet, with nothing claimed about the spatial
+coupling. *(Script: `examples/dome_margin_ranking_figure.jl`.)*
+
+![DOME margin-ranking bridge figure](figures/dome_margin_ranking.png)
+
+A within-anchor **ablation** asks whether the routed, capacity-structured margin beats a *naive
+equal-weight load* index (no routing, no structure). It does, at every field anchor:
+
+| anchor (outcome) | naive load | routed margin |
+| --- | --- | --- |
+| Widdows 1995 estuary (SFG) | +0.22 | **+0.41\*** |
+| Widdows 2002 basin (SFG) | +0.005 | **+0.12** |
+| Stress-on-stress, DOME (survival-in-air) | +0.32 | **+0.39** (+0.45 \| size+cond.) |
+
+This supports the **operative response structure** (MoA routing, bounded impairment, axis aggregation) —
+*not* the across-species capacity **weighting**, which is held constant within each single-species anchor
+and remains the open question below.
+
 ## Honest through-line
 
 - **Rank-robust, magnitude-modest, specification-sensitive.** Effects are ρ≈0.2–0.45 (corroboration,
