@@ -96,6 +96,50 @@ function process_species_data()
                     "g" => g_ratio
                 )
             )
+
+            # --- Ontogeny block (ADDITIVE) ---------------------------------------------------
+            # Stage-transition geometry for stage-resolved capacity (length-dependent recovery
+            # lambda_max = v_eff/L and metabolic acceleration). Read in a SEPARATE try so a
+            # species missing any of these fields KEEPS its whole-organism record (additivity
+            # invariant) and simply gets no ontogeny block. Nothing above is modified.
+            try
+                model = species_data["model"]   # DEB model type, e.g. "std", "abj"
+                s_M   = species_data["s_M"]      # metabolic acceleration factor (= 1 for std)
+                L_b   = species_data["L_b"]      # structural length at birth
+                L_p   = species_data["L_p"]      # structural length at puberty
+                L_i   = species_data["L_i"]      # ultimate structural length
+                # L_j (metamorphosis length) exists only for accelerating models; for
+                # non-accelerating models there is no acceleration window, so L_j = L_b.
+                L_j = haskey(species_data, "L_j") ? species_data["L_j"] : L_b
+
+                len_ok =
+                    all(x -> (x isa Float64) && isfinite(x) && x > 0, (s_M, L_b, L_j, L_p, L_i)) &&
+                    s_M >= 1.0 &&
+                    L_b <= L_p && L_p <= L_i &&
+                    L_b <= L_j && L_j <= L_i
+
+                if len_ok
+                    ont = Dict{String, Any}(
+                        "model" => (model isa AbstractString ? String(model) : string(model)),
+                        "s_M"   => s_M,
+                        "L_b"   => L_b,
+                        "L_j"   => L_j,
+                        "L_p"   => L_p,
+                        "L_i"   => L_i
+                    )
+                    # Maturity thresholds: stored when present/valid, not required.
+                    for k in ("E_Hb", "E_Hp")
+                        if haskey(species_data, k) && species_data[k] isa Float64 &&
+                           isfinite(species_data[k]) && species_data[k] > 0
+                            ont[k] = species_data[k]
+                        end
+                    end
+                    results[species]["ontogeny"] = ont
+                end
+            catch
+                # No ontogeny block for this species; whole-organism record stands.
+            end
+
             processed_count += 1
 
         catch e

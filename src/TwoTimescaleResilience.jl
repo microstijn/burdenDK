@@ -33,6 +33,7 @@ export regime_intensity_transition_summary
 
 
 export amp_species_key, load_amp_species_library, validate_amp_record, amp_record_to_deb_params, amp_species_deb_params, amp_species_profile
+export amp_species_record, has_ontogeny, validate_ontogeny_record, deb_params_at_length, deb_params_for_stage
 
 export load_ecotox_library, validate_ecotox_record, ecotox_active_stress
 export ecotox_effect_to_deb_axis, deb_axis_index
@@ -58,6 +59,7 @@ include("reduced_deb_response.jl")
 include("mode_of_action.jl")
 include("default_isimip_moa.jl")
 include("exposure_filters.jl")
+include("movement_exposure.jl")
 include("moa_deb_mapping.jl")
 include("isimip_deb_pipeline.jl")
 include("species_defaults.jl")
