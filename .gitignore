@@ -64,3 +64,6 @@ data/external/*.RData
 
 # GlobTherm raw download (derived globtherm_amp_matched.csv is committed; re-fetch via scripts/extract_amp_for_globtherm.jl)
 data/external/GlobalTherm.csv
+
+# ICES DOME OSPAR CEMP raw download (derived sos_dome_ukcemp.csv is committed; re-fetch via scripts/extract_dome_sos.jl header)
+data/external/ospar_cemp2024_*.csv
