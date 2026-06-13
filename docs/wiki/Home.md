@@ -39,9 +39,12 @@ predict independent demographic data from the COMADRE matrix database?
 | [Reproducibility](Reproducibility.md) | Exact commands + data provenance for the validation pipeline (extractors, resolvers, analyses). |
 
 **Bottom line:** external support lands on the **recovery/margin layer** — its *rate
-endpoints* (`k_M`, `R_i` vs COMADRE) **and the margin state under pressure itself** (vs
-Scope for Growth, where tissue burden indexes exposure); the amplification scalar `g`/`F`
+endpoints* (`k_M`, `R_i` vs COMADRE), its *state* (Scope for Growth), its *function* (Stress-
+on-Stress), and a *first sign of its dynamics* (transplant); the amplification scalar `g`/`F`
 predicts nothing — consistent with the margin-first reframe.
+
+> **One consolidated, manuscript-ready account of every external validation (with the honest
+> scope of each):** [External validation synthesis](../notes/external_validation_synthesis.md).
 
 ### Component reference (deeper dives)
 
