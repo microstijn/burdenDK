@@ -39,6 +39,7 @@ organisational level (**no scale bridge**).
 | 4 | **Stress-on-Stress** (ICES DOME) | individual energetics | the margin **function** (acute resilience), static | **+0.39 → +0.45** (confound-controlled), +0.62 QC-cleaned | ✅ static map |
 | 4b | **Viarengo 1995** (controlled SoS) | individual, controlled dose | the **impairment curve + mixture model** | monotone dose-response (potency Cu>PAH>PCB); mixture additive, no antagonism (TU/IA bracket) | ✅ controlled |
 | 5 | **Transplant + single-contaminant time-courses** (Veldhuizen 1991) | individual, *over time* | the margin **dynamics** (sustained-burden erosion) | dynamics reproduce continued erosion the static map can't (n=4); Cd-alone erodes SoS progressively, ρ(margin,LT50)=+0.90 (PCB confound removed) | ◑ proof-of-concept, de-confounded |
+| 5b | **Single-trait `k_M`→toxicity** (ECOTOX LC50 n=310; Rubach `k_out` n=6) | individual, cross-species | does maintenance predict toxic response *beyond body size*? | raw maintenance↔sensitivity ρ≈−0.27 (all 4 chemicals) **nulls under a size control** (partial −0.03); rate axis weak/n.s. | ✅ bounding (size-confounded) |
 | — | **amplification scalar `g`/`F`** | — | the 1-D readout | **null everywhere** (−0.05…−0.13) | ✅ (margin-first prediction) |
 
 *\* p<0.05, ** p<0.01, partial/within-Order where noted. Magnitudes are modest and rank-based
@@ -73,8 +74,18 @@ time, and within-Order group-mean-centred (tree-free phylogeny proxy).
   Partial ρ holds 0.18–0.33 across 6 COMADRE matrix-quality filters (not a filter artifact).
 - **Specification-sensitive (important):** the gen-controlled `k_M` signal is **rank-based**
   (partial Spearman +0.264); the log-linear partial is only +0.04 — monotone but not log-linear.
-- **Open:** a *real-phylogeny* control. The OTL+Grafen tree gives Pagel λ≈0 (too weak to test);
-  a **dated-tree PGLS** pipeline is built and smoke-tested, awaiting one VertLife/TimeTree download.
+- **Real-phylogeny control — DONE (2026-06-13), and it does not overturn the result.** A dated
+  **TimeTree** (182 spp, real branch lengths) gives **Pagel's λ ≈ 0 *again*** (0.00–0.07): the log
+  damping ratio carries **no detectable phylogenetic signal**, so PGLS ≈ OLS and the earlier
+  within-Order proxy was adequate — **phylogeny was never the confound.** In the linear PGLS,
+  `k_M`→recovery is significant *alone* (β\*=0.30, **p=0.014**, λ=0) but **nulls under a
+  generation-time covariate** (β\*=0.009, p=0.96). That is the *log-linear* form, already known to be
+  weak (+0.04); the surviving COMADRE signal is the **rank-based** partial (Spearman +0.26\*\*, within-
+  Order +0.19\*), which this parametric PGLS does not test. **Net: phylogeny does not refute or rescue
+  — it confirms the `k_M` result is rank-based and pace-sensitive, not a robust parametric effect.**
+  *Output:* `data/external/comadre_pgls_dated_results.txt`; tree
+  `data/external/comadre_amp_dated_tree.nwk` (TimeTree, 184 tips; species list
+  `comadre_species_for_timetree.txt`).
 
 *Detail:* `docs/wiki/COMADRE-External-Validation.md`, `Per-Axis-Resilience.md`,
 `Phylogenetic-PGLS.md`; notes `comadre_*`.
@@ -200,6 +211,34 @@ claim is thus **de-confounded and reinforced**, still short of a *powered* test.
 
 ---
 
+## 7b. Direct test of the maintenance-timescale claim — single-trait `k_M`→toxicity is body-size-confounded
+
+§7 rests on the prediction that the margin's erosion/recovery timescale is set by the maintenance
+rate (`1/λ ≈ 1/k_M`). That prediction was tested **directly and out-of-sample**: does AmP `k_M`
+predict an independent, **non-DEB** toxicity rate or threshold, *controlling body size*? Two axes,
+both reducing to a **body-size confound** — a bounding result in the spirit of §4 (GlobTherm).
+
+- **State axis (`k_M` → acute sensitivity), n=310.** Replicating Baas & Kooijman (2015): species-level
+  acute LC50/EC50 for their four AChE inhibitors (chlorpyrifos, malathion, carbaryl, carbofuran),
+  pulled from **raw EPA ECOTOX** and matched to AmP. The maintenance↔sensitivity link **replicates raw**
+  (higher `k_M`/`[p_M]` → more sensitive; ρ≈−0.27 pooled, **same sign in all four chemicals**) but
+  **vanishes under a body-size control** (partial ρ ≈ −0.03; −0.01…+0.10 per chemical). At n=310 this
+  is a **robust null, not underpower**: small species are both faster-`k_M` and more sensitive, so
+  `k_M` carries no signal *beyond* size.
+- **Rate axis (`k_M` → elimination rate), n=6.** Against measured chlorpyrifos elimination constants
+  `k_out` (Rubach et al. 2010, 15 freshwater arthropods, radiotracer — non-DEB), AmP overlap is 6
+  species and `k_M`↔`k_out` is weak/wrong-signed (ρ≈−0.5, n.s.). `k_out` is anyway the **toxicokinetic**
+  (chemical-clearance) rate, not the thesis-relevant **toxicodynamic recovery** rate `k_r`; the clean
+  `k_r` (GUTS-proper; e.g. Nyman et al. 2012, *G. pulex*/propiconazole `k_r`=1.0–2.3 d⁻¹) is **scarce,
+  *G. pulex*-centric and chemical-specific**, leaving a *powered* dynamic rate test **data-starved**.
+
+**Reading.** Like GlobTherm (§4), this **bounds rather than refutes**: the model's distinctive leverage
+is **not** "`k_M` predicts toxic response" — that is a body-size story — but the **across-axis capacity
+weighting** (§9), which every single-trait *and* single-species test here holds constant. Both axes
+stand as honest negative controls. *Detail:* `guts_kd_dynamic_test_scoping.md`.
+
+---
+
 ## 8. The consistent null — the amplification scalar `g`/`F`
 
 Across **every** anchor the one-dimensional amplification scalar predicts nothing: COMADRE
@@ -218,12 +257,17 @@ not for a scalar amplification readout.
 - **Scale bridge.** COMADRE needs an individual→population bridge (argued via DEB-structured
   models). SFG/SoS do **not** — they are at the margin's own level; that is their methodological
   strength.
-- **The capacity weighting is still untested.** Every SFG/SoS study is single-species, so the AmP
-  capacity (A0, κ-rule axis weights — the model's distinctive content) is held constant; the tests
-  validate the *erosion mechanism + MoA aggregation*, not the weighting. Testing it needs
-  across-species contaminant-gradient data, which is largely absent (the SFG corpus is
-  mussel-dominated; ICES DOME no longer holds SFG; non-mussel SFG is temperature- not
-  contaminant-driven).
+- **The capacity weighting is still untested — and is carried as an assumption.** Every SFG/SoS study
+  is single-species, so the AmP capacity (A0, κ-rule axis weights — the model's distinctive content)
+  is held constant; the tests validate the *erosion mechanism + MoA aggregation*, not the weighting.
+  Testing it needs across-species contaminant-gradient data, which is largely absent (the SFG corpus
+  is mussel-dominated; ICES DOME no longer holds SFG; non-mussel SFG is temperature- not
+  contaminant-driven). Pending such data it is stated as a **model assumption** — like the mixture
+  rules — not a validated result.
+- **Single-trait maintenance is a body-size story (§7b).** A well-powered cross-species test (n=310)
+  shows the raw `k_M`→sensitivity correlation is *fully accounted for by body size* (partial ≈ 0). The
+  model's leverage is therefore the across-axis *weighting*, not `k_M` as a scalar predictor — the
+  strongest form yet of the "specification-sensitive" signature (a proper size control nulls it).
 - **Tissue burden ≠ exposure.** A threshold-free median-normalised relative burden is the pressure
   proxy; where burden tracks food/condition rather than exposure, it fails (Albentosa).
 - **Metals as a positive confound** recur across SFG and SoS (As/Cd/Zn) — the MoA routing exists
@@ -240,9 +284,16 @@ External evidence supports the **margin/recovery layer** at four levels: its **r
 **function** as acute-stress resilience (SoS, with the condition confound *strengthening* the
 signal), and a **first positive sign of its dynamics** (the transplant continued-erosion result on
 the model's own unfitted timescale). The **amplification scalar `g`/`F` is null throughout**,
-exactly as the margin-first reframe predicts. **Open:** a real-phylogeny control (dated-tree PGLS,
-one download away); the **capacity weighting** (needs across-species data that largely does not
-exist); and a **powered dynamic test** (a denser single-contaminant time series, in progress).
+exactly as the margin-first reframe predicts. A **direct cross-species test** of the maintenance
+claim (§7b, n=310) finds the single-trait `k_M`→toxicity signal is **body-size-confounded** —
+bounding, like GlobTherm. The **real-phylogeny control is now done** (dated TimeTree PGLS, §3): the
+damping-ratio trait shows **no phylogenetic signal** (Pagel's λ≈0), so phylogeny was never the
+confound — the `k_M` result stands as a rank-based, pace-sensitive tendency, neither rescued nor
+refuted. **Open:** the **capacity weighting**, which the single-species corpus cannot test and is therefore carried as
+a **model assumption** (like the mixture rules), pending across-species gradient data that largely
+does not exist; and a **powered dynamic test**, which this session found is **data-starved** — the
+clean toxicodynamic recovery rate `k_r` is scarce and chemical-specific, while the abundant
+rate/threshold endpoints reduce to body size (§7b).
 
 ---
 
@@ -252,7 +303,7 @@ exist); and a **powered dynamic test** (a denser single-contaminant time series,
 | --- | --- | --- |
 | COMADRE | COMADRE `.RData` (gitignored); derived CSV committed | `scripts/extract_comadre_recovery.jl`, `examples/comadre_*`, `scripts/comadre_*` |
 | COMADRE robustness | — | `examples/comadre_bootstrap_effectsizes.jl`, `scripts/comadre_filter_sensitivity.jl`, `comadre_ap_diagnostic.jl` |
-| PGLS (pending tree) | dated Newick (manual) | `scripts/comadre_pgls_dated.jl` |
+| PGLS (DONE) | `comadre_amp_dated_tree.nwk` (TimeTree, 184 tips; list `comadre_species_for_timetree.txt`); results `comadre_pgls_dated_results.txt` | `scripts/comadre_pgls_dated.jl` (needs `Distributions` env) |
 | GlobTherm | `GlobalTherm.csv` (gitignored); `globtherm_amp_matched.csv` committed | `scripts/extract_amp_for_globtherm.jl`, `examples/globtherm_validation.jl` |
 | SFG (Widdows 1995) | `sfg_widdows1995_*.csv` | `examples/sfg_margin_validation.jl` |
 | SFG (Widdows 2002) | `sfg_widdows2002_*.csv` (SFG figure-digitised) | `examples/sfg_margin_validation_widdows2002.jl` |
@@ -262,6 +313,8 @@ exist); and a **powered dynamic test** (a denser single-contaminant time series,
 | SoS controlled (Viarengo) | `sos_viarengo1995_doseresponse.csv` | `examples/sos_mixture_validation_viarengo.jl` |
 | Dynamics (transplant) | `sos_veldhuizen1991_transplant.csv` (digitised) | `examples/sos_dynamic_validation_veldhuizen.jl` |
 | Dynamics firm-up (single-contaminant) | `sos_veldhuizen1991_singlecontaminant.csv` | `examples/sos_dynamic_firmup_veldhuizen_singlecontaminant.jl` |
+| Maintenance→toxicity, state axis (§7b) | EPA ECOTOX ASCII (gitignored); `ecotox_acute_4chem.csv`, `state_axis_ecotox_amp_paired.csv` committed | `scripts/extract_ecotox_acute.awk` (extract), `scripts/state_axis_ecotox_amp.jl` (analysis) |
+| Maintenance→toxicity, rate axis (§7b) | Rubach 2010 Table 2 (transcribed); `rubach2010_kM_kout_paired.csv` committed | `scripts/rubach2010_rate_axis.jl` |
 
 All rank statistics; pre-registered signs; raw downloads gitignored, derived CSVs committed.
 Run via `julia +release --project=. <harness>` (Julia 1.12.6).
@@ -276,3 +329,6 @@ Run via `julia +release --project=. <harness>` (Julia 1.12.6).
   Albentosa et al. 2012, *STOTEN* 435–436:430.
 - SoS: ICES DOME 2024 OSPAR CEMP (figshare 27211422); Veldhuizen-Tsoerkan et al. 1991,
   *Arch. Environ. Contam. Toxicol.* 21:497–504 (transplant) and 20:259–265 (controlled, firm-up).
+- Maintenance→toxicity (§7b): Baas & Kooijman 2015, *Ecotoxicology* 24:657 (metabolic rate↔sensitivity);
+  Rubach et al. 2010, *Environ. Toxicol. Chem.* 29:2225 (15-species chlorpyrifos toxicokinetics);
+  Nyman et al. 2012, *Ecotoxicology* 21:1828 (GUTS-proper `k_r`); US-EPA ECOTOX (ASCII release 03/2026).

@@ -1,0 +1,17 @@
+DATED-tree PGLS (real branch lengths, Pagel's lambda ML).
+matched species on dated tree: 182
+
+=== comadre_log_damping ~ predictor ===
+predictor        beta*       SE        t        p  Pagel-l
+lambda(A0)       0.226    0.124     1.83   0.0687    0.000
+k_M              0.304    0.123     2.48   0.0142    0.000
+g               -0.084    0.130    -0.65   0.5184    0.031
+
+=== comadre_log_damping ~ predictor + generation_time (n=178) ===
+predictor        beta*       SE        t        p  Pagel-l
+lambda(A0)      -0.092    0.157    -0.59   0.5570    0.065
+k_M              0.009    0.155     0.06   0.9555    0.056
+g               -0.148    0.130    -1.14   0.2571    0.042
+
+Compare Pagel's lambda here (dated) with the ~0 from the OTL+Grafen pass:
+a non-trivial lambda means the dated tree actually carries phylogenetic signal.
