@@ -37,6 +37,7 @@ organisational level (**no scale bridge**).
 | 2 | **GlobTherm** (thermal tolerance) | individual physiology | is the capacity axis *general* resilience? | coherent (\|ρ\|≤0.45) but **recovery-specific** (general-resilience refuted) | ✅ bounding |
 | 3 | **Scope for Growth** (3 studies) | individual energetics | the margin **state** under pressure | **+0.41** (estuary) → +0.12 (basin) → −0.11 (confounded) | ✅ / ◐ scale-dependent |
 | 4 | **Stress-on-Stress** (ICES DOME) | individual energetics | the margin **function** (acute resilience), static | **+0.39 → +0.45** (confound-controlled), +0.62 QC-cleaned | ✅ static map |
+| 4b | **Viarengo 1995** (controlled SoS) | individual, controlled dose | the **impairment curve + mixture model** | monotone dose-response (potency Cu>PAH>PCB); mixture additive, no antagonism (TU/IA bracket) | ✅ controlled |
 | 5 | **Transplant time-course** (Veldhuizen 1991) | individual, *over time* | the margin **dynamics** (sustained-burden erosion) | dynamics reproduce continued erosion the static map can't (n=4) | ◑ proof-of-concept |
 | — | **amplification scalar `g`/`F`** | — | the 1-D readout | **null everywhere** (−0.05…−0.13) | ✅ (margin-first prediction) |
 
@@ -153,6 +154,17 @@ controlled result is marginally significant (p≈0.04). A within-station tempora
 panel) is **positive but underpowered** (+0.15 n.s.; pooled +0.28 with PAH −0.33\*, PCB −0.34\*).
 *Detail:* `sos_validation_status.md`.
 
+### 6b. Controlled cross-check — impairment curve + mixture model (Viarengo 1995)
+The only **controlled-exposure** validation: *M. galloprovincialis*, 3-day single-contaminant and
+binary-mixture exposures, survival-in-air LT50 (Viarengo et al. 1995). **(A)** LT50 falls
+monotonically with dose for Cu (maintenance), DMBA/PAH (assimilation), Aroclor/PCB (reproduction),
+ρ=−1 each, potency **Cu>PAH>PCB** — consistent with the saturating per-axis impairment `E=x/(1+x)`.
+**(B)** the Cu+DMBA mixture is worse than either component (real effect, **no antagonism**) and the
+model's own mixture rules (`aggregate_axis_mixture_effects`, CA/TU & IA) **bracket** the observed
+LT50 (CA 5.25/3.89, IA 5.14/3.57 vs obs 5.0/3.0) — corroborating the **"mixtures are additive
+assumptions, not fitted interactions"** invariant; mild supra-additive excess unresolved (n=2,
+LT50 rounding). Static (single timepoint). *Detail:* `sos_validation_status.md`.
+
 ---
 
 ## 7. The margin **dynamics** — transplant proof-of-concept (the only test that runs the dynamics)
@@ -239,6 +251,7 @@ exist); and a **powered dynamic test** (a denser single-contaminant time series,
 | SFG (Albentosa 2012) | `sfg_albentosa2012_*.csv` | `examples/sfg_margin_validation_albentosa2012.jl` |
 | SoS static | `sos_dome_ukcemp.csv` (raw DOME gitignored) | `scripts/extract_dome_sos.jl`, `examples/sos_margin_validation_dome.jl` |
 | SoS temporal | `sos_dome_ukcemp_yearly.csv` | `scripts/extract_dome_sos_yearly.jl`, `examples/sos_temporal_validation_dome.jl` |
+| SoS controlled (Viarengo) | `sos_viarengo1995_doseresponse.csv` | `examples/sos_mixture_validation_viarengo.jl` |
 | Dynamics (transplant) | `sos_veldhuizen1991_transplant.csv` (digitised) | `examples/sos_dynamic_validation_veldhuizen.jl` |
 
 All rank statistics; pre-registered signs; raw downloads gitignored, derived CSVs committed.

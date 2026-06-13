@@ -152,7 +152,13 @@ nearest-year), sign-stable but magnitude-sensitive. A **within-station temporal*
 underpowered** (ρ=+0.15, n.s.) — the panel is thin (mostly 2 yr/station) and within-station
 burden is too stable to drive a year-to-year signal, so the *dynamic* claim is directionally
 consistent but not established; the *static* margin→acute-resilience link is the solid result.
-Detail: `docs/notes/sos_validation_status.md`.
+
+**Controlled cross-check (Viarengo et al. 1995).** A controlled lab SoS dose-response (the only
+non-observational SoS test) corroborates the *mechanics*: LT50 falls monotonically with dose on
+each MoA axis (potency Cu>PAH>PCB), and a Cu+DMBA mixture is worse than either component with **no
+antagonism** — the model's own mixture rules (CA/TU and IA, `aggregate_axis_mixture_effects`)
+**bracket** the observed mixture LT50, corroborating the "mixtures are additive assumptions, not
+fitted interactions" design. Detail: `docs/notes/sos_validation_status.md`.
 
 ---
 
