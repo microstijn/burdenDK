@@ -28,6 +28,7 @@ using TwoTimescaleResilience
     include("test_amp_library.jl")
     include("test_amp_translator_identities.jl")
     include("test_amp_lifestage.jl")
+    include("test_movement_exposure.jl")
 
     # -------------------------------------------------------------------------
     # Temporarily disabled: heavier / integration / IO / plotting / examples
