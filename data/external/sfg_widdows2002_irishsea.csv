@@ -1,0 +1,38 @@
+# Scope for Growth, Irish Sea Mytilus edulis (PHASE I, June-July 1996, eastern Irish Sea).
+# Source: Widdows et al. 2002, Mar. Environ. Res. 53(4):327-356, doi:10.1016/S0141-1136(01)00120-9.
+# Third study in the across-species SFG programme (after Widdows 1995 = validated +0.41,
+# Albentosa 2012 = bounding -0.11). Same group/method/species as the validated Widdows 1995.
+#
+# *** SFG PROVENANCE: this study publishes per-site SFG ONLY as bar charts (Fig 2A), not a
+#     numeric table. Values below are DIGITIZED BY EYE from Fig 2A (gridlines at 0/5/10/15/
+#     20/25/30 J/g/h), so treat as APPROXIMATE (~+/-1 J/g/h) and use RANK statistics only.
+#     anchor=exact: four sites have published numeric SFG in Table 2 (n=16, 1996 column) and
+#     are used to calibrate the reading: Loch Creran N 7.03, New Brighton 8.71, St Ishmaels
+#     9.50, Port Quin 16.33 (my digitized reads matched these to <0.3, validating the scale).
+# The contaminant (PRESSURE) table is sfg_widdows2002_contaminants.csv (same sites).
+# Phase II (western Irish Sea, 1997) is deferred: SFG there has multi-day Mornington / repeat
+# complications and the contaminant join is sparser.
+site,species,sfg_J_g_h,sfg_source
+Loch Creran N,Mytilus_edulis,7.0,anchor_table2
+Mull of Kintyre,Mytilus_edulis,24.0,fig2A
+Loch Striven,Mytilus_edulis,16.0,fig2A
+Kirkcolm,Mytilus_edulis,18.5,fig2A
+Silloth,Mytilus_edulis,10.5,fig2A
+St. Bees,Mytilus_edulis,13.5,fig2A
+Bootle,Mytilus_edulis,10.5,fig2A
+Barrow,Mytilus_edulis,6.5,fig2A
+Blackpool,Mytilus_edulis,7.0,fig2A
+Southport,Mytilus_edulis,6.0,fig2A
+New Brighton,Mytilus_edulis,8.7,anchor_table2
+Llandudno,Mytilus_edulis,8.5,fig2A
+Bangor Flats,Mytilus_edulis,12.5,fig2A
+Hen Borth,Mytilus_edulis,14.5,fig2A
+Llanddwyn Bay,Mytilus_edulis,9.0,fig2A
+Abersoch,Mytilus_edulis,19.0,fig2A
+Borth,Mytilus_edulis,18.0,fig2A
+Aberporth,Mytilus_edulis,13.0,fig2A
+Fishguard,Mytilus_edulis,20.5,fig2A
+St. Brides,Mytilus_edulis,11.5,fig2A
+St. Ishmaels,Mytilus_edulis,9.5,anchor_table2
+Port Quin,Mytilus_edulis,16.3,anchor_table2
+Zennor,Mytilus_edulis,18.0,fig2A
