@@ -23,8 +23,9 @@ Effects are Spearman ρ; `*` p<0.05, `**` p<0.01.
 | Stress-on-stress (DOME) | energetics | **+0.39 → +0.45** (confound-controlled) | ✅ static map |
 | Viarengo 1995 | controlled dose | monotone dose-response; additive mixture | ✅ controlled |
 | Transplant (Veldhuizen) | dynamics | continued erosion a static map can't; Cd-alone **+0.90** | ◑ proof-of-concept |
-| Phenanthrene (Dellali) | dynamics, controlled | static flat vs dynamic erosion, 4 wk × 3 doses; ρ(erosion,LT50)=**−0.99** (n=12) | ◑ proof-of-concept |
+| Phenanthrene (Dellali), 2 spp. | dynamics, controlled | static flat vs dynamic erosion, 4 wk × 3 doses; ρ(erosion,LT50)=**−0.99/−0.97** (mussel/clam) | ◑ proof-of-concept |
 | **`k_M`→toxicity (n=310)** | **cross-species** | **raw −0.27; nulls under body size (partial −0.03)** | ✅ bounding (negative) |
+| Benzovindiflupyr 5-fish | cross-species, 1 chem | k_M→sensitivity −0.90 (n=5 pilot); axis weighting null; needs multi-MoA | ◐ pilot (capacity) |
 | amplification `g`/`F` | — | **null everywhere** | ✅ (margin-first) |
 
 ![External-validation forest plot](figures/validation_forest.png)
@@ -58,12 +59,15 @@ dose-response and an additive binary mixture, bracketed by the model's own CA/IA
 **The margin dynamics — two proof-of-concept tests.** *(1) Transplant (Veldhuizen):* cadmium burden
 plateaus by 2.5 months yet survival keeps dropping to 5 months — continued erosion a static map cannot
 produce, reproduced on the model's *unfitted* months-scale `1/λ`; cadmium alone tracks survival ρ=+0.90
-(n=4). *(2) Phenanthrene (Dellali 2023), cleaner & controlled:* *M. galloprovincialis* at constant
-waterborne phenanthrene, survival-in-air over 4 weeks × 3 doses with a flat control. Constant exposure
-⇒ a static map predicts no temporal change, yet LT₅₀ falls progressively and dose-dependently (control
-5%, 42%, 57% over 7→28 d); the dynamic erosion rises (1/λ=16–263 d ≫ 28 d) with dose-ordered magnitude.
-Across the full 12-cell grid ρ(erosion, LT₅₀)=**−0.99**, with genuine dose×time inversions (no longer
-monotone-by-construction). Single PAH → assimilation axis, no metal/PCB confound. *(Script:
+(n=4). *(2) Phenanthrene (Dellali 2023), cleaner, controlled, 2 species:* *M. galloprovincialis* **and**
+*R. decussatus* at constant waterborne phenanthrene, survival-in-air over 4 weeks × 3 doses with a flat
+control. Constant exposure ⇒ a static map predicts no temporal change, yet LT₅₀ falls progressively and
+dose-dependently in both (mussel 5/42/57%, clam 10/50/50% over 7→28 d); the dynamic erosion rises
+(1/λ ≫ 28 d) with dose-ordered magnitude. Each species is an independent 12-cell grid: ρ(erosion, LT₅₀)=
+**−0.99** (mussel), **−0.97** (clam), with genuine dose×time inversions (no longer monotone-by-construction).
+The clam is more anoxia-tolerant at baseline (~13 vs ~9 d) — anoxia physiology, not the contaminant margin;
+control-normalised pooling gives **−0.91** (n=24), and the absolute gap is the open capacity-weighting
+question. Single PAH → assimilation axis, no metal/PCB confound. *(Script:
 `examples/sos_dynamic_validation_dellali.jl`.)*
 
 **Bounding negative controls — single-trait `k_M`→toxicity is size-confounded.** Acute LC50/EC50 for

@@ -215,31 +215,34 @@ claim is thus **de-confounded and reinforced**, still short of a *powered* test.
 
 ---
 
-### 7-bis. Phenanthrene firm-up — a cleaner controlled dynamic replicate (Dellali et al. 2023)
+### 7-bis. Phenanthrene firm-up — a cleaner, two-species controlled dynamic replicate (Dellali et al. 2023)
 `examples/sos_dynamic_validation_dellali.jl`; data `data/external/sos_dellali2023_phenanthrene.csv`.
-**Dellali et al. 2023** (*Animals* 13(1):151) exposed *M. galloprovincialis* to **constant** waterborne
-phenanthrene (Table 1: ~10/45/89 µg/L, flat over time) and measured survival-in-air LT50 at 7/15/21/28 d.
-A **cleaner** dynamic test than the transplant: **single PAH** (→ assimilation axis, same routing as
-Widdows/DOME), a **flat control** (negative baseline), a **3-level dose gradient** — no metal/PCB confound,
+**Dellali et al. 2023** (*Animals* 13(1):151) exposed **both** *M. galloprovincialis* and *R. decussatus*
+to **constant** waterborne phenanthrene (Table 1: ~10/45/89 µg/L, flat over time) and measured survival-
+in-air LT50 at 7/15/21/28 d. A **cleaner** dynamic test than the transplant: **single PAH** (→ assimilation
+axis, same routing as Widdows/DOME), a **flat control**, a **3-level dose gradient** — no metal/PCB confound,
 exposure genuinely constant (so the static map's prediction is unambiguous).
 
 - **The discriminator.** Constant exposure ⇒ a static burden→margin map predicts LT50 **flat** in time.
-  Observed LT50 instead **declines progressively and dose-dependently**: control 8.6→8.15 d (5%, flat),
-  WC1 7.42→4.31 d (42%), WC2 6.4→2.77 d (57%) over 7→28 d. The **dynamic** erosion (M. galloprovincialis
-  `k_M=0.0038/d`, 1/λ=16–263 d ≫ 28 d) keeps rising over the four weeks with **dose-ordered absolute
-  erosion** (+0.006/+0.025/+0.049 7→28 d) matching the dose-ordered drops; **static change = 0** for every
-  treatment.
-- **Pooled** ρ(dynamic erosion, LT50) = **−0.99** over the **full 12-cell grid** (3 doses × 4 times).
-  Unlike the transplant's small-n ρ, this is **no longer monotone by construction**: it carries genuine
-  dose×time inversions (e.g. WC1@28 d = 4.31 d < WC2@15 d = 5.0 d), so the erosion state is a
-  **non-trivial** predictor.
-- **Honest scope.** 7 d & 28 d text/Table-3 reported; **15 d & 21 d figure-digitised** from the Figure 4
-  *M. galloprovincialis* (water) panels (50%-survival crossing, ±~0.5 d → rank-reliable). Still
-  single-species, and the fractional erosion is dose-uniform (cost≪A0 ⇒ λ≈λ_max), so the model captures
-  the **trajectory shape + dose-ordering**, not the dose×time magnitude interaction.
-- **Net:** a second, cleaner, and now **complete** dynamic proof-of-concept corroborating the transplant —
-  the static map cannot produce the temporal decline; the unfitted-`k_M` dynamics can, across 4 weeks × 3
-  doses (ρ=−0.99, n=12). Powered validation still needs reported (not figure-read), multi-species series.
+  Observed LT50 instead **declines progressively and dose-dependently** (mussel: control 8.6→8.15 d (5%, flat),
+  WC1 7.42→4.31 d (42%), WC2 6.4→2.77 d (57%); clam: control 13→11.7 d (10%), WC1 9.49→4.73 d (50%),
+  WC2 7.67→3.85 d (50%), over 7→28 d). The **dynamic** erosion keeps rising over the four weeks
+  (1/λ ≫ 28 d) with **dose-ordered** magnitude; **static change = 0** for every treatment, both species.
+- **Two independent 12-cell replicates:** ρ(dynamic erosion, LT50) = **−0.99** (mussel) and **−0.97**
+  (clam). Unlike the transplant's small-n ρ, these are **not monotone by construction** — they carry genuine
+  dose×time inversions (e.g. WC1@28 d < WC2@15 d), so the erosion state is a **non-trivial** predictor.
+- **Cross-species (n=24):** raw pooled ρ = **−0.82**, but the clam is far more anoxia-tolerant at baseline
+  (control ~13 vs ~8.6 d) — the paper ascribes this to **anoxia physiology** (tighter shell closure,
+  anaerobic metabolism), **not** the contaminant margin. **Control-normalising** (the contaminant effect
+  proper) restores ρ = **−0.91**. The absolute cross-species tolerance gap is the **untested capacity-
+  weighting** question (§9), not a dynamics claim.
+- **Honest scope.** 7 d & 28 d text/Table-3 reported (max→7 d, min→28 d); **15 d & 21 d figure-digitised**
+  from the Figure 4 species panels (±~0.5 d → rank-reliable). Fractional erosion is dose-uniform
+  (cost≪A0 ⇒ λ≈λ_max), so the model captures the **trajectory shape + dose-ordering**, not the dose×time
+  magnitude interaction.
+- **Net:** a cleaner, complete, **two-species** dynamic proof-of-concept corroborating the transplant — the
+  static map cannot produce the temporal decline; the unfitted-`k_M` dynamics can, in both species.
+  Powered validation still needs reported, multi-species series spanning a wider capacity range.
 
 ## 7b. Direct test of the maintenance-timescale claim — single-trait `k_M`→toxicity is body-size-confounded
 
@@ -266,6 +269,31 @@ both reducing to a **body-size confound** — a bounding result in the spirit of
 is **not** "`k_M` predicts toxic response" — that is a body-size story — but the **across-axis capacity
 weighting** (§9), which every single-trait *and* single-species test here holds constant. Both axes
 stand as honest negative controls. *Detail:* `guts_kd_dynamic_test_scoping.md`.
+
+---
+
+## 7c. Cross-species capacity pilot — 5 fish, benzovindiflupyr (single chemical)
+
+`examples/benzovindiflupyr_capacity_probe.jl`; data `data/external/benzovindiflupyr_fish_survival.csv`
+(extracted by `scripts/extract_benzovindiflupyr_fish.jl` from the **Nickisch Born Gericke et al. 2022**
+*ETC* 41(7):1732–1741, doi:10.1002/etc.5348 SI; underlying acute survival = Ashauer et al. 2013). The
+first **reported, multi-species** single-chemical cross-species set wired in. Benzovindiflupyr is an SDHI
+(complex-II inhibitor) → energetic cost → the **maintenance** axis. Per-species acute (96 h) LC50: carp
+3.5 < fathead 4.8 < trout 8.9 < sheepshead 26 < bluegill 28.5 µg/L (~8×).
+
+- **n=5 → pilot, direction only** (only |ρ|>~0.9 reaches p<0.05). A single chemical exercises **one** axis,
+  so this is a **§7b-style** single-trait cross-species probe (new chemical class/taxon), **not** the
+  across-axis weighting.
+- `k_M`→sensitivity = **−0.90** raw (higher `k_M` → more sensitive), **−0.92** partialling body size — here
+  `k_M` *survives* the size control, the **opposite** of the powered §7b (n=310). **But**: n=5, and the only
+  size proxy AmP exposes is **structural** length `L_m`, which does **not** rank physical body size cleanly
+  (δ_M varies; ρ(`L_m`,LC50)=−0.10) — so this **cannot** overturn the n=310 result; a noisy pilot with a
+  weak size control.
+- The framework's **distinctive axis weighting** (`alpha_maint`) does **not** predict sensitivity
+  (ρ=+0.10, partial −0.10) — as expected for a single-MoA set. `A0` is a size proxy (ρ(`A0`,`L_m`)=+0.90).
+- **Net:** the cross-species GUTS pipeline now runs reproducibly, but this single-chemical pilot **confirms
+  the open question stands** (§9): single-trait `k_M` is suggestive-but-confounded/underpowered, and the
+  real across-axis **weighting** test needs **multiple MoA × species** data — which this is not.
 
 ---
 

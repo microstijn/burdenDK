@@ -18,6 +18,8 @@ entries = [
     ("SFG Albentosa 2012 (condition-confounded)",       -0.11, 39,  :ener, ""),
     ("SoS DOME survival (| size + condition)",           0.45, 16,  :ener, ""),
     ("Transplant: Cd-alone margin→survival",         0.90, 5,   :dyn,  ""),
+    ("Phenanthrene mussel: margin→survival",         0.99, 12,  :dyn,  "**"),
+    ("Phenanthrene clam: margin→survival",           0.97, 12,  :dyn,  "**"),
     ("k_M → acute sensitivity (raw)",               -0.27, 310, :neg,  "**"),
     ("k_M → acute sensitivity (| body size)",       -0.03, 310, :neg,  ""),
     ("amplification g / F (COMADRE)",                    -0.11, 197, :null, ""),
@@ -37,7 +39,7 @@ function ci(r, n)
 end
 
 N = length(entries); ys = collect(N:-1:1)
-fig = Figure(size = (900, 540))
+fig = Figure(size = (900, 600))
 ax = Axis(fig[1,1];
     xlabel = "Spearman ρ  (model quantity ↔ independent outcome)",
     xticks = -1:0.25:1, xminorgridvisible = false,
