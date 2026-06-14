@@ -1,0 +1,50 @@
+ref,species_common,scientific_name,amp_key,in_amp,kappa,compound,pmoa,primary_axis,doi
+KlokRoos1996,Earthworm,Lumbricus rubellus,Lumbricus_rubellus,true,0.985,copper,M+R,maintenance,http://dx.doi.org/10.1006/eesa.1996.0015
+JageCrom2004,Springtail,Folsomia candida,Folsomia_candida,true,0.374,cadmium,A,assimilation,http://dx.doi.org/10.1021/es0352348
+JageCrom2004,Springtail,Folsomia candida,Folsomia_candida,true,0.374,triphenyltin,M,maintenance,
+AldaJage2005,Nematode,Caenorhabditis elegans,Caenorhabditis_elegans,true,0.506,cadmium,A,assimilation,http://dx.doi.org/10.1111/j.1365-2435.2005.01012.x
+AldaJage2006a,Nematode,Acrobeloides nanus,Acrobeloides_nanus,false,,cadmium,G,growth,http://dx.doi.org/10.1897/06-097R.1
+AldaJage2006a,Nematode,Acrobeloides nanus,Acrobeloides_nanus,false,,pentachlorobenzene,A,assimilation,
+AldaJage2006a,Nematode,Acrobeloides nanus,Acrobeloides_nanus,false,,carbendazim,A,assimilation,
+AldaJage2006b,Nematode,Caenorhabditis elegans,Caenorhabditis_elegans,true,0.506,pentachlorobenzene,G+R,growth,http://dx.doi.org/10.1021/es052260s
+AldaJage2006b,Nematode,Caenorhabditis elegans,Caenorhabditis_elegans,true,0.506,carbendazim,A,assimilation,
+JageHeug2006,Water flea,Daphnia magna,Daphnia_magna,true,0.581,cadmium,A,assimilation,http://dx.doi.org/10.1007/s10646-006-0060-x
+PietJage2006,Water flea,Daphnia magna,Daphnia_magna,true,0.581,fenvalerate,A,assimilation,http://dx.doi.org/10.1007/s10646-006-0100-6
+JageCrom2007,Springtail,Folsomia candida,Folsomia_candida,true,0.374,chlorpyrifos,R,reproduction,http://dx.doi.org/10.1016/j.envpol.2006.04.028
+BillDeli2008,Water flea,Daphnia magna,Daphnia_magna,true,0.581,zinc,A/M,assimilation,http://dx.doi.org/10.1021/es801418x
+BillDeli2008,Water flea,Daphnia magna,Daphnia_magna,true,0.581,copper,G,growth,
+Klok2008,Earthworm,Lumbricus rubellus,Lumbricus_rubellus,true,0.985,zinc,M,maintenance,http://dx.doi.org/10.1021/es8016599
+BillFerr2009,Water flea,Moina micrura,Moina_micrura,true,0.726,toxic cyanobacteria,A/M,assimilation,http://dx.doi.org/10.1016/j.jtbi.2008.07.029
+JageKlok2010,Earthworm,Dendrobaena octaedra,Dendrobaena_octaedra,true,0.799,copper,A,assimilation,http://dx.doi.org/10.1098/rstb.2010.0137
+JageVand2010,Water flea,Daphnia magna,Daphnia_magna,true,0.581,pyrene,R,reproduction,http://dx.doi.org/10.1007/s10646-009-0417-z
+JageVand2010,Water flea,Daphnia magna,Daphnia_magna,true,0.581,fluoranthene,R,reproduction,
+MullNisb2010a,Mussel,Mytilus edulis,Mytilus_edulis,true,0.996,pentachlorophenol,A+M,assimilation,http://dx.doi.org/10.1007/s10646-009-0385-3
+MullNisb2010a,Mussel,Mytilus  galloprovincialis,Mytilus_galloprovincialis,true,0.477,mercury,A,assimilation,
+MullNisb2010a,Oyster,Crassostrea gigas,Crassostrea_gigas,false,,mercury,A/M,assimilation,
+MullNisb2010a,Earthworm,Lumbricus rubellus,Lumbricus_rubellus,true,0.985,copper,A,assimilation,
+MullNisb2010a,Zebrafish,Danio rerio,Danio_rerio,true,0.358,benzo(k)-fluoranthene,A,assimilation,
+MullNisb2010a,Zebrafish,Danio rerio,Danio_rerio,true,0.358,PAH mixture,A,assimilation,
+MullNisb2010a,Water flea,Daphnia magna,Daphnia_magna,true,0.581,tetradifon,A,assimilation,
+MullNisb2010a,Water flea,Daphnia magna,Daphnia_magna,true,0.581,pyridine,M,maintenance,
+MullNisb2010b,Mussel,Mytilus  galloprovincialis,Mytilus_galloprovincialis,true,0.477,produced water,A+M,assimilation,http://dx.doi.org/10.1007/s10646-009-0384-4
+MullNisb2010b,Mussel,Mytilus  californianus,Mytilus_californianus,true,0.98,produced water,A+M,assimilation,
+SwaiWren,Nematode,Caenorhabditis elegans,Caenorhabditis_elegans,true,0.506,cadmium,A,assimilation,http://dx.doi.org/10.1186/1752-0509-4-32
+SwaiWren,Nematode,Caenorhabditis elegans,Caenorhabditis_elegans,true,0.506,fluoranthene,G+R,growth,
+SwaiWren,Nematode,Caenorhabditis elegans,Caenorhabditis_elegans,true,0.506,atrazine,M,maintenance,
+JageSelc2011,Polychaete,Capitella teleta,Capitella_teleta,true,0.864,nonylphenol,G+R,growth,http://dx.doi.org/10.1016/j.seares.2011.04.003
+MassBeau2011,Water flea,Daphnia magna,Daphnia_magna,true,0.581,uranium,A,assimilation,http://dx.doi.org/10.1021/es104082e
+WrenKill,Nematode,Caenorhabditis elegans,Caenorhabditis_elegans,true,0.506,aldicarb,M,maintenance,http://dx.doi.org/10.1007/s10646-010-0591-z
+AuguGagn2012,Zebrafish,Danio rerio,Danio_rerio,true,0.358,uranium,M+G,maintenance,http://dx.doi.org/10.1016/j.aquatox.2012.02.029
+MartJage2013,Water flea,Daphnia magna,Daphnia_magna,true,0.581,3,4-dichloroaniline,R/H,reproduction,http://dx.doi.org/10.1007/s10646-013-1049-x
+BarsJage2014,Pond snail,Lymnaea stagnalis,Lymnaea_stagnalis,true,0.688,acetone,A,assimilation,http://dx.doi.org/10.1002/etc.2399
+JageGudm2014,Nematode,Caenorhabditis elegans,Caenorhabditis_elegans,true,0.506,cadmium,A,assimilation,http://dx.doi.org/10.1021/es501306t
+JageGudm2014,Nematode,Caenorhabditis elegans,Caenorhabditis_elegans,true,0.506,fluoranthene,G+R,growth,
+MullHann2014,Mussel,Mytilus  galloprovincialis,Mytilus_galloprovincialis,true,0.477,zinc-oxide nanopart.,A+M,assimilation,http://dx.doi.org/10.1016/j.seares.2013.12.013
+GousBeau2015,Nematode,Caenorhabditis elegans,Caenorhabditis_elegans,true,0.506,uranium,A,assimilation,http://dx.doi.org/10.1016/j.chemosphere.2014.09.006
+CedeNorh2016,Nematode,Caenorhabditis elegans,Caenorhabditis_elegans,true,0.506,copper,A,assimilation,http://dx.doi.org/10.1371/journal.pone.0140277
+JageRave2016,Sea urchin,Strongylocentrotus droebachiensis,Strongylocentrotus_droebachiensis,true,0.811,pH (ocean acidification),M,maintenance,http://dx.doi.org/10.1016/j.jembe.2015.09.016
+MargGome,Nematode,Caenorhabditis elegans,Caenorhabditis_elegans,true,0.506,uranium,A/M,assimilation,http://dx.doi.org/10.1016/j.chemosphere.2015.12.029
+MargGome,Nematode,Caenorhabditis elegans,Caenorhabditis_elegans,true,0.506,cadmium,A/M,assimilation,
+Hamd2013,Springtail,Folsomia candida,Folsomia_candida,true,0.374,cadmium,A,assimilation,PhD thesis: http://dare.ubvu.vu.nl/handle/1871/50121
+Zimm2013,Pond snail,Lymnaea stagnalis,Lymnaea_stagnalis,true,0.688,diquat,A/M,assimilation,PhD thesis: https://research.vu.nl/en/publications/the-pond-snail-under-stress-interactive-effects-of-food-limitatio
+Bars2015,Pond snail,Lymnaea stagnalis,Lymnaea_stagnalis,true,0.688,tributyltin,A,assimilation,Phd thesis: http://dare.ubvu.vu.nl/handle/1871/52194
