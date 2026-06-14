@@ -309,6 +309,12 @@ not for a scalar amplification readout.
 
 ## 9. Cross-cutting honest assessment
 
+- **Zero free parameters — the correlations are UNCALIBRATED.** Every model quantity (A0, axis weights,
+  λ_min=k_M, λ_max=k_M·g) is fixed offline from AmP/DEB + ECOTOX; the pressure map is threshold-free;
+  **nothing is fitted to the outcomes.** A single fitted scaling (one per-anchor slope, or a global gain)
+  would very likely raise the ρ's a lot, but is **deliberately omitted** — an uncalibrated rank
+  correlation is the conservative corroboration test; calibration belongs to a later quantitative-
+  prediction study. (Visualised by the red banner on `validation_architecture.png`.)
 - **Rank-robust, magnitude-modest, specification-sensitive.** Effects are ρ≈0.2–0.45 (COMADRE,
   SFG, SoS) — corroboration, not strong prediction — and several are robust in *ranks* but weak in
   log-linear form. The cleanest case is COMADRE `k_M`: the rank effect **survives pace + a dated-tree
