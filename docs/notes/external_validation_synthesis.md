@@ -41,6 +41,7 @@ organisational level (**no scale bridge**).
 | 5 | **Transplant + single-contaminant time-courses** (Veldhuizen 1991) | individual, *over time* | the margin **dynamics** (sustained-burden erosion) | dynamics reproduce continued erosion the static map can't (n=4); Cd-alone erodes SoS progressively, ρ(margin,LT50)=+0.90 (PCB confound removed) | ◑ proof-of-concept, de-confounded |
 | 5-bis | **Phenanthrene time×dose** (Dellali 2023, §7-bis) | individual, *over time* | the margin **dynamics**, controlled | static flat vs dynamic erosion across 4 wk × 3 doses; ρ(erosion,LT50)=**−0.99** (n=12, non-trivial inversions); single PAH, flat control | ◑ proof-of-concept, cleaner/complete |
 | 5b | **Single-trait `k_M`→toxicity** (ECOTOX LC50 n=310; Rubach `k_out` n=6) | individual, cross-species | does maintenance predict toxic response *beyond body size*? | raw maintenance↔sensitivity ρ≈−0.27 (all 4 chemicals) **nulls under a size control** (partial −0.03); rate axis weak/n.s. | ✅ bounding (size-confounded) |
+| 5c | **Across-axis weighting** (ECOTOX multi-MoA × species; n=27 core / 101) | individual, cross-species × MoA | does the κ-driven axis weighting predict species×MoA sensitivity *beyond size*? | ρ(κ,Δ)≈**−0.22** (wrong sign; stratum signal = insecticide target-site artifact); robust to endpoint; clean apical-EC50 data-starved (M∩R=2) | ✅ **powered negative** (distinctive content **not** corroborated) |
 | — | **amplification scalar `g`/`F`** | — | the 1-D readout | **null everywhere** (−0.05…−0.13) | ✅ (margin-first prediction) |
 
 *\* p<0.05, ** p<0.01, partial/within-Order where noted. Magnitudes are modest and rank-based
@@ -297,6 +298,36 @@ first **reported, multi-species** single-chemical cross-species set wired in. Be
 
 ---
 
+## 7d. The across-axis weighting — powered test, NOT corroborated (2026-06-14)
+
+The §7b/§7c open question, finally given a **powered** test. Operative weights are κ-driven
+(`w = (1/2, κ/4, κ/4, (1−κ)/2)`, `κ = alpha_axes[3]`); the discriminating prediction is that higher-κ
+species are *relatively* more sensitive to **maintenance** chemicals and lower-κ to **reproduction**
+chemicals (`w_M/w_R = κ/(2(1−κ))`). A multi-MoA × shared-species matrix was mined from raw EPA ECOTOX
+(panel `data/ecotox_multimoa_panel.csv`; core = defensible pMoA, stratum = AChE/DDT/PAH), with a physical
+body-size control (AmP `Ww_i`, `scripts/extract_amp_size_proxies.jl`). Test: within-species, chemical-
+centred `Δ = resid_R − resid_M`, correlated with κ (differencing removes species size + overall
+sensitivity). Prediction ρ(κ,Δ) > 0.
+
+- **Result: not corroborated.** CORE (n=27) ρ=−0.28 (perm p=0.15, null, wrong sign); CORE+STRATUM (n=101)
+  ρ=−0.20 (p=0.043, significant but **wrong sign**), partial|logWw ≈ −0.17 (κ–size collinearity ≈ 0). The
+  negative is a **taxonomic target-site artifact** (low-κ arthropods are insecticide/uncoupler-sensitive
+  for reasons the energetic weighting doesn't capture); core (no AChE) is null.
+- **Endpoint-robust:** clean apical mortality (LC50|MOR) reproduces it (CORE ρ=−0.22; +STRATUM ρ=−0.22,
+  p=0.043). Not a pooling artifact.
+- **Clean axis-matched sublethal test is data-starved:** local apical-EC50 → M∩R = **2 species**; the
+  cross-species chronic literature (Caldwell EE2 SSD, PCP) is **NOEC-dominated** — the statistic we exclude
+  (design-/power-dependent, not a potency). The DEBtox-fitted route gives clean cascade-aware pMoA labels
+  but only **5 AmP species with ≥2 axes** (assimilation-skewed) — power and clean labels are anti-
+  correlated in available data.
+- **Net:** the model's distinctive content is **not validated**; a powered negative delimiting the claims.
+  Clean test = whole-budget DEBtox refits across a designed panel (Paper-2). Harnesses:
+  `examples/across_axis_weighting_{capacity_test,axismatched,endpoint_sensitivity}.jl`,
+  `scripts/{extract_ecotox_multimoa.awk,ecotox_multimoa_coverage.jl,extract_debtox_fitted_pmoa_species.jl}`.
+  Detail: `across_axis_weighting_result.md`; future plan: `curated_apical_ecx_plan.md`.
+
+---
+
 ## 8. The consistent null — the amplification scalar `g`/`F`
 
 Across **every** anchor the one-dimensional amplification scalar predicts nothing: COMADRE
@@ -323,13 +354,17 @@ not for a scalar amplification readout.
 - **Scale bridge.** COMADRE needs an individual→population bridge (argued via DEB-structured
   models). SFG/SoS do **not** — they are at the margin's own level; that is their methodological
   strength.
-- **The capacity weighting is still untested — and is carried as an assumption.** Every SFG/SoS study
-  is single-species, so the AmP capacity (A0, κ-rule axis weights — the model's distinctive content)
-  is held constant; the tests validate the *erosion mechanism + MoA aggregation*, not the weighting.
-  Testing it needs across-species contaminant-gradient data, which is largely absent (the SFG corpus
-  is mussel-dominated; ICES DOME no longer holds SFG; non-mussel SFG is temperature- not
-  contaminant-driven). Pending such data it is stated as a **model assumption** — like the mixture
-  rules — not a validated result.
+- **The capacity weighting is now TESTED (powered) and NOT corroborated (§7d, 2026-06-14).** Previously
+  carried as an untested assumption; a multi-MoA × shared-species matrix mined from raw EPA ECOTOX
+  (n=27 clean-pMoA core / n=101 with the AChE-DDT stratum) tested whether the κ-driven axis weighting
+  predicts species×MoA sensitivity beyond body size. It does **not**: ρ(κ, Δ) ≈ **−0.22** (wrong sign,
+  the apparent stratum signal a taxonomic insecticide-target-site artifact), **robust to endpoint** (clean
+  LC50|MOR reproduces it). A clean axis-matched *sublethal* version is **data-starved** (local apical-EC50
+  → M∩R = 2 species; the cross-species chronic literature is NOEC-dominated). So the distinctive content
+  is **not validated** — report as a powered negative that delimits the validated claims (mechanism +
+  structure, not the cross-species weighting). The proper clean test = **whole-budget DEBtox refits across
+  a designed species×MoA panel** (Paper-2; `curated_apical_ecx_plan.md`). Detail:
+  `across_axis_weighting_result.md`; critique implications in `paper1_open_critiques.md`.
 - **Single-trait maintenance is a body-size story (§7b).** A well-powered cross-species test (n=310)
   shows the raw `k_M`→sensitivity correlation is *fully accounted for by body size* (partial ≈ 0). The
   model's leverage is therefore the across-axis *weighting*, not `k_M` as a scalar predictor — the
@@ -405,9 +440,11 @@ exactly as the margin-first reframe predicts. A **direct cross-species test** of
 claim (§7b, n=310) finds the single-trait `k_M`→toxicity signal is **body-size-confounded** —
 bounding, like GlobTherm. The **real-phylogeny control is now done** (dated TimeTree PGLS, §3): the
 `k_M`↔recovery signal **survives in rank form** under pace + a real dated-phylogeny correction
-(phylogenetic Spearman β\*=0.221, p=0.011); only its log-linear form is weak. **Open:** the **capacity weighting**, which the single-species corpus cannot test and is therefore carried as
-a **model assumption** (like the mixture rules), pending across-species gradient data that largely
-does not exist; and a **powered dynamic test**, which this session found is **data-starved** for the
+(phylogenetic Spearman β\*=0.221, p=0.011); only its log-linear form is weak. The **capacity weighting**
+— the model's distinctive content — is now **tested (powered) and NOT corroborated** (§7d/5c, 2026-06-14):
+the ECOTOX multi-MoA matrix gives ρ(κ,Δ)≈−0.22 (wrong sign, robust to endpoint), and a clean apical-EC50
+version is data-starved; it is therefore a **powered negative**, not a validated result, with the clean
+test deferred to a Paper-2 DEBtox-refit panel. **Open:** a **powered dynamic test**, which this session found is **data-starved** for the
 *toxicodynamic recovery rate* `k_r` (scarce, chemical-specific; the abundant rate/threshold endpoints
 reduce to body size, §7b) — **but a well-matched *erosion-dynamics* firm-up dataset exists and is now
 partially run (§7-bis):** Dellali et al. 2023 (*Animals* 13(1):151, doi:10.3390/ani13010151) report
