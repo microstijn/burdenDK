@@ -1,5 +1,15 @@
 # Curated apical-EC50 database — plan + the power/label tension (2026-06-14)
 
+> **STATUS (consolidated 2026-06-14): PARKED as Paper-2 future work.** A retrieval attempt concluded that
+> **assembling a clean apical-EC50 cross-species matrix from existing summary data is not feasible**:
+> local ECOTOX apical-EC50 → M∩R = 2 species (`scripts/ecotox_apical_ecx_seed.jl`); the cross-species
+> chronic literature (Caldwell EE2 SSD over 26 species; PCP datasets) is **NOEC-dominated** — the
+> excluded statistic; the DEBtox-fitted route gives clean labels but only 5 AmP species with ≥2 axes.
+> **Conclusion:** the only clean, powered route is **whole-budget DEBtox refits across a designed
+> species × MoA panel** (re-analysing raw dose–response–time data, not assembling summary ECx) — a real
+> dedicated study. Paper-1 reports the powered ECOTOX **negative** (`across_axis_weighting_result.md`).
+> Everything below is the design spec for that future study.
+
 Goal: a clean, powered cross-species test of the **across-axis capacity weighting** (κ-driven
 maintenance-vs-reproduction). The acute ECOTOX test was powered (n=27/101) but not clean (acute
 endpoint + contested pMoA → not corroborated, robustly). A clean test needs (i) **defensible pMoA axis

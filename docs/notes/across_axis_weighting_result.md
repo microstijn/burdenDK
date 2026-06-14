@@ -56,7 +56,12 @@ Three heterogeneity axes: **statistic** (LC50/EC50 potency ✓ vs NOEC/LOEC cens
 DECISION (2026-06-14): **acute LC50|MOR is the primary reported endpoint** (powered, homogeneous, robust);
 pooled acute = robustness check; the NOEC/LOEC axis-matched attempt is documented as the ECOTOX limit.
 
-## Required next deliverable — a CURATED APICAL-EC50 database
+## Required next deliverable — a CURATED APICAL-EC50 database  (PARKED → Paper-2)
+
+**Consolidated 2026-06-14:** a retrieval attempt established this can't be assembled from existing summary
+data — local ECOTOX apical-EC50 → M∩R = 2 species; the cross-species chronic literature is NOEC-dominated;
+the DEBtox-fitted route gives clean labels but n≈5. So the clean test = whole-budget DEBtox refits across a
+designed panel, **parked as Paper-2** (`curated_apical_ecx_plan.md`). The text below is the design spec.
 
 The ECOTOX → axis pMoA *mapping* is a core framework component, so a proper test of its cross-species
 consequence (the weighting) must use endpoints that engage the pMoA. ECOTOX can't, so this needs a
