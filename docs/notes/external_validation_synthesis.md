@@ -214,6 +214,31 @@ claim is thus **de-confounded and reinforced**, still short of a *powered* test.
 
 ---
 
+### 7-bis. Phenanthrene firm-up — a cleaner controlled dynamic replicate (Dellali et al. 2023)
+`examples/sos_dynamic_validation_dellali.jl`; data `data/external/sos_dellali2023_phenanthrene.csv`.
+**Dellali et al. 2023** (*Animals* 13(1):151) exposed *M. galloprovincialis* to **constant** waterborne
+phenanthrene (Table 1: ~10/45/89 µg/L, flat over time) and measured survival-in-air LT50 at 7/15/21/28 d.
+A **cleaner** dynamic test than the transplant: **single PAH** (→ assimilation axis, same routing as
+Widdows/DOME), a **flat control** (negative baseline), a **3-level dose gradient** — no metal/PCB confound,
+exposure genuinely constant (so the static map's prediction is unambiguous).
+
+- **The discriminator.** Constant exposure ⇒ a static burden→margin map predicts LT50 **flat** in time.
+  Observed LT50 instead **declines progressively and dose-dependently**: control 8.6→8.15 d (5%, flat),
+  WC1 7.42→4.31 d (42%), WC2 6.4→2.77 d (57%) over 7→28 d. The **dynamic** erosion (M. galloprovincialis
+  `k_M=0.0038/d`, 1/λ=16–263 d ≫ 28 d) keeps rising over the four weeks with **dose-ordered absolute
+  erosion** (+0.006/+0.025/+0.049 7→28 d) matching the dose-ordered drops; **static change = 0** for every
+  treatment.
+- **Pooled** ρ(dynamic erosion, LT50) = **−1.00** over the 6 available cells (3 doses × {7,28 d}) — monotone
+  by construction at small n (as in the transplant), so the weight is on the **discriminator + dose-ordering**,
+  not the ρ magnitude.
+- **Honest scope.** Endpoints (7 d, 28 d) only → 6 cells; **15 d & 21 d LT50 live only in the Figure 4
+  survivorship curves** and are not yet digitised — the model **predicts** them (a held-out check). Like the
+  transplant, the fractional erosion is uniform (cost≪A0 ⇒ λ≈λ_max), so the model captures the **trajectory
+  shape + cross-sectional dose-ordering**, not the dose×time magnitude interaction.
+- **Net:** a second, cleaner dynamic proof-of-concept corroborating the transplant — the static map cannot
+  produce the temporal decline; the unfitted-`k_M` dynamics can. The full 4-timepoint powered test needs
+  only the Figure 4 digitisation.
+
 ## 7b. Direct test of the maintenance-timescale claim — single-trait `k_M`→toxicity is body-size-confounded
 
 §7 rests on the prediction that the margin's erosion/recovery timescale is set by the maintenance
@@ -348,13 +373,13 @@ bounding, like GlobTherm. The **real-phylogeny control is now done** (dated Time
 a **model assumption** (like the mixture rules), pending across-species gradient data that largely
 does not exist; and a **powered dynamic test**, which this session found is **data-starved** for the
 *toxicodynamic recovery rate* `k_r` (scarce, chemical-specific; the abundant rate/threshold endpoints
-reduce to body size, §7b) — **but a well-matched *erosion-dynamics* firm-up dataset does exist and is
-the concrete next step:** Dellali et al. 2023 (*Animals* 13(1):151, doi:10.3390/ani13010151) report
-**weekly survival-in-air LT50 of *M. galloprovincialis* under graded phenanthrene (50, 100 µg/L) at 7,
-15, 21, 28 d, with near-flat controls** — a controlled, *time- and concentration-resolved* single-PAH
-(→ assimilation axis, same routing as Widdows/DOME) survival-in-air series. It upgrades the n=4
-transplant proof-of-concept to a powered test of the erosion ODE on its own timescale and needs only
-**digitisation**, no new experiment. (Companion: the openGUTS / Nyman *G. pulex*–propiconazole `k_r`
+reduce to body size, §7b) — **but a well-matched *erosion-dynamics* firm-up dataset exists and is now
+partially run (§7-bis):** Dellali et al. 2023 (*Animals* 13(1):151, doi:10.3390/ani13010151) report
+**weekly survival-in-air LT50 of *M. galloprovincialis* under graded phenanthrene (~10/45/89 µg/L) at 7,
+15, 21, 28 d, with a flat control** — a controlled, *time- and concentration-resolved* single-PAH
+(→ assimilation axis) survival-in-air series. The **endpoints (7 d, 28 d) replicate the transplant
+result** (static map flat; dynamic erosion rises, dose-ordered; §7-bis); the **15 d & 21 d points
+(Figure 4) remain to be digitised** for the full 4-timepoint powered test — no new experiment needed. (Companion: the openGUTS / Nyman *G. pulex*–propiconazole `k_r`
 data remain the toxicodynamic-rate route, but are *G. pulex*-centric.)
 
 ---
