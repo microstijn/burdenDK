@@ -59,6 +59,17 @@ function process_species_data()
 
             L_m = kap * p_Am / p_M
 
+            # Physical-size proxies (cross-species body-size CONTROL for the across-axis
+            # capacity-weighting test). Structural L_m is a poor cross-species size proxy
+            # (delta_M varies); ultimate wet weight Ww_i is mass-based and the standard
+            # acute-LC50 size covariate. Optional/additive: a species missing Ww_i/Wd_i keeps
+            # its record with NaN here. NOTE: the COMMITTED AmP_Species_Library.json predates
+            # these fields; a deliberate (key-sorted) regen is needed to fold them in -- meanwhile
+            # scripts/extract_amp_size_proxies.jl emits them as a sidecar from allStat.mat.
+            _posf(x) = (x isa Float64 && isfinite(x) && x > 0) ? x : NaN
+            Ww_i = _posf(get(species_data, "Ww_i", NaN))   # ultimate wet weight [g]
+            Wd_i = _posf(get(species_data, "Wd_i", NaN))   # ultimate dry weight [g]
+
             # Fast recovery rate (1/time): reserve mobilization, conductance over max length.
             lambda_max = v / L_m
 
@@ -93,7 +104,9 @@ function process_species_data()
                     "p_M" => p_M,
                     "k_M" => k_M,
                     "E_G" => E_G,
-                    "g" => g_ratio
+                    "g" => g_ratio,
+                    "Ww_i" => Ww_i,
+                    "Wd_i" => Wd_i
                 )
             )
 
