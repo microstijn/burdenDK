@@ -16,10 +16,9 @@
 # The DYNAMIC erosion state integrates the sustained cost with intrinsic timescale 1/lambda ~ months
 # (>> the 28 d experiment), so it keeps rising over 4 weeks -> progressive decline. Which matches?
 #
-# DATA STATE (honest): 7 d and 28 d LT50 are text/Table-3 reported; 15 d and 21 d are ONLY in the
-# Figure 4 survivorship curves and are not yet digitised (blank in the CSV). The model PREDICTS them,
-# so they are a held-out check: fill them in to convert this from endpoints (n=6 cells) to the full
-# 4-timepoint test.
+# DATA STATE (honest): 7 d and 28 d LT50 are text/Table-3 reported; 15 d and 21 d are figure-digitised
+# from the Figure 4 M. galloprovincialis (water) survivorship panels (50%-survival crossing, +-~0.5 d ->
+# rank-reliable). The full 4-timepoint x 3-dose grid is n=12 cells.
 #
 #   julia +release --project=. examples/sos_dynamic_validation_dellali.jl
 # ===========================================================================
@@ -127,8 +126,9 @@ function main()
     println("LT50 change, yet LT50 falls progressively and dose-dependently (control ~flat). The DYNAMIC")
     println("erosion keeps rising over the 4 weeks (1/lambda ~ months) and is dose-ordered, matching the")
     println("data: a cleaner replicate of the transplant result (single PAH, flat control, gradient).")
-    println("SCOPE: endpoints (7 d, 28 d) now -> 6 cells; the 15 d & 21 d LT50 (Figure 4) are a held-out")
-    println("prediction. Rank-based, pre-registered NEGATIVE sign. See docs/notes/sos_validation_status.md.")
+    println("SCOPE: full 4-timepoint x 3-dose grid, n=12 cells (7/28 d text-reported, 15/21 d figure-")
+    println("digitised +-~0.5 d). rho is no longer monotone-by-construction -- it carries real dose x time")
+    println("inversions (e.g. WC1@28d < WC2@15d). Rank-based, pre-registered NEGATIVE sign.")
 end
 
 main()
