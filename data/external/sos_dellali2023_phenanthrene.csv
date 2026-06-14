@@ -11,20 +11,21 @@
 #   7 d  : control & WC2 from text 3.3.1 (8.6+-0.69 ; 6.4+-0.37); WC1 = Table 3 range-max (7.42).
 #   28 d : Table 3 current-study range-min (control 8.15+-0.73 ; WC1 4.31 ; WC2 2.77). LT50 declines
 #          monotonically with time, so range-max<->7 d and range-min<->28 d (WC2 6.4 confirms exactly).
-#   15 d & 21 d : ONLY in the Figure 4 survivorship curves (50%-survival crossing) -> left BLANK,
-#          need figure digitisation. control 15/21 d ~ 8.5 (flat, "insignificant" variation 8.15-9).
+#   15 d & 21 d : digitised from the Figure 4 M. galloprovincialis (water) survivorship panels
+#          (50%-survival crossing of WUt/WC1/WC2), +-~0.5 d -> rank-reliable, magnitude-approximate.
+#          Bracketed by the text endpoints (7 d, 28 d) and the stated monotonic time/dose decline.
 # n = 3 replicate tanks per group (30 individuals x 3 replicates; LT50 +- SD over the 3 replicates).
 # treatment_ugL = measured time-averaged water concentration.
 duration_d,treatment_ugL,nominal_ugL,LT50_d,LT50_sd,n,source
 7,10.0,0,8.6,0.69,3,text_3.3.1
 7,44.9,50,7.42,,3,table3_rangemax
 7,89.2,100,6.4,0.37,3,text_3.3.1
-15,10.0,0,,,3,figure4_only
-15,44.9,50,,,3,figure4_only
-15,89.2,100,,,3,figure4_only
-21,10.0,0,,,3,figure4_only
-21,44.9,50,,,3,figure4_only
-21,89.2,100,,,3,figure4_only
+15,10.0,0,8.4,,3,figure4_digitised
+15,44.9,50,6.3,,3,figure4_digitised
+15,89.2,100,5.0,,3,figure4_digitised
+21,10.0,0,8.3,,3,figure4_digitised
+21,44.9,50,5.2,,3,figure4_digitised
+21,89.2,100,4.0,,3,figure4_digitised
 28,10.0,0,8.15,0.73,3,text_table3_rangemin
 28,44.9,50,4.31,,3,table3_rangemin
 28,89.2,100,2.77,,3,table3_rangemin
